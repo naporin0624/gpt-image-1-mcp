@@ -1,9 +1,9 @@
 import { defineConfig } from "vitepress";
 
 export default defineConfig({
-  title: "GPT Image 1 MCP",
+  title: "gpt-image-1 MCP",
   description:
-    "AI-powered image generation and vision analysis MCP server documentation",
+    "AI-powered image generation MCP server documentation using gpt-image-1",
   head: [["link", { rel: "icon", href: "/images/logo.png" }]],
 
   themeConfig: {
@@ -12,7 +12,7 @@ export default defineConfig({
     nav: [
       { text: "Home", link: "/" },
       { text: "Guide", link: "/guide/getting-started" },
-      { text: "API Reference", link: "/api/tools" },
+      { text: "Reference", link: "/api/tools" },
       { text: "Examples", link: "/examples/basic-usage" },
     ],
 
@@ -22,7 +22,7 @@ export default defineConfig({
           text: "Introduction",
           items: [
             {
-              text: "What is GPT Image 1 MCP?",
+              text: "What is gpt-image-1 MCP?",
               link: "/guide/what-is-mcp",
             },
             { text: "Getting Started", link: "/guide/getting-started" },
@@ -32,9 +32,10 @@ export default defineConfig({
           text: "Features",
           items: [
             { text: "Image Generation", link: "/guide/image-generation" },
-            { text: "Vision Analysis", link: "/guide/vision-analysis" },
+            { text: "Image Editing", link: "/guide/edit-image" },
+            { text: "Batch Editing", link: "/guide/batch-edit" },
             {
-              text: "Japanese Translation",
+              text: "English-Only Input",
               link: "/guide/japanese-translation",
             },
           ],
@@ -53,17 +54,9 @@ export default defineConfig({
 
       "/api/": [
         {
-          text: "MCP Tools",
+          text: "Reference",
           items: [
-            { text: "Overview", link: "/api/tools" },
-            { text: "generate-image", link: "/api/generate-image" },
-            { text: "analyze-image", link: "/api/analyze-image" },
-            { text: "translate-prompt", link: "/api/translate-prompt" },
-          ],
-        },
-        {
-          text: "Advanced",
-          items: [
+            { text: "Tools Overview", link: "/api/tools" },
             { text: "Error Handling", link: "/api/error-handling" },
             { text: "Rate Limiting", link: "/api/rate-limiting" },
           ],
