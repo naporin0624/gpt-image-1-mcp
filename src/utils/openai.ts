@@ -8,6 +8,7 @@ import {
 import { aspectRatioToSize, mapLegacyQuality } from "../types/image.js";
 
 import { FileManager } from "./file-manager.js";
+import { loadImageAsBuffer, normalizeImageInput } from "./image-input.js";
 
 import type {
   EditImageInput,
@@ -17,6 +18,7 @@ import type {
   MaskInput,
   MaskResult,
   EditedImageData,
+  ImageInput,
 } from "../types/edit.js";
 import type {
   GenerateImageInput,
@@ -57,7 +59,7 @@ export class OpenAIService {
     const metadataTokens = 200; // Rough estimate for JSON structure
 
     if (!includeBase64) {
-      return metadataTokens; // File path response only
+      return metadataTokens;
     }
 
     // Base64 is ~4/3 size of original
@@ -65,6 +67,7 @@ export class OpenAIService {
     // 1 token ≈ 4 characters
     const base64Tokens = Math.ceil(base64Chars / 4);
     // Add 20% overhead for JSON escaping
+
     return Math.ceil((metadataTokens + base64Tokens) * 1.2);
   }
 
@@ -77,7 +80,7 @@ export class OpenAIService {
       const size = aspectRatioToSize(input.aspect_ratio);
 
       const _defaultQuality = mapLegacyQuality(
-        process.env.DEFAULT_IMAGE_QUALITY || "medium",
+        process.env.DEFAULT_IMAGE_QUALITY ?? "medium",
       );
 
       // Build parameters only with what gpt-image-1 supports
@@ -99,7 +102,7 @@ export class OpenAIService {
 
       const openaiResponse = await this.client.images.generate(generateParams);
 
-      const generationTime = Date.now() - startTime;
+      const _generationTime = Date.now() - startTime;
 
       if (openaiResponse.data == null || openaiResponse.data.length === 0) {
         throw new Error("No image data returned from OpenAI");
@@ -152,7 +155,7 @@ export class OpenAIService {
           {
             prompt: input.prompt,
             aspectRatio: input.aspect_ratio,
-            quality: input.quality || "medium",
+            quality: input.quality ?? "medium",
           },
         );
       } catch (error) {
@@ -167,11 +170,11 @@ export class OpenAIService {
 
       // Always include metadata
       customResponse.metadata = {
-        width: parseInt(size.split("x")[0] || "1024"),
-        height: parseInt(size.split("x")[1] || "1024"),
-        format: fileResult?.format || input.output_format || "png",
-        size_bytes: fileResult?.size_bytes || 0,
-        created_at: fileResult?.saved_at || new Date().toISOString(),
+        width: parseInt(size.split("x")[0] ?? "1024"),
+        height: parseInt(size.split("x")[1] ?? "1024"),
+        format: fileResult?.format ?? input.output_format ?? "png",
+        size_bytes: fileResult?.size_bytes ?? 0,
+        created_at: fileResult?.saved_at ?? new Date().toISOString(),
       };
 
       // Include warnings if needed
@@ -222,15 +225,16 @@ export class OpenAIService {
     const startTime = Date.now();
 
     try {
-      // Download source image to convert to file format
-      const imageBuffer = await this.downloadImageAsBuffer(input.source_image);
+      // Load source image using new image input system
+      const normalizedInput = normalizeImageInput(input.source_image);
+      const imageBuffer = await loadImageAsBuffer(normalizedInput);
 
       // Determine size based on model capabilities
       let size: string;
       if (input.model === "gpt-image-1") {
-        size = "1024x1024"; // gpt-image-1 supports various sizes
+        size = "1024x1024";
       } else {
-        size = "1024x1024"; // dall-e-2 default
+        size = "1024x1024";
       }
 
       const baseParams = {
@@ -280,7 +284,7 @@ export class OpenAIService {
       if (imageData.b64_json) {
         // gpt-image-1 returns base64 - save to file immediately to avoid large responses
         const base64Data = imageData.b64_json;
-        const dataUrl = `data:image/${input.output_format};base64,${base64Data}`;
+        const dataUrl = `data:image/${input.output_format ?? "png"};base64,${base64Data}`;
 
         try {
           fileResult = await this.fileManager.saveImage(
@@ -288,9 +292,11 @@ export class OpenAIService {
             {
               save_to_file: true, // Always save base64 data to file
               output_directory: input.output_directory,
-              filename: input.filename_prefix
-                ? `${input.filename_prefix}${Date.now()}`
-                : undefined,
+              filename:
+                input.filename_prefix != null &&
+                input.filename_prefix.length > 0
+                  ? `${input.filename_prefix}${Date.now()}`
+                  : undefined,
               naming_strategy: input.naming_strategy,
               organize_by: input.organize_by,
             },
@@ -318,9 +324,11 @@ export class OpenAIService {
               {
                 save_to_file: input.save_to_file,
                 output_directory: input.output_directory,
-                filename: input.filename_prefix
-                  ? `${input.filename_prefix}${Date.now()}`
-                  : undefined,
+                filename:
+                  input.filename_prefix != null &&
+                  input.filename_prefix.length > 0
+                    ? `${input.filename_prefix}${Date.now()}`
+                    : undefined,
                 naming_strategy: input.naming_strategy,
                 organize_by: input.organize_by,
               },
@@ -343,7 +351,7 @@ export class OpenAIService {
         image_url: openaiImageUrl, // OpenAI URL only (undefined for base64)
         local_file_path: fileResult?.local_path,
         file_size: fileResult?.size_bytes,
-        revised_prompt: imageData.revised_prompt || input.edit_prompt,
+        revised_prompt: imageData.revised_prompt ?? input.edit_prompt,
         original_prompt: input.edit_prompt,
         edit_type: input.edit_type,
         strength: input.strength,
@@ -359,7 +367,10 @@ export class OpenAIService {
 
       return {
         original_image: {
-          url: input.source_image,
+          url:
+            normalizedInput.type === "url"
+              ? normalizedInput.value
+              : `${normalizedInput.type}:${normalizedInput.value.substring(0, 50)}...`,
           format: "unknown",
           dimensions: { width: 1024, height: 1024 },
         },
@@ -394,8 +405,15 @@ export class OpenAIService {
     let processedCount = 0;
     let failedCount = 0;
 
+    // Handle both new images array and legacy image_urls for backward compatibility
+    const imageInputs =
+      input.images ??
+      (input.image_urls != null
+        ? input.image_urls.map((url) => ({ type: "url" as const, value: url }))
+        : []);
+
     try {
-      const processImage = async (imageUrl: string, index: number) => {
+      const processImage = async (imageInput: ImageInput, index: number) => {
         try {
           // Map batch edit types to edit image types
           const editTypeMap: Record<string, string> = {
@@ -406,7 +424,7 @@ export class OpenAIService {
           };
 
           const editResult = await this.editImage({
-            source_image: imageUrl,
+            source_image: imageInput,
             edit_prompt: input.edit_prompt,
             edit_type: editTypeMap[input.edit_type] as
               | "inpaint"
@@ -433,7 +451,10 @@ export class OpenAIService {
           processedCount++;
 
           return {
-            original_url: imageUrl,
+            original_url:
+              imageInput.type === "url"
+                ? imageInput.value
+                : `${imageInput.type}:${imageInput.value.substring(0, 50)}...`,
             success: true,
             edited_image: editResult.edited_image,
           };
@@ -441,7 +462,10 @@ export class OpenAIService {
           failedCount++;
 
           return {
-            original_url: imageUrl,
+            original_url:
+              imageInput.type === "url"
+                ? imageInput.value
+                : `${imageInput.type}:${imageInput.value.substring(0, 50)}...`,
             success: false,
             error: error instanceof Error ? error.message : "Unknown error",
           };
@@ -452,12 +476,14 @@ export class OpenAIService {
         const maxConcurrent = settings.max_concurrent || 3;
         const chunks = [];
 
-        for (let i = 0; i < input.image_urls.length; i += maxConcurrent) {
-          chunks.push(input.image_urls.slice(i, i + maxConcurrent));
+        for (let i = 0; i < imageInputs.length; i += maxConcurrent) {
+          chunks.push(imageInputs.slice(i, i + maxConcurrent));
         }
 
         for (const chunk of chunks) {
-          const promises = chunk.map((url, index) => processImage(url, index));
+          const promises = chunk.map((imageInput, index) =>
+            processImage(imageInput, index),
+          );
           const chunkResults = await Promise.allSettled(promises);
 
           for (const result of chunkResults) {
@@ -477,10 +503,10 @@ export class OpenAIService {
           }
         }
       } else {
-        for (let i = 0; i < input.image_urls.length; i++) {
-          const imageUrl = input.image_urls[i];
-          if (imageUrl != null) {
-            const result = await processImage(imageUrl, i);
+        for (let i = 0; i < imageInputs.length; i++) {
+          const imageInput = imageInputs[i];
+          if (imageInput != null) {
+            const result = await processImage(imageInput, i);
             results.push(result);
           }
         }
@@ -489,24 +515,32 @@ export class OpenAIService {
       const totalTime = Date.now() - startTime;
 
       return {
-        total_images: input.image_urls.length,
+        total_images: imageInputs.length,
         processed_images: processedCount,
         failed_images: failedCount,
         results,
         metadata: {
           total_time_ms: totalTime,
-          average_time_per_image_ms: totalTime / input.image_urls.length,
+          average_time_per_image_ms: totalTime / imageInputs.length,
           model_used: "gpt-image-1",
           parallel_processing: settings.parallel_processing ?? false,
         },
       };
     } catch (error) {
-      const failedUrls = input.image_urls.filter(
-        (_, index) => !(results[index]?.success ?? false),
-      );
-      const successfulUrls = input.image_urls.filter(
-        (_, index) => results[index]?.success ?? false,
-      );
+      const failedUrls = imageInputs
+        .filter((_, index) => !(results[index]?.success ?? false))
+        .map((input) =>
+          input.type === "url"
+            ? input.value
+            : `${input.type}:${input.value.substring(0, 50)}...`,
+        );
+      const successfulUrls = imageInputs
+        .filter((_, index) => results[index]?.success ?? false)
+        .map((input) =>
+          input.type === "url"
+            ? input.value
+            : `${input.type}:${input.value.substring(0, 50)}...`,
+        );
 
       throw new BatchProcessingError(
         "Batch processing failed",
@@ -577,7 +611,7 @@ export class OpenAIService {
   }
 
   private handleOpenAIError(error: unknown): Error {
-    if (error && typeof error === "object" && "error" in error) {
+    if (error != null && typeof error === "object" && "error" in error) {
       const openaiError = error as {
         error: { type: string; message: string } | null;
       };
@@ -620,31 +654,6 @@ export class OpenAIService {
     return new Error("OpenAI API error: Unknown error");
   }
 
-  private async downloadImageAsBuffer(imageUrl: string): Promise<ArrayBuffer> {
-    // Handle base64 data URLs
-    if (imageUrl.startsWith("data:")) {
-      const base64Data = imageUrl.split(",")[1];
-      if (!base64Data) {
-        throw new Error("Invalid base64 data URL");
-      }
-
-      // Convert base64 to ArrayBuffer
-      const binaryString = Buffer.from(base64Data, "base64");
-
-      return binaryString.buffer.slice(
-        binaryString.byteOffset,
-        binaryString.byteOffset + binaryString.byteLength,
-      );
-    }
-
-    // Handle HTTP URLs
-    const response = await fetch(imageUrl);
-    if (!response.ok) {
-      throw new Error(
-        `Failed to download image: ${response.status} ${response.statusText}`,
-      );
-    }
-
-    return await response.arrayBuffer();
-  }
+  // REMOVED: downloadImageAsBuffer - replaced with loadImageAsBuffer from image-input utility
+  // This provides better type safety, security validation, and support for local files
 }

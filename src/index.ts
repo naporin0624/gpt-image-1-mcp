@@ -7,18 +7,50 @@ import {
 import { config } from "dotenv";
 
 import { EditImageInputSchema, BatchEditInputSchema } from "./types/edit.js";
-import type {
-  OptimizedGenerateImageResponse} from "./types/image.js";
-import {
-  GenerateImageInputSchema,
-  mapLegacyQuality
-} from "./types/image.js";
+import type { OptimizedGenerateImageResponse } from "./types/image.js";
+import { GenerateImageInputSchema, mapLegacyQuality } from "./types/image.js";
 
+import { normalizeImageInput } from "./utils/image-input.js";
 import { OpenAIService } from "./utils/openai.js";
 import {
   validateEnglishOnly,
   formatValidationError,
 } from "./utils/validation.js";
+
+// Type guards for runtime type checking
+function isStringArray(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) &&
+    value.every((item): item is string => typeof item === "string")
+  );
+}
+
+function hasImageUrls(obj: unknown): obj is { image_urls: string[] } {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    "image_urls" in obj &&
+    isStringArray((obj as Record<string, unknown>).image_urls)
+  );
+}
+
+function hasImages(obj: unknown): obj is { images: unknown[] } {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    "images" in obj &&
+    Array.isArray((obj as Record<string, unknown>).images)
+  );
+}
+
+function hasSourceImage(obj: unknown): obj is { source_image: string } {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    "source_image" in obj &&
+    typeof (obj as Record<string, unknown>).source_image === "string"
+  );
+}
 
 config();
 
@@ -129,8 +161,21 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           type: "object",
           properties: {
             source_image: {
-              type: "string",
-              description: "Image URL or base64 encoded image",
+              type: "object",
+              properties: {
+                type: {
+                  type: "string",
+                  enum: ["url", "base64", "local"],
+                  description: "Type of image input",
+                },
+                value: {
+                  type: "string",
+                  description: "Image URL, base64 data, or local file path",
+                },
+              },
+              required: ["type", "value"],
+              description:
+                "Image input as discriminated union (URL, base64, or local file)",
             },
             edit_prompt: {
               type: "string",
@@ -208,12 +253,34 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         inputSchema: {
           type: "object",
           properties: {
+            images: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  type: {
+                    type: "string",
+                    enum: ["url", "base64", "local"],
+                    description: "Type of image input",
+                  },
+                  value: {
+                    type: "string",
+                    description: "Image URL, base64 data, or local file path",
+                  },
+                },
+                required: ["type", "value"],
+              },
+              description:
+                "Array of image inputs as discriminated union (URL, base64, or local file)",
+            },
+            // Deprecated: kept for backward compatibility
             image_urls: {
               type: "array",
               items: {
                 type: "string",
               },
-              description: "Array of image URLs to edit",
+              description:
+                "[DEPRECATED] Array of image URLs to edit - use 'images' instead",
             },
             edit_prompt: {
               type: "string",
@@ -285,7 +352,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
               description: "Subdirectory organization strategy",
             },
           },
-          required: ["image_urls", "edit_prompt", "edit_type"],
+          required: ["edit_prompt", "edit_type"],
         },
       },
     ],
@@ -322,21 +389,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               text: `Generated image successfully!
 
 Prompt: "${input.prompt}"
-Size: ${result.metadata?.width || "unknown"}x${result.metadata?.height || "unknown"}
+Size: ${result.metadata?.width ?? "unknown"}x${result.metadata?.height ?? "unknown"}
 Aspect ratio: ${input.aspect_ratio}
 Quality: ${input.quality || "medium"}
 Model: gpt-image-1
 
 ${
-  result.file_path
+  result.file_path !== null &&
+  result.file_path !== undefined &&
+  result.file_path.length > 0
     ? `Local file: ${result.file_path}
-File size: ${result.metadata?.size_bytes || 0} bytes
-Format: ${result.metadata?.format || "unknown"}
-Created at: ${result.metadata?.created_at || "unknown"}
+File size: ${result.metadata?.size_bytes ?? 0} bytes
+Format: ${result.metadata?.format ?? "unknown"}
+Created at: ${result.metadata?.created_at ?? "unknown"}
 `
     : ""
 }${
-                result.base64_image
+                result.base64_image !== null &&
+                result.base64_image !== undefined &&
+                result.base64_image.length > 0
                   ? `Base64 data included in response (${Math.ceil((result.base64_image as string).length * 0.75)} bytes)`
                   : ""
               }${
@@ -353,7 +424,17 @@ Created at: ${result.metadata?.created_at || "unknown"}
 
     case "edit-image":
       try {
-        const input = EditImageInputSchema.parse(args);
+        const rawInput = args || {};
+
+        // Handle backward compatibility for source_image
+        const processedInput = {
+          ...rawInput,
+          source_image: hasSourceImage(rawInput)
+            ? normalizeImageInput(rawInput.source_image)
+            : rawInput.source_image,
+        };
+
+        const input = EditImageInputSchema.parse(processedInput);
 
         // Validate English-only input
         validateEnglishOnly(input.edit_prompt, "edit_prompt");
@@ -371,7 +452,7 @@ Edit Type: ${result.edited_image.edit_type}
 Edit Strength: ${result.edited_image.strength}
 Edit prompt: "${result.edited_image.original_prompt}"
 
-Edited Image URL: ${result.edited_image.image_url || result.edited_image.local_file_path || "N/A"}
+Edited Image URL: ${result.edited_image.image_url ?? result.edited_image.local_file_path ?? "N/A"}
 ${
   result.edited_image.local_path != null
     ? `Local file: ${result.edited_image.local_path}
@@ -397,7 +478,29 @@ Mask applied: ${result.metadata.mask_applied}`,
 
     case "batch-edit":
       try {
-        const input = BatchEditInputSchema.parse(args);
+        const rawInput = args || {};
+
+        // Validate that at least one of images or image_urls is provided
+        if (!hasImages(rawInput) && !hasImageUrls(rawInput)) {
+          throw new Error(
+            "Either 'images' or 'image_urls' parameter must be provided",
+          );
+        }
+
+        // Handle backward compatibility for image_urls -> images
+        const processedInput = {
+          ...rawInput,
+          // Convert image_urls to images format if needed
+          ...(hasImageUrls(rawInput) && !hasImages(rawInput)
+            ? {
+                images: rawInput.image_urls.map((url: string) =>
+                  normalizeImageInput(url),
+                ),
+              }
+            : {}),
+        };
+
+        const input = BatchEditInputSchema.parse(processedInput);
 
         // Validate English-only input
         validateEnglishOnly(input.edit_prompt, "edit_prompt");
@@ -424,7 +527,7 @@ Image ${index + 1}: ${item.success ? "✓ Success" : "✗ Failed"}
 - Original: ${item.original_url}
 ${
   item.success && item.edited_image
-    ? `- Edited: ${item.edited_image.image_url || item.edited_image.local_file_path || "N/A"}
+    ? `- Edited: ${item.edited_image.image_url ?? item.edited_image.local_file_path ?? "N/A"}
 ${item.edited_image.local_path != null ? `- Local file: ${item.edited_image.local_path}` : ""}`
     : ""
 }

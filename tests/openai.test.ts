@@ -18,6 +18,10 @@ interface OpenAIServiceTestAccess {
 vi.mock("openai");
 vi.mock("../src/utils/file-manager.js");
 
+// Mock fetch for loadImageAsBuffer
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
+
 describe("OpenAI Integration", () => {
   let mockOpenAI: Mocked<OpenAI>;
 
@@ -34,7 +38,17 @@ describe("OpenAI Integration", () => {
         },
       },
     } as unknown as Mocked<OpenAI>;
+
     vi.clearAllMocks();
+
+    // Mock fetch for loadImageAsBuffer (after clearAllMocks)
+    mockFetch.mockResolvedValue({
+      ok: true,
+      headers: {
+        get: vi.fn().mockReturnValue("image/jpeg"),
+      },
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(1024)),
+    });
   });
 
   describe("Image Generation", () => {
@@ -139,6 +153,9 @@ describe("OpenAI Integration", () => {
       // Mock fetch for image downloads
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
+        headers: {
+          get: vi.fn().mockReturnValue("image/jpeg"),
+        },
         arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(100)),
       });
 
@@ -184,7 +201,7 @@ describe("OpenAI Integration", () => {
       mockFileManager.saveImage.mockResolvedValue(mockFileResult);
 
       const input: EditImageInput = {
-        source_image: "https://example.com/source.jpg",
+        source_image: { type: "url", value: "https://example.com/source.jpg" },
         edit_prompt: "Make it colorful",
         edit_type: "style_transfer",
         model: "gpt-image-1",
@@ -237,7 +254,7 @@ describe("OpenAI Integration", () => {
     it("should always save base64 data to file even when save_to_file is false", async () => {
       // Arrange
       const input: EditImageInput = {
-        source_image: "https://example.com/source.jpg",
+        source_image: { type: "url", value: "https://example.com/source.jpg" },
         edit_prompt: "Make it colorful",
         edit_type: "style_transfer",
         model: "gpt-image-1", // Returns base64 data
@@ -271,7 +288,7 @@ describe("OpenAI Integration", () => {
       mockFileManager.saveImage.mockRejectedValue(new Error("Disk full"));
 
       const input: EditImageInput = {
-        source_image: "https://example.com/source.jpg",
+        source_image: { type: "url", value: "https://example.com/source.jpg" },
         edit_prompt: "Make it colorful",
         edit_type: "style_transfer",
         model: "gpt-image-1",
@@ -316,6 +333,9 @@ describe("OpenAI Integration", () => {
       // Mock fetch for image downloads
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
+        headers: {
+          get: vi.fn().mockReturnValue("image/jpeg"),
+        },
         arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(100)),
       });
 
@@ -361,9 +381,9 @@ describe("OpenAI Integration", () => {
       mockFileManager.saveImage.mockResolvedValue(mockFileResult);
 
       const input: BatchEditInput = {
-        image_urls: [
-          "https://example.com/image1.jpg",
-          "https://example.com/image2.jpg",
+        images: [
+          { type: "url", value: "https://example.com/image1.jpg" },
+          { type: "url", value: "https://example.com/image2.jpg" },
         ],
         edit_prompt: "Make it artistic",
         edit_type: "style_transfer",
@@ -419,7 +439,7 @@ describe("OpenAI Integration", () => {
     it("should always save base64 data to file even when save_to_file is false", async () => {
       // Arrange
       const input: BatchEditInput = {
-        image_urls: ["https://example.com/image1.jpg"],
+        images: [{ type: "url", value: "https://example.com/image1.jpg" }],
         edit_prompt: "Make it artistic",
         edit_type: "style_transfer",
         save_to_file: false, // Even though this is false...

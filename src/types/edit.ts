@@ -14,8 +14,24 @@ export const EditModelSchema = z.enum(["gpt-image-1"]);
 
 export const EditStrengthSchema = z.number().min(0.0).max(1.0);
 
+// Image input discriminated union
+export const ImageInputSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("url"),
+    value: z.string().url("Valid URL is required"),
+  }),
+  z.object({
+    type: z.literal("base64"),
+    value: z.string().min(1, "Base64 data is required"),
+  }),
+  z.object({
+    type: z.literal("local"),
+    value: z.string().min(1, "File path is required"),
+  }),
+]);
+
 export const EditImageInputSchema = z.object({
-  source_image: z.string().min(1, "Source image URL or base64 is required"),
+  source_image: ImageInputSchema,
   edit_prompt: z.string().min(1, "Edit prompt is required"),
   edit_type: EditTypeSchema,
   model: EditModelSchema.optional().default("gpt-image-1"),
@@ -81,9 +97,12 @@ export const EditImageResultSchema = z.object({
 // REMOVED: VariationResultSchema - variations not supported by gpt-image-1
 
 export const BatchEditInputSchema = z.object({
+  images: z.array(ImageInputSchema).min(1, "At least one image is required"),
+  // Deprecated: kept for backward compatibility
   image_urls: z
     .array(z.string().url())
-    .min(1, "At least one image URL is required"),
+    .min(1, "At least one image URL is required")
+    .optional(),
   edit_prompt: z.string().min(1, "Edit prompt is required"),
   edit_type: z.enum([
     "style_transfer",
@@ -182,6 +201,7 @@ export const MaskResultSchema = z.object({
 export type EditType = z.infer<typeof EditTypeSchema>;
 export type EditModel = z.infer<typeof EditModelSchema>;
 export type EditStrength = z.infer<typeof EditStrengthSchema>;
+export type ImageInput = z.infer<typeof ImageInputSchema>;
 export type EditImageInput = z.infer<typeof EditImageInputSchema>;
 export type EditImageResult = z.infer<typeof EditImageResultSchema>;
 // REMOVED: VariationInput, VariationResult - variations not supported by gpt-image-1

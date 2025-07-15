@@ -305,10 +305,10 @@ export class FileManager {
       organizeBy: options.organize_by,
       date: new Date(),
     };
-    if (metadata.aspectRatio) {
+    if (metadata.aspectRatio != null && metadata.aspectRatio.length > 0) {
       directoryOptions.aspectRatio = metadata.aspectRatio;
     }
-    if (metadata.quality) {
+    if (metadata.quality != null && metadata.quality.length > 0) {
       directoryOptions.quality = metadata.quality;
     }
     const outputDir = this.getOrganizedDirectory(directoryOptions);
@@ -321,9 +321,14 @@ export class FileManager {
         ? this.resolveCustomFilename(options.filename, outputDir)
         : this.generateFileName({
             strategy: options.naming_strategy,
-            ...(metadata.prompt && { prompt: metadata.prompt }),
-            ...(metadata.aspectRatio && { aspectRatio: metadata.aspectRatio }),
-            ...(metadata.quality && { quality: metadata.quality }),
+            ...(metadata.prompt != null &&
+              metadata.prompt.length > 0 && { prompt: metadata.prompt }),
+            ...(metadata.aspectRatio != null &&
+              metadata.aspectRatio.length > 0 && {
+                aspectRatio: metadata.aspectRatio,
+              }),
+            ...(metadata.quality != null &&
+              metadata.quality.length > 0 && { quality: metadata.quality }),
           });
 
     const outputPath = join(outputDir, filename);
