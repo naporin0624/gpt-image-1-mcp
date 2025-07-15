@@ -121,6 +121,28 @@ All errors follow a consistent format across all tools:
 
 ### Validation Errors
 
+#### VALIDATION_ERROR
+
+- **Description**: Input validation failed (e.g., non-English text detected)
+- **HTTP Status**: 400
+- **Retry**: No (fix input)
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Only English text is supported for optimal gpt-image-1 performance",
+    "details": {
+      "field": "prompt",
+      "detected_language": "japanese",
+      "suggestion": "Please translate your prompt to English using your LLM client first",
+      "example": "Use your LLM: 'Translate to English: 美しい桜の花'"
+    }
+  }
+}
+```
+
 #### INVALID_PARAMS
 
 - **Description**: Invalid parameters provided
@@ -521,6 +543,10 @@ async function generateImage(prompt: string) {
     console.error("Image generation failed:", error.message);
 
     switch (error.code) {
+      case "VALIDATION_ERROR":
+        throw new Error(
+          "Please translate your prompt to English using your LLM first."
+        );
       case "RATE_LIMIT_EXCEEDED":
         throw new Error("Rate limit exceeded. Please try again later.");
       case "CONTENT_POLICY_VIOLATION":
@@ -635,8 +661,7 @@ async function healthCheck() {
   const tests = [
     { name: "API Key", test: () => testApiKey() },
     { name: "Image Generation", test: () => testImageGeneration() },
-    { name: "Image Analysis", test: () => testImageAnalysis() },
-    { name: "Translation", test: () => testTranslation() },
+    { name: "Image Editing", test: () => testImageEditing() },
   ];
 
   const results = await Promise.allSettled(
