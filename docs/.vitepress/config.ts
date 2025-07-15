@@ -13,7 +13,7 @@ export default defineConfig({
       { text: "Home", link: "/" },
       { text: "Guide", link: "/guide/getting-started" },
       { text: "Reference", link: "/api/tools" },
-      { text: "Examples", link: "/examples/basic-usage" },
+      { text: "Examples", link: "/examples/" },
     ],
 
     sidebar: {
@@ -60,6 +60,18 @@ export default defineConfig({
       ],
 
       "/examples/": [
+        {
+          text: "Visual Examples",
+          items: [
+            { text: "Overview", link: "/examples/" },
+            {
+              text: "Image Generation",
+              link: "/examples/generate-image-examples",
+            },
+            { text: "Image Editing", link: "/examples/edit-image-examples" },
+            { text: "Batch Processing", link: "/examples/batch-edit-examples" },
+          ],
+        },
         {
           text: "Usage Examples",
           items: [
