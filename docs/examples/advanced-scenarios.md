@@ -36,45 +36,20 @@ async function iterativeImageRefinement(
       style: "vivid",
     });
 
-    // Analyze generated image
-    const analysisResult = await client.callTool("analyze-image", {
-      image_url: imageResult.data.image_url,
-      analysis_type: "detailed",
-      questions: [
-        "How well does this match the original prompt?",
-        "What is the overall quality score from 0-1?",
-        "What specific improvements could be made?",
-        "Are there any obvious flaws or issues?",
-      ],
-    });
+    // Keep best result (simplified approach without analysis)
+    bestResult = {
+      image: imageResult.data,
+      prompt: currentPrompt,
+      iteration: iteration + 1,
+    };
 
-    // Calculate quality score
-    const qualityScore = parseFloat(
-      analysisResult.data.questions[1].answer.match(/[\d.]+/)?.[0] || "0",
-    );
+    console.log(`Generated iteration ${iteration + 1}`);
 
-    console.log(`Quality score: ${qualityScore}`);
-
-    // Keep best result
-    if (qualityScore > bestScore) {
-      bestScore = qualityScore;
-      bestResult = {
-        image: imageResult.data,
-        analysis: analysisResult.data,
-        prompt: currentPrompt,
-        iteration: iteration + 1,
-      };
-    }
-
-    // Check if we've reached target quality
-    if (qualityScore >= targetQuality) {
-      console.log(`Target quality reached at iteration ${iteration + 1}`);
+    // For demonstration, we'll consider the first successful generation as complete
+    if (iteration === 0) {
+      console.log(`Image generated successfully`);
       break;
     }
-
-    // Refine prompt based on analysis
-    const improvements = analysisResult.data.questions[2].answer;
-    currentPrompt = await refinePrompt(currentPrompt, improvements);
   }
 
   return bestResult;
@@ -84,13 +59,8 @@ async function refinePrompt(
   originalPrompt: string,
   improvements: string,
 ): Promise<string> {
-  // Use translation tool for prompt optimization
-  const refinedResult = await client.callTool("translate-prompt", {
-    japanese_prompt: `${originalPrompt}を改善して、以下の点を考慮してください: ${improvements}`,
-    context: "artistic",
-  });
-
-  return refinedResult.data.optimized_prompt;
+  // Simple prompt refinement by appending improvements
+  return `${originalPrompt}, ${improvements}`;
 }
 ```
 
@@ -123,28 +93,13 @@ async function abTestImageGeneration(
           ...variant,
         });
 
-        // Analyze against criteria
-        const analysisResult = await client.callTool("analyze-image", {
-          image_url: imageResult.data.image_url,
-          analysis_type: "detailed",
-          questions: evaluationCriteria,
-        });
-
-        // Calculate overall score
-        const scores = analysisResult.data.questions.map((q) => {
-          const match = q.answer.match(/(\d+(?:\.\d+)?)/);
-          return match ? parseFloat(match[1]) : 0;
-        });
-
-        const averageScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+        // For A/B testing without analysis, we'll use generation metadata
 
         promptResults.push({
           variant,
           image: imageResult.data,
-          analysis: analysisResult.data,
-          scores,
-          averageScore,
           prompt,
+          timestamp: new Date().toISOString(),
         });
 
         // Rate limiting
@@ -162,9 +117,7 @@ async function abTestImageGeneration(
     results.push({
       prompt,
       variants: promptResults,
-      bestVariant: promptResults.reduce((best, current) =>
-        (current.averageScore || 0) > (best.averageScore || 0) ? current : best,
-      ),
+      bestVariant: promptResults.find(v => v.image) || promptResults[0],
     });
   }
 
@@ -203,20 +156,8 @@ async function smartQualityOptimization(
         const estimatedSize = quality === "hd" ? 3000000 : 1500000;
 
         if (estimatedSize <= targetFileSize) {
-          // Analyze quality
-          const analysis = await client.callTool("analyze-image", {
-            image_url: result.data.image_url,
-            analysis_type: "technical",
-            questions: [
-              "What is the technical quality of this image?",
-              "Are there any compression artifacts?",
-              "Is the detail level appropriate?",
-            ],
-          });
-
           return {
             image: result.data,
-            analysis: analysis.data,
             settings: { quality, style },
             fileSize: estimatedSize,
             attempt: attempt + 1,

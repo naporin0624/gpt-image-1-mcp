@@ -28,18 +28,12 @@ class WordPressImageGenerator {
   }
 
   async generateFeaturedImage(postId: number, title: string, excerpt: string) {
-    // Generate Japanese prompt from post content
-    const prompt = `${title}の記事のアイキャッチ画像。${excerpt}`;
-
-    // Translate and optimize prompt
-    const translation = await this.client.callTool("translate-prompt", {
-      japanese_prompt: prompt,
-      context: "artistic",
-    });
+    // Generate English prompt from post content
+    const prompt = `Featured image for article: ${title}. ${excerpt}`;
 
     // Generate image
     const image = await this.client.callTool("generate-image", {
-      prompt: translation.data.optimized_prompt,
+      prompt: prompt,
       aspect_ratio: "landscape",
       quality: "hd",
     });
@@ -57,7 +51,7 @@ class WordPressImageGenerator {
       postId,
       imageUrl: image.data.image_url,
       wordpressMediaId: mediaResponse.id,
-      prompt: translation.data.optimized_prompt,
+      prompt: prompt,
     };
   }
 
@@ -111,21 +105,16 @@ class ShopifyProductImageGenerator {
 
     // Generate multiple image variations
     const prompts = [
-      `${title}の商品写真。白背景でプロフェッショナルな商品撮影`,
-      `${title}のライフスタイル写真。${description}`,
-      `${vendor}ブランドの${title}。${tags.join("、")}のスタイル`,
+      `Product photo of ${title} on white background, professional product photography`,
+      `Lifestyle photo featuring ${title}. ${description}`,
+      `${vendor} brand ${title} in ${tags.join(", ")} style`,
     ];
 
     const images = [];
 
     for (const [index, prompt] of prompts.entries()) {
-      const translation = await this.client.callTool("translate-prompt", {
-        japanese_prompt: prompt,
-        context: "photographic",
-      });
-
       const image = await this.client.callTool("generate-image", {
-        prompt: translation.data.optimized_prompt,
+        prompt: prompt,
         aspect_ratio: "square",
         quality: "hd",
       });
@@ -140,8 +129,7 @@ class ShopifyProductImageGenerator {
       images.push({
         shopifyId: shopifyImage.id,
         url: shopifyImage.src,
-        originalPrompt: prompt,
-        translatedPrompt: translation.data.optimized_prompt,
+        prompt: prompt,
       });
 
       // Rate limiting
@@ -193,16 +181,10 @@ class TwitterImageBot {
     this.twitterClient = new TwitterApi(twitterCredentials);
   }
 
-  async createScheduledPost(japaneseText: string, scheduledTime: Date) {
-    // Translate content
-    const translation = await this.client.callTool("translate-prompt", {
-      japanese_prompt: japaneseText,
-      context: "artistic",
-    });
-
+  async createScheduledPost(englishText: string, scheduledTime: Date) {
     // Generate image
     const image = await this.client.callTool("generate-image", {
-      prompt: translation.data.optimized_prompt,
+      prompt: englishText,
       aspect_ratio: "landscape",
       quality: "hd",
     });
@@ -212,15 +194,14 @@ class TwitterImageBot {
 
     // Schedule tweet
     const tweet = await this.twitterClient.v2.tweet({
-      text: `${translation.data.english_prompt} #AI #GeneratedArt`,
+      text: `${englishText} #AI #GeneratedArt`,
       media: { media_ids: [mediaId] },
     });
 
     return {
       tweetId: tweet.data.id,
       imageUrl: image.data.image_url,
-      originalText: japaneseText,
-      translatedText: translation.data.english_prompt,
+      text: englishText,
     };
   }
 
@@ -249,13 +230,8 @@ class InstagramImageGenerator {
 
   async createInstagramPost(caption: string, hashtags: string[]) {
     // Generate image from caption
-    const translation = await this.client.callTool("translate-prompt", {
-      japanese_prompt: caption,
-      context: "artistic",
-    });
-
     const image = await this.client.callTool("generate-image", {
-      prompt: translation.data.optimized_prompt,
+      prompt: caption,
       aspect_ratio: "square",
       quality: "hd",
     });
@@ -270,7 +246,7 @@ class InstagramImageGenerator {
         },
         body: JSON.stringify({
           image_url: image.data.image_url,
-          caption: `${translation.data.english_prompt}\n\n${hashtags.join(" ")}`,
+          caption: `${caption}\n\n${hashtags.join(" ")}`,
           access_token: this.accessToken,
         }),
       },
@@ -492,40 +468,22 @@ const imageGenerationWorker = new Worker(
       // Update job progress
       await job.updateProgress(10);
 
-      // Translate if needed
-      let finalPrompt = prompt;
-      if (options.translateJapanese) {
-        const translation = await client.callTool("translate-prompt", {
-          japanese_prompt: prompt,
-          context: options.context || "general",
-        });
-        finalPrompt = translation.data.optimized_prompt;
-      }
-
       await job.updateProgress(30);
 
       // Generate image
       const image = await client.callTool("generate-image", {
-        prompt: finalPrompt,
+        prompt: prompt,
         ...options,
       });
 
       await job.updateProgress(70);
 
-      // Analyze result
-      const analysis = await client.callTool("analyze-image", {
-        image_url: image.data.image_url,
-        analysis_type: "technical",
-      });
-
-      await job.updateProgress(90);
+            await job.updateProgress(90);
 
       // Store result
       await storeResult(userId, requestId, {
         image: image.data,
-        analysis: analysis.data,
-        originalPrompt: prompt,
-        finalPrompt,
+        prompt: prompt,
       });
 
       await job.updateProgress(100);
@@ -716,11 +674,12 @@ ipcMain.handle("generate-image", async (event, { prompt, options }) => {
   }
 });
 
-ipcMain.handle("analyze-image", async (event, { imageUrl, questions }) => {
+ipcMain.handle("edit-image", async (event, { sourceImage, editPrompt, editType }) => {
   try {
-    const result = await client.callTool("analyze-image", {
-      image_url: imageUrl,
-      questions,
+    const result = await client.callTool("edit-image", {
+      source_image: sourceImage,
+      edit_prompt: editPrompt,
+      edit_type: editType,
     });
 
     return { success: true, data: result.data };

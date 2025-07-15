@@ -25,31 +25,30 @@ console.log("Image generated:", result.data.local_path);
 console.log("Image URL:", result.data.image_url);
 ```
 
-### Basic Image Analysis
+### Image Editing
 
 ```typescript
-// Analyze an existing image
-const analysis = await client.callTool("analyze-image", {
-  image_url: "https://example.com/image.jpg",
+// Edit an existing image
+const editResult = await client.callTool("edit-image", {
+  source_image: "https://example.com/image.jpg",
+  edit_prompt: "Add a sunset sky background",
+  edit_type: "background_change",
 });
 
-console.log("Analysis:", analysis.data.description);
+console.log("Edited image:", editResult.data.file_path);
 ```
 
-### Japanese Prompt Translation
+### English Prompt Best Practices
 
 ```typescript
-// Translate Japanese to English for better gpt-image-1 results
-const translation = await client.callTool("translate-prompt", {
-  japanese_prompt: "桜の花が咲く美しい日本庭園",
-});
-
-console.log("Translated prompt:", translation.data.english_prompt);
-
-// Use the translated prompt for image generation
+// Use clear, descriptive English prompts for best gpt-image-1 results
 const result = await client.callTool("generate-image", {
-  prompt: translation.data.english_prompt,
+  prompt: "A beautiful Japanese garden with cherry blossoms in bloom",
+  quality: "hd",
+  aspect_ratio: "landscape",
 });
+
+console.log("Image generated:", result.data.file_path);
 ```
 
 ## Common Use Cases
@@ -58,7 +57,7 @@ const result = await client.callTool("generate-image", {
 
 ```typescript
 async function createContentImage(topic: string) {
-  // Step 1: Generate image
+  // Generate professional illustration
   const imageResult = await client.callTool("generate-image", {
     prompt: `A professional illustration representing ${topic}, modern flat design style, vibrant colors`,
     aspect_ratio: "landscape",
@@ -66,24 +65,15 @@ async function createContentImage(topic: string) {
     style: "vivid",
   });
 
-  // Step 2: Analyze the generated image
-  const analysisResult = await client.callTool("analyze-image", {
-    image_url: imageResult.data.image_url,
-    questions: [
-      "What is the main subject of this image?",
-      "What colors are predominant?",
-      "Is this suitable for professional use?",
-    ],
-  });
-
   return {
     image: imageResult.data,
-    analysis: analysisResult.data,
+    topic,
   };
 }
 
 // Usage
 const content = await createContentImage("artificial intelligence");
+console.log(`Generated image for ${content.topic}:`, content.image.file_path);
 ```
 
 ### 2. E-commerce Product Mockups
@@ -155,19 +145,14 @@ async function createEducationalDiagram(concept: string) {
     aspect_ratio: "landscape",
     quality: "hd",
     style: "natural",
-    analyze_after_generation: true,
   });
 
-  return {
-    image: result.data,
-    analysis: result.data.analysis,
-  };
+  return result.data;
 }
 
 // Create educational content
 const diagram = await createEducationalDiagram("how solar panels work");
-console.log("Educational diagram created:", diagram.image.local_path);
-console.log("Content analysis:", diagram.analysis.description);
+console.log("Educational diagram created:", diagram.file_path);
 ```
 
 ### 5. Brand Identity Assets
@@ -282,18 +267,8 @@ async function createProgressiveImage(basePrompt: string) {
     filename: "preview",
   });
 
-  // Analyze the preview
-  const analysis = await client.callTool("analyze-image", {
-    image_url: standardResult.data.image_url,
-    questions: [
-      "Is this image composition good?",
-      "Are the colors appropriate?",
-      "What could be improved?",
-    ],
-  });
-
-  // Enhance based on analysis
-  const enhancedPrompt = `${basePrompt}, ${analysis.data.answers.map((a) => a.answer).join(", ")}`;
+  // Generate high quality version with enhanced prompt
+  const enhancedPrompt = `${basePrompt}, high quality, professional composition, vibrant colors`;
 
   const hdResult = await client.callTool("generate-image", {
     prompt: enhancedPrompt,
@@ -303,7 +278,6 @@ async function createProgressiveImage(basePrompt: string) {
 
   return {
     preview: standardResult.data,
-    analysis: analysis.data,
     final: hdResult.data,
   };
 }
@@ -312,42 +286,28 @@ async function createProgressiveImage(basePrompt: string) {
 const progressive = await createProgressiveImage("A modern office workspace");
 ```
 
-### 3. Multilingual Content Creation
+### 3. High-Quality Content Creation
 
 ```typescript
-async function createMultilingualContent(japanesePrompt: string) {
-  // Translate Japanese prompt
-  const translation = await client.callTool("translate-prompt", {
-    japanese_prompt: japanesePrompt,
-    context: "artistic",
-    preserve_technical_terms: true,
-  });
-
-  // Generate image with translated prompt
+async function createHighQualityContent(englishPrompt: string) {
+  // Generate image with optimized settings
   const imageResult = await client.callTool("generate-image", {
-    prompt: translation.data.english_prompt,
+    prompt: englishPrompt,
     aspect_ratio: "landscape",
     quality: "hd",
     style: "vivid",
   });
 
-  // Analyze generated image
-  const analysis = await client.callTool("analyze-image", {
-    image_url: imageResult.data.image_url,
-    analysis_type: "detailed",
-  });
-
   return {
-    original_prompt: japanesePrompt,
-    translated_prompt: translation.data.english_prompt,
+    prompt: englishPrompt,
     image: imageResult.data,
-    analysis: analysis.data,
   };
 }
 
 // Usage
-const multilingualContent =
-  await createMultilingualContent("美しい桜の花が咲く春の日本庭園");
+const content = await createHighQualityContent(
+  "A beautiful Japanese garden with cherry blossoms in spring"
+);
 ```
 
 ## Error Handling Best Practices
@@ -435,4 +395,4 @@ async function generateWithRetry(prompt: string, maxRetries = 3) {
 - [Advanced Scenarios](/examples/advanced-scenarios.md) - Complex workflows and patterns
 - [Integration Patterns](/examples/integration-patterns.md) - Integrate with other systems
 - [API Reference](/api/tools.md) - Complete API documentation
-- [Vision Analysis](/guide/vision-analysis.md) - Analyze generated images
+- [Image Generation Guide](/guide/image-generation.md) - Detailed generation guide
