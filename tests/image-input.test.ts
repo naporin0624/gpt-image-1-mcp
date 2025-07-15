@@ -415,10 +415,7 @@ describe("image-input utilities", () => {
 
   describe("loadImageAsBuffer - error cases", () => {
     test("should throw error for unsupported input type", async () => {
-      const input = { type: "unsupported", value: "test" } as {
-        type: string;
-        value: string;
-      };
+      const input = { type: "unsupported", value: "test" } as never;
 
       await expect(loadImageAsBuffer(input)).rejects.toThrow(
         "Unsupported image input type: unsupported",
