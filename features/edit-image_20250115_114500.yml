@@ -1,0 +1,167 @@
+feature: Image Input Discriminated Union Support
+description: Add support for local file paths, URLs, and base64 as discriminated union types for edit-image and batch-edit tools
+created_at: 2025-01-15T11:45:00+09:00
+status: planned
+
+overview:
+  current_implementation:
+    edit_image:
+      - source_image accepts string (URL or base64 data URL)
+      - downloadImageAsBuffer method auto-detects URL vs base64
+      - local file paths not supported
+    batch_edit:
+      - image_urls accepts array of URL strings only
+      - local files and base64 not supported
+  
+  proposed_changes:
+    - implement discriminated union for explicit type specification
+    - add support for local file paths
+    - maintain backward compatibility with deprecation warnings
+
+implementation:
+  type_definitions:
+    file: src/types/edit.ts
+    changes:
+      - add ImageInputSchema as discriminated union:
+          types:
+            - type: "url", value: string (validated URL)
+            - type: "base64", value: string (base64 data)
+            - type: "local", value: string (file path)
+      - update EditImageInputSchema:
+          source_image: ImageInputSchema (was string)
+      - update BatchEditInputSchema:
+          images: array of ImageInputSchema (was image_urls)
+
+  utilities:
+    file: src/utils/image-input.ts (new)
+    exports:
+      - loadImageAsBuffer(input: ImageInput): Promise<ArrayBuffer>
+      - convertBufferToBase64DataUrl(buffer: ArrayBuffer, mimeType: string): string
+    internal_functions:
+      - loadLocalFileAsBuffer(filePath: string): Promise<ArrayBuffer>
+      - downloadImageFromUrl(url: string): Promise<ArrayBuffer>
+      - convertBase64ToBuffer(base64: string): ArrayBuffer
+    security:
+      - path validation to prevent directory traversal
+      - file size limits
+      - allowed file extensions validation
+
+  openai_service:
+    file: src/utils/openai.ts
+    changes:
+      - replace downloadImageAsBuffer with loadImageAsBuffer
+      - update editImage to handle ImageInput type
+      - update batchEdit to process array of ImageInput
+      - remove internal downloadImageAsBuffer method
+
+  mcp_server:
+    file: src/index.ts
+    changes:
+      edit_image_tool:
+        source_image:
+          type: object
+          properties:
+            type: enum ["url", "base64", "local"]
+            value: string
+          required: ["type", "value"]
+      
+      batch_edit_tool:
+        images:
+          type: array
+          items:
+            type: object
+            properties:
+              type: enum ["url", "base64", "local"]
+              value: string
+            required: ["type", "value"]
+
+backward_compatibility:
+  strategy:
+    - accept both string and ImageInput types
+    - auto-detect type for string inputs
+    - show deprecation warnings for string usage
+  
+  implementation:
+    normalizeImageInput:
+      input: string | ImageInput
+      returns: ImageInput
+      logic:
+        - if string starts with "data:": type="base64"
+        - if string starts with "http://" or "https://": type="url"
+        - else: type="local"
+
+testing:
+  unit_tests:
+    - image input type detection
+    - local file loading with various paths
+    - base64 conversion utilities
+    - URL downloading
+    - error cases (file not found, invalid path, etc.)
+  
+  integration_tests:
+    - edit-image with each input type
+    - batch-edit with mixed input types
+    - backward compatibility with string inputs
+    - security tests (directory traversal attempts)
+
+documentation:
+  readme_updates:
+    - new input format examples
+    - migration guide from string to discriminated union
+    - security considerations for local file access
+  
+  examples:
+    edit_image_url:
+      source_image:
+        type: "url"
+        value: "https://example.com/image.png"
+    
+    edit_image_local:
+      source_image:
+        type: "local"
+        value: "./images/photo.jpg"
+    
+    edit_image_base64:
+      source_image:
+        type: "base64"
+        value: "iVBORw0KGgoAAAANS..."
+
+security_considerations:
+  local_file_access:
+    - validate paths (no "..", absolute paths)
+    - optional allowed directories configuration
+    - file size limits (configurable via env)
+    - supported file extensions only
+  
+  input_validation:
+    - base64 format validation
+    - URL protocol restrictions (http/https only)
+    - path normalization and sanitization
+
+implementation_order:
+  1. create type definitions and schemas
+  2. implement image-input utility
+  3. add comprehensive tests
+  4. update OpenAI service
+  5. update MCP server definitions
+  6. add backward compatibility layer
+  7. update documentation
+
+benefits:
+  - type_safety: explicit type specification reduces runtime errors
+  - flexibility: support for local files improves usability
+  - performance: local files avoid network overhead
+  - clarity: LLM clients can explicitly specify input type
+
+risks_and_mitigations:
+  breaking_changes:
+    risk: existing integrations may break
+    mitigation: backward compatibility layer with deprecation period
+  
+  security:
+    risk: local file access vulnerabilities
+    mitigation: strict path validation and access controls
+  
+  complexity:
+    risk: increased API complexity
+    mitigation: clear documentation and examples

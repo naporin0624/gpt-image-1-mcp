@@ -1,0 +1,140 @@
+# Documentation Update Plan for gpt-image-1 Model Change
+# Created: 2025-01-15 12:00:00
+
+meta:
+  title: "Documentation and Image Assets Update for gpt-image-1"
+  description: "Complete documentation refresh to reflect the new gpt-image-1 model capabilities and regenerate all image assets"
+  priority: high
+  created_at: "2025-01-15"
+  model_change: "DALL-E 3 → gpt-image-1"
+
+objectives:
+  - Regenerate all documentation images using gpt-image-1 model
+  - Update documentation to reflect gpt-image-1 features
+  - Ensure consistency across all documentation pages
+  - Create high-quality visual assets that showcase gpt-image-1 capabilities
+
+phases:
+  1_image_regeneration:
+    description: "Regenerate all visual assets with gpt-image-1"
+    tasks:
+      - name: "Generate new logo"
+        details:
+          current_file: "docs/public/images/logo.png"
+          requirements:
+            - Modern, clean design representing image generation
+            - Include text "gpt-image-1 MCP" with advanced text rendering
+            - Transparent background
+            - Professional appearance
+          prompt: "A modern, minimalist logo for 'gpt-image-1 MCP' image generation service. Clean design with vibrant gradient colors, incorporating abstract shapes suggesting image creation and AI technology. Text 'gpt-image-1 MCP' in modern sans-serif font. Transparent background, professional tech branding style."
+          
+      - name: "Generate hero image"
+        details:
+          current_file: "docs/public/images/hero.png"
+          requirements:
+            - Showcase gpt-image-1's capabilities
+            - Visually appealing banner image
+            - Include demonstration of text rendering
+          prompt: "A stunning hero banner showcasing AI image generation capabilities. Feature multiple small image previews floating in 3D space showing diverse subjects: landscapes, portraits, abstract art, and text rendering examples. Modern gradient background with purple and blue tones. Include text overlay 'Advanced Image Generation with gpt-image-1' in crisp, modern typography."
+          
+      - name: "Generate section icons"
+        details:
+          current_file: "docs/public/images/section-icons.png"
+          requirements:
+            - Multiple icons in one image for different sections
+            - Consistent style across all icons
+            - Clear visual hierarchy
+          prompt: "A collection of 6 modern icons arranged in a 2x3 grid for documentation sections: 1) API icon with code brackets, 2) Guide book icon, 3) Examples icon with image samples, 4) Getting Started rocket icon, 5) Integration gears icon, 6) Features star icon. Consistent flat design style with gradient colors, clean lines, professional appearance."
+
+  2_documentation_updates:
+    description: "Update documentation content"
+    tasks:
+      - name: "Update index.md"
+        details:
+          - Emphasize gpt-image-1 features
+          - Update feature list
+          - Ensure English-only validation is highlighted
+          
+      - name: "Update API documentation"
+        files:
+          - "docs/api/tools.md"
+          - "docs/api/error-handling.md"
+        changes:
+          - Remove references to analyze-image tool
+          - Update tool descriptions for current 3 tools
+          - Emphasize English-only validation errors
+          
+      - name: "Update guide pages"
+        files:
+          - "docs/guide/image-generation.md"
+          - "docs/guide/edit-image.md"
+          - "docs/guide/batch-edit.md"
+        changes:
+          - Highlight gpt-image-1 specific features
+          - Update examples to show proper English usage
+          - Add notes about translation workflow
+          
+      - name: "Update examples"
+        files:
+          - "docs/examples/basic-usage.md"
+          - "docs/examples/advanced-scenarios.md"
+          - "docs/examples/integration-patterns.md"
+        changes:
+          - Ensure all examples use English prompts
+          - Show LLM translation pattern
+          - Update tool usage examples
+
+  3_quality_assurance:
+    description: "Verify and refine generated images"
+    tasks:
+      - name: "Review generated images"
+        criteria:
+          - Text rendering quality
+          - Visual appeal
+          - Brand consistency
+          - Technical correctness
+          
+      - name: "Apply edits if needed"
+        potential_edits:
+          - Background adjustments
+          - Color corrections
+          - Text clarity improvements
+          - Composition refinements
+          
+      - name: "Create backup versions"
+        details:
+          - Save timestamped backups
+          - Maintain version history
+
+image_generation_strategy:
+  initial_generation:
+    - Use generate-image tool with high quality settings
+    - Specify transparent backgrounds where appropriate
+    - Request PNG format for logos and icons
+    
+  refinement_process:
+    - If initial generation needs adjustment, use edit-image
+    - Possible edit types:
+      - "background_change" for background adjustments
+      - "style_transfer" for style consistency
+      - "enhancement" for quality improvements
+    
+  validation:
+    - Check text rendering clarity
+    - Verify brand consistency
+    - Ensure professional appearance
+    - Confirm technical requirements met
+
+expected_outcomes:
+  - All documentation images updated to showcase gpt-image-1 capabilities
+  - Consistent visual branding across documentation
+  - Clear demonstration of advanced text rendering
+  - Professional, modern appearance
+  - Documentation fully aligned with current implementation
+
+notes:
+  - All prompts must be in English (enforced by the system)
+  - Focus on showcasing gpt-image-1's superior text rendering
+  - Maintain professional, technical aesthetic
+  - Keep file sizes reasonable for web usage
+  - Consider creating multiple variations for A/B testing
