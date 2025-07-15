@@ -47,3 +47,4 @@ temp/
 # VitePress
 docs/.vitepress/cache/
 docs/.vitepress/dist/
+generated_images
