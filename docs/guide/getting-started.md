@@ -6,7 +6,7 @@ This guide will help you set up and start using gpt-image-1 MCP in your projects
 
 Before you begin, ensure you have:
 
-- Node.js 18+ installed
+- Node.js 20+ installed
 - An OpenAI API key with access to gpt-image-1
 - A Model Context Protocol (MCP) compatible client
 
