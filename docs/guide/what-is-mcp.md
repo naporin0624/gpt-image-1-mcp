@@ -1,6 +1,6 @@
-# What is GPT Image 1 MCP?
+# What is gpt-image-1 MCP?
 
-GPT Image 1 MCP is a **Model Context Protocol (MCP) server** that provides AI-powered image generation and analysis capabilities. It serves as a bridge between OpenAI's powerful vision models and MCP-compatible applications.
+gpt-image-1 MCP is a **Model Context Protocol (MCP) server** that provides AI-powered image generation capabilities using OpenAI's gpt-image-1 model. It serves as a bridge between OpenAI's advanced image generation technology and MCP-compatible applications.
 
 ## What is MCP?
 
@@ -8,81 +8,105 @@ The Model Context Protocol (MCP) is an open protocol that enables AI assistants 
 
 ## Key Features
 
-### 🎨 Image Generation
+### 🎨 Advanced Image Generation
 
-- **OpenAI gpt-image-1 Integration**: Generate high-quality images using OpenAI's most advanced image generation model
-- **Multiple Aspect Ratios**: Support for square (1:1), landscape (16:9), and portrait (9:16) formats
-- **Quality Options**: Choose between standard and HD quality
-- **Style Variations**: Generate images in vivid or natural styles
+- **gpt-image-1 Integration**: Generate high-quality images using OpenAI's latest image generation model
+- **Superior Text Rendering**: Crisp, legible typography and logos in generated images
+- **Native Transparency**: Built-in transparent background support without post-processing
+- **Multiple Formats**: PNG, JPEG, and WebP output with optimized compression
 
-### 👁️ Vision Analysis
+### 🏗️ Flexible Dimensions
 
-- **GPT-4o Vision**: Analyze and describe images with advanced AI
-- **Detailed Analysis**: Get comprehensive descriptions of image content
-- **Question Answering**: Ask specific questions about images
-- **Technical Analysis**: Analyze technical aspects of images
+- **Square Format**: 1024×1024 for avatars, icons, and social media
+- **Landscape Format**: 1536×1024 for headers, banners, and presentations
+- **Portrait Format**: 1024×1536 for mobile screens and posters
+- **Quality Options**: Choose between standard and HD quality levels
 
-### 🌏 Language Support
+### 🎯 English-Optimized
 
-- **Japanese Translation**: Automatically translate Japanese prompts to English for better OpenAI gpt-image-1 results
-- **Context-Aware**: Maintains context and technical terms during translation
-- **Bidirectional Support**: Works with both English and Japanese inputs
+- **English-Only Input**: Optimized for English prompts to maximize gpt-image-1 performance
+- **Input Validation**: Automatic validation with helpful error messages
+- **LLM Integration**: Designed to work with your LLM for translation when needed
+- **Superior Results**: Leverages gpt-image-1's GPT-4o language understanding
 
-## Architecture
+### 🛠️ Image Editing
 
-The MCP server acts as a middleware layer between your applications and OpenAI's services:
+- **AI-Powered Editing**: Modify and enhance generated images
+- **Multiple Edit Types**: Inpainting, outpainting, style transfer, and background changes
+- **Batch Processing**: Apply the same edit to multiple images efficiently
+- **Seamless Workflow**: Integrate editing into your image generation pipeline
 
-```
-Your Application → MCP Client → GPT Image 1 MCP → OpenAI API
-```
+## How It Works
 
-This architecture provides several benefits:
-
-- **Standardized Interface**: Consistent API across different AI tools
-- **Error Handling**: Built-in retry logic and error management
-- **Configuration Management**: Centralized API key and settings management
-- **Extensibility**: Easy to add new features and capabilities
+1. **Connect**: Your MCP client connects to the gpt-image-1 MCP server
+2. **Generate**: Use the `generate-image` tool to create images with English prompts
+3. **Edit**: Enhance images with the `edit-image` tool
+4. **Optimize**: Leverage MCP-optimized responses for efficient workflows
 
 ## Use Cases
 
-### Creative Applications
-
-- **Content Creation**: Generate images for blogs, social media, and marketing
-- **Design Prototyping**: Quickly create visual concepts and mockups
-- **Art Exploration**: Experiment with different artistic styles and concepts
+### Content Creation
+- Generate hero images for websites and blogs
+- Create social media graphics and thumbnails
+- Design product mockups and marketing materials
 
 ### Development Workflows
+- Generate placeholder images for applications
+- Create assets for user interfaces
+- Design icons and logos programmatically
 
-- **Documentation**: Generate diagrams and illustrations for technical documentation
-- **Testing**: Create test images for UI/UX testing
-- **Automation**: Integrate image generation into CI/CD pipelines
+### Creative Projects
+- Explore artistic concepts and ideas
+- Generate reference images for projects
+- Create variations and iterations quickly
 
-### Analysis and Research
+## Integration
 
-- **Image Analysis**: Analyze and categorize visual content
-- **Content Moderation**: Identify and classify image content
-- **Research**: Analyze visual data for insights
+gpt-image-1 MCP integrates seamlessly with MCP-compatible applications:
+
+- **Claude Desktop**: Direct integration through MCP configuration
+- **Custom Applications**: Use the MCP protocol to connect your apps
+- **Workflow Automation**: Integrate with CI/CD and content pipelines
+- **Developer Tools**: Enhance development environments with AI image generation
+
+## Benefits of MCP
+
+### For Developers
+- **Standardized Protocol**: Use the same interface across different AI services
+- **Easy Integration**: Simple JSON-RPC based communication
+- **Extensible**: Add new capabilities without changing client code
+
+### For Users
+- **Seamless Experience**: AI tools work directly within familiar applications
+- **Powerful Combinations**: Combine image generation with other AI capabilities
+- **Efficient Workflows**: Reduce context switching between different tools
 
 ## Getting Started
 
-1. **Prerequisites**: Ensure you have Node.js 18+ and an OpenAI API key
-2. **Installation**: Clone the repository and install dependencies
-3. **Configuration**: Set up your OpenAI API key and MCP client
-4. **Usage**: Start generating and analyzing images through MCP
+Ready to start generating images with gpt-image-1 MCP?
 
-Ready to begin? Check out our [Getting Started](/guide/getting-started.md) guide for detailed setup instructions.
+1. [Set up the server](/guide/getting-started) - Install and configure the MCP server
+2. [Learn the basics](/guide/image-generation) - Understand image generation capabilities
+3. [Explore examples](/examples/basic-usage) - See practical usage patterns
+4. [Configure your client](/guide/mcp-configuration) - Set up MCP integration
 
-## Why Choose GPT Image 1 MCP?
+## Architecture Benefits
 
-- **Production Ready**: Built with TypeScript and comprehensive error handling
-- **Well Documented**: Complete API documentation and examples
-- **Extensible**: Easy to customize and extend with new features
-- **Community Driven**: Open source with active development
-- **Japanese Support**: First-class support for Japanese language workflows
+### English-Only Design
+- **Optimized Performance**: Leverages gpt-image-1's English language strengths
+- **Simplified Architecture**: No internal translation overhead
+- **Better Results**: Direct English processing for superior image quality
+- **User Control**: Choose your preferred translation method
+
+### MCP Optimization
+- **Token Efficient**: Optimized response formats for MCP limits
+- **Fast Responses**: Minimal overhead for better performance
+- **Reliable Integration**: Robust error handling and retry logic
+- **Scalable Design**: Built for production workflows
 
 ## Next Steps
 
-- [Getting Started](/guide/getting-started.md) - Set up the MCP server
-- [Image Generation](/guide/image-generation.md) - Learn about OpenAI gpt-image-1 integration
-- [Vision Analysis](/guide/vision-analysis.md) - Explore GPT-4o Vision capabilities
-- [API Reference](/api/tools.md) - Detailed API documentation
+- [Getting Started Guide](/guide/getting-started) - Set up your first image generation
+- [API Reference](/api/tools) - Explore all available tools
+- [Configuration Guide](/guide/mcp-configuration) - Configure MCP integration
+- [Examples](/examples/basic-usage) - Learn from practical examples

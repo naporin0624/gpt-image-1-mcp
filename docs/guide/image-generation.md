@@ -4,7 +4,13 @@ Generate stunning images using OpenAI's gpt-image-1 through the MCP interface.
 
 ## Overview
 
-The `generate-image` tool provides access to gpt-image-1's advanced image generation capabilities with superior text rendering, transparency support, and enhanced instruction following across multiple aspect ratios, quality settings, and artistic styles.
+The `generate-image` tool provides access to gpt-image-1's advanced image generation capabilities featuring:
+
+- **Advanced Text Rendering**: Crisp, legible typography and logos
+- **Native Transparency**: Built-in transparent background support
+- **Superior Instruction Following**: Inherits GPT-4o's language understanding
+- **Multiple Output Formats**: PNG, JPEG, WebP with optimized compression
+- **Flexible Dimensions**: Optimized aspect ratios for different use cases
 
 ## Aspect Ratios
 
@@ -18,13 +24,13 @@ Choose from three aspect ratios optimized for different use cases:
 
 ### Landscape (16:9)
 
-- Resolution: 1792x1024
+- Resolution: 1536x1024 (optimized for gpt-image-1)
 - Perfect for: Headers, banners, presentations
 - Use case: Website heroes, blog headers, desktop wallpapers
 
 ### Portrait (9:16)
 
-- Resolution: 1024x1792
+- Resolution: 1024x1536 (optimized for gpt-image-1)
 - Perfect for: Mobile screens, stories, posters
 - Use case: Phone wallpapers, Instagram stories, book covers
 
@@ -88,19 +94,33 @@ Futuristic cityscape at sunset, cyberpunk aesthetic, neon lights
 reflecting on wet streets, flying vehicles, digital art style
 ```
 
-## Japanese Prompt Support
+## English-Only Input Requirement
 
-The server automatically translates Japanese prompts for optimal results:
+The server requires English prompts for optimal gpt-image-1 performance:
 
 ```typescript
-// Japanese prompt
+// ✅ Correct - English prompt
+{
+  prompt: "A serene Japanese garden with blooming cherry blossoms",
+  aspect_ratio: "landscape"
+}
+
+// ❌ Rejected - Non-English text
 {
   prompt: "桜の花が咲く静かな日本庭園",
   aspect_ratio: "landscape"
 }
+// Error: VALIDATION_ERROR - Please translate to English first
+```
 
-// Automatically translated to:
-// "A serene Japanese garden with blooming cherry blossoms"
+### Translation Workflow
+
+Use your LLM to translate non-English prompts:
+
+```
+1. User: "桜の花が咲く静かな日本庭園を描いて"
+2. LLM: "A serene Japanese garden with blooming cherry blossoms"
+3. MCP: Generate image with English prompt
 ```
 
 ## File Management
@@ -121,30 +141,35 @@ The server automatically translates Japanese prompts for optimal results:
 
 ## Advanced Features
 
-### Batch Generation
+### Image Editing
 
-Generate multiple variations of a prompt:
+Edit and enhance generated images:
 
 ```typescript
-// Coming soon: batch-generate tool
-{
-  prompt: "Abstract geometric pattern",
-  variations: 4,
-  aspect_ratio: "square"
-}
+// Generate base image
+const baseImage = await client.callTool("generate-image", {
+  prompt: "A mountain landscape",
+  aspect_ratio: "landscape"
+});
+
+// Edit the image
+const editedImage = await client.callTool("edit-image", {
+  source_image: baseImage.data.file_path,
+  edit_prompt: "Add dramatic storm clouds",
+  edit_type: "background_change"
+});
 ```
 
-### Prompt Enhancement
+### Batch Editing
 
-Automatically improve prompts for better results:
+Apply the same edit to multiple images:
 
 ```typescript
-// Coming soon: enhance-prompt tool
-{
-  prompt: "sunset beach",
-  enhance_level: "detailed"
-}
-// Returns: "A breathtaking sunset over a pristine beach..."
+const result = await client.callTool("batch-edit", {
+  image_urls: ["image1.png", "image2.png", "image3.png"],
+  edit_prompt: "Convert to black and white",
+  edit_type: "style_transfer"
+});
 ```
 
 ## Tips for Success
@@ -164,6 +189,7 @@ Automatically improve prompts for better results:
 
 ## Next Steps
 
-- Explore [Vision Analysis](/guide/vision-analysis) to analyze generated images
-- Learn about [Japanese Translation](/guide/japanese-translation) features
+- Learn about [English-Only Input](/guide/japanese-translation) and translation workflows
+- Explore [Image Editing](/guide/edit-image) capabilities for post-processing
+- Try [Batch Editing](/guide/batch-edit) for processing multiple images
 - Check out [Examples](/examples/basic-usage) for more use cases

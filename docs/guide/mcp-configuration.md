@@ -1,10 +1,10 @@
 # MCP Configuration
 
-Configure GPT Image 1 MCP with various MCP-compatible clients including Claude Desktop, Cline, and other Model Context Protocol implementations.
+Configure gpt-image-1 MCP with various MCP-compatible clients including Claude Desktop, Cline, and other Model Context Protocol implementations.
 
 ## Overview
 
-The Model Context Protocol (MCP) enables GPT Image 1 to integrate with various AI clients and applications. This guide covers:
+The Model Context Protocol (MCP) enables gpt-image-1 to integrate with various AI clients and applications. This guide covers:
 
 - **Client Configuration**: Setting up different MCP clients
 - **Server Configuration**: Configuring the MCP server

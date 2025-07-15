@@ -1,6 +1,6 @@
 # Environment Variables
 
-GPT Image 1 MCP can be configured through environment variables to customize behavior, set defaults, and manage API credentials.
+gpt-image-1 MCP can be configured through environment variables to customize behavior, set defaults, and manage API credentials.
 
 ## Overview
 
@@ -136,16 +136,16 @@ DEFAULT_TRANSLATION_CONTEXT=artistic
 PRESERVE_TECHNICAL_TERMS=true
 ```
 
-## Vision Analysis Settings
+## Image Editing Settings
 
-**`DEFAULT_ANALYSIS_TYPE`** (Optional)
+**`DEFAULT_EDIT_STRENGTH`** (Optional)
 
-- **Description**: Default analysis type for vision processing
-- **Values**: `general`, `detailed`, `artistic`, `technical`
-- **Default**: `general`
+- **Description**: Default strength for image editing operations
+- **Values**: `0.0` to `1.0`
+- **Default**: `0.8`
 
 ```bash
-DEFAULT_ANALYSIS_TYPE=detailed
+DEFAULT_EDIT_STRENGTH=0.8
 ```
 
 **`MAX_ANALYSIS_QUESTIONS`** (Optional)

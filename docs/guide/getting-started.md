@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide will help you set up and start using GPT Image 1 MCP in your projects.
+This guide will help you set up and start using gpt-image-1 MCP in your projects.
 
 ## Prerequisites
 
@@ -8,7 +8,7 @@ Before you begin, ensure you have:
 
 - Node.js 18+ installed
 - pnpm package manager
-- An OpenAI API key with access to gpt-image-1 and GPT-4o Vision
+- An OpenAI API key with access to gpt-image-1
 - A Model Context Protocol (MCP) compatible client
 
 ## Installation
@@ -87,8 +87,8 @@ Add the server to your MCP client configuration:
 Once configured, your MCP client should show the following available tools:
 
 - `generate-image` - Generate images using OpenAI gpt-image-1
-- `analyze-image` - Analyze images with GPT-4o Vision
-- `translate-prompt` - Translate Japanese prompts to English
+- `edit-image` - Edit and enhance generated images
+- `batch-edit` - Apply edits to multiple images
 
 ## First Image Generation
 
@@ -106,7 +106,7 @@ await client.callTool("generate-image", {
 ## Next Steps
 
 - Learn about [Image Generation](/guide/image-generation) features
-- Explore [Vision Analysis](/guide/vision-analysis) capabilities
+- Understand [English-Only Input](/guide/japanese-translation) requirements
 - Configure [Environment Variables](/guide/environment-variables)
 - Check out [Examples](/examples/basic-usage)
 
