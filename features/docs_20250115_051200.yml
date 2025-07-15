@@ -1,0 +1,239 @@
+name: Documentation Update for gpt-image-1 Migration
+version: 1.0.0
+author: Claude
+created: 2025-01-15T05:12:00Z
+description: Complete documentation update plan to reflect migration from DALL-E to gpt-image-1 model
+
+objectives:
+  - Remove all references to deprecated analyze-image tool
+  - Update documentation to reflect gpt-image-1 capabilities and constraints
+  - Regenerate all documentation images using gpt-image-1
+  - Clarify English-only input validation requirements
+  - Update response format documentation for MCP optimization
+
+phases:
+  - name: Critical Documentation Updates
+    description: Remove deprecated features and update incorrect information
+    priority: CRITICAL
+    tasks:
+      - id: remove-analyze-image-docs
+        name: Remove analyze-image documentation
+        description: Delete or mark as deprecated all analyze-image related content
+        files:
+          - docs/api/analyze-image.md (DELETE)
+          - docs/guide/vision-analysis.md (DELETE or REWRITE)
+        subtasks:
+          - Delete docs/api/analyze-image.md file
+          - Delete or completely rewrite docs/guide/vision-analysis.md
+          - Update navigation config in docs/.vitepress/config.ts to remove links
+
+      - id: update-tools-overview
+        name: Update tools documentation
+        description: Remove analyze-image from tools list and update descriptions
+        files:
+          - docs/api/tools.md
+          - docs/index.md
+        changes:
+          - Remove analyze-image tool from available tools list
+          - Fix duplicate "OpenAI" reference in tools.md line 9
+          - Update tool count (now 4 tools instead of 5)
+          - Add note about image analysis via direct file reading by LLMs
+
+      - id: update-basic-usage
+        name: Update basic usage examples
+        description: Remove analyze-image examples and update workflows
+        files:
+          - docs/examples/basic-usage.md
+          - docs/examples/integration-patterns.md
+          - docs/examples/advanced-scenarios.md
+        changes:
+          - Remove all analyze-image tool examples
+          - Remove analyze_after_generation parameter references
+          - Update workflows to show LLM direct image reading pattern
+
+  - name: English-Only Validation Documentation
+    description: Document the English-only input requirement clearly
+    priority: HIGH
+    tasks:
+      - id: update-translation-guide
+        name: Rewrite Japanese translation guide
+        description: Update to reflect English-only validation and LLM-first translation
+        files:
+          - docs/guide/japanese-translation.md
+        changes:
+          - Clarify that ALL text inputs must be in English
+          - Explain validation will reject non-English text
+          - Provide examples of proper LLM translation workflow
+          - Remove references to internal translation capabilities
+
+      - id: update-api-docs-validation
+        name: Add validation sections to API docs
+        description: Document English validation in all relevant API endpoints
+        files:
+          - docs/api/generate-image.md
+          - docs/api/error-handling.md
+        changes:
+          - Add validation error examples for non-English input
+          - Document error response format for validation failures
+          - Provide guidance on pre-translation via LLM
+
+  - name: Response Format Updates
+    description: Update documentation to reflect optimized MCP response structure
+    priority: HIGH
+    tasks:
+      - id: update-response-formats
+        name: Document new optimized response structure
+        description: Update all API docs to show correct response format
+        files:
+          - docs/api/generate-image.md
+          - docs/api/error-handling.md
+          - docs/guide/image-generation.md
+        changes:
+          - Document default response (file_path + metadata only)
+          - Explain include_base64 parameter for optional base64 data
+          - Add response size optimization examples
+          - Document MCP token limit considerations (20K max)
+
+  - name: gpt-image-1 Feature Documentation
+    description: Update to highlight gpt-image-1 specific capabilities
+    priority: MEDIUM
+    tasks:
+      - id: update-feature-highlights
+        name: Update gpt-image-1 advantages
+        description: Document unique capabilities of gpt-image-1
+        files:
+          - docs/index.md
+          - docs/guide/image-generation.md
+          - docs/guide/getting-started.md
+        changes:
+          - Emphasize advanced text rendering capabilities
+          - Document native transparency support
+          - Highlight superior instruction following
+          - Update aspect ratio dimensions (1536x1024 for landscape)
+          - Document output format options (PNG, JPEG, WebP)
+
+      - id: update-migration-notes
+        name: Add migration guide from DALL-E
+        description: Create section for users migrating from DALL-E
+        files:
+          - docs/guide/getting-started.md (add section)
+        content:
+          - Key differences between DALL-E 3 and gpt-image-1
+          - Dimension changes for aspect ratios
+          - Quality parameter mapping (standard→medium, hd→high)
+          - Removal of create-variation tool
+          - English-only requirement
+
+  - name: Image Regeneration
+    description: Generate new documentation images using gpt-image-1
+    priority: HIGH
+    tasks:
+      - id: generate-hero-image
+        name: Create new hero image
+        description: Generate main hero image for documentation homepage
+        output: docs/public/images/hero.png
+        prompt: |
+          A modern, professional hero image for developer documentation about an AI image generation MCP server.
+          Show abstract representation of AI creating images with code elements.
+          Use a gradient background with blues and purples.
+          Include subtle technical elements like pixels, grids, or neural network patterns.
+          Modern tech aesthetic with clean lines.
+          16:9 aspect ratio, high quality.
+          No text or logos.
+        fallback_prompts:
+          - "Tech documentation hero image with AI and image generation theme, gradient background, abstract modern design"
+          - "Developer documentation banner showing AI image creation process, technical aesthetic, blue purple gradient"
+
+      - id: generate-logo
+        name: Create project logo
+        description: Generate logo for gpt-image-1 MCP server
+        output: docs/public/images/logo.png
+        prompt: |
+          A minimalist logo for "gpt-image-1 MCP" server.
+          Modern tech logo design with clean geometric shapes.
+          Incorporate elements suggesting image generation and AI.
+          Use blue and purple color scheme.
+          Square format, suitable for favicon.
+          Simple enough to be recognizable at small sizes.
+          No text, just icon.
+        fallback_prompts:
+          - "Minimalist AI image generation logo, geometric design, blue purple colors, square format"
+          - "Tech logo icon for image generation tool, simple shapes, modern design"
+
+      - id: generate-section-icons
+        name: Create section icons
+        description: Generate icons for different documentation sections
+        output: docs/public/images/section-icons.png
+        prompt: |
+          Create a sprite sheet of modern tech icons for documentation sections.
+          Include 6 icons in a horizontal row:
+          1. Getting Started (rocket or launch icon)
+          2. API Reference (code brackets or terminal)
+          3. Image Generation (picture frame with sparkles)
+          4. Configuration (gear or settings)
+          5. Examples (lightbulb or book)
+          6. Support (question mark or help)
+          Consistent style, monoline design, single color.
+          White background, dark icons.
+          Each icon should be clearly distinguishable at small sizes.
+        fallback_prompts:
+          - "Technical documentation icon set, 6 modern icons in row, monoline style, consistent design"
+          - "Simple tech icons for docs: start, api, images, config, examples, help - horizontal layout"
+
+  - name: Configuration Updates
+    description: Update VitePress and project configuration
+    priority: MEDIUM
+    tasks:
+      - id: update-vitepress-config
+        name: Update navigation and metadata
+        description: Remove deprecated pages from navigation
+        files:
+          - docs/.vitepress/config.ts
+        changes:
+          - Remove analyze-image from API sidebar
+          - Remove vision-analysis from guides sidebar
+          - Update site description to mention gpt-image-1
+          - Update meta tags if needed
+
+      - id: verify-404-page
+        name: Update 404 page if needed
+        description: Ensure 404 page doesn't reference removed features
+        files:
+          - docs/404.md
+
+  - name: Final Review and Polish
+    description: Final consistency checks and improvements
+    priority: LOW
+    tasks:
+      - id: consistency-check
+        name: Ensure consistent terminology
+        description: Check all files for consistent model naming
+        checks:
+          - Use "gpt-image-1" consistently (not "GPT-IMAGE-1" or "Gpt-Image-1")
+          - Ensure "MCP server" terminology is consistent
+          - Check for any remaining "DALL-E" references
+
+      - id: update-examples
+        name: Update all code examples
+        description: Ensure examples use English prompts and correct parameters
+        files:
+          - All files in docs/examples/
+          - All code blocks in docs/guide/
+        changes:
+          - Use English prompts exclusively
+          - Update response handling to match new format
+          - Remove analyze_after_generation parameters
+
+validation:
+  - All analyze-image references removed or marked deprecated
+  - All prompts in examples are in English
+  - Response formats match implementation
+  - Navigation works without broken links
+  - Images are successfully generated with gpt-image-1
+
+success_criteria:
+  - Documentation accurately reflects current implementation
+  - No references to removed features remain active
+  - English-only requirement is clearly communicated
+  - New images properly showcase gpt-image-1 capabilities
+  - Users can successfully follow documentation to use the MCP server
