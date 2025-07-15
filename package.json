@@ -33,6 +33,9 @@
   "bin": {
     "gpt-image-1-mcp": "./dist/index.js"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "dist",
     "README.md",
