@@ -1,0 +1,195 @@
+# E2E Test Report: chatgpt-image-gen-mcp
+# Generated: 2025-07-15T04:34:00Z
+# Test Duration: ~30 minutes
+
+## Executive Summary
+- **Overall Status**: ⚠️  PARTIAL SUCCESS
+- **Core Functionality**: Working with issues
+- **Critical Issues**: MCP tool parameter schema mismatch
+- **Test Environment**: Linux WSL2, Node.js with TypeScript
+
+## Detailed Test Results
+
+### 1. MCP Server Basic Functionality ✅
+```yaml
+test: mcp_server_startup
+status: PASS
+details:
+  - Server starts successfully
+  - Tool list accessible 
+  - 4 tools registered: generate-image, analyze-image, edit-image, batch-edit
+  - Build process successful
+  - TypeScript compilation working
+```
+
+### 2. Test Suite Execution ✅
+```yaml
+test: automated_test_suite
+status: PASS
+details:
+  - Total tests: 59
+  - Passed: 59 (100%)
+  - Failed: 0
+  - Test files: 5 (validation, openai, types, fileManager, response-size)
+  - Duration: 6.71s
+  - All core validation and API integration tests passing
+```
+
+### 3. Generate Image Tool ❌
+```yaml
+test: generate_image_functionality
+status: FAIL
+error: "Invalid request: Unknown parameter: 'style'"
+attempts:
+  - attempt_1:
+      params: {prompt: "A red apple on a white table", aspect_ratio: "square", quality: "standard", style: "vivid"}
+      result: "Invalid enum value. Expected 'high' | 'medium' | 'low', received 'standard'"
+  - attempt_2:
+      params: {prompt: "A red apple on a white table", aspect_ratio: "square", quality: "medium", style: "natural"} 
+      result: "Invalid request: Unknown parameter: 'style'"
+  - attempt_3:
+      params: {prompt: "A simple red circle on white background"}
+      result: "Invalid request: Unknown parameter: 'style'"
+issues:
+  - MCP tool interface schema doesn't match internal server implementation
+  - Parameter validation failing on basic requests
+  - Tool may be using different MCP server than the one in this codebase
+```
+
+### 4. Analyze Image Tool ✅
+```yaml
+test: analyze_image_functionality
+status: PASS
+details:
+  - HTTP URL image analysis: SUCCESS
+  - File URL image analysis: FAIL (expected - not supported)
+  - GPT-4o vision integration working
+  - Response format correct
+example_result: |
+  Description: "This image depicts a breathtaking mountain landscape. Snow-capped peaks rise majestically, bathed in the warm glow of a sunrise or sunset. Below, a thick layer of clouds or mist fills the valley, creating a soft, ethereal atmosphere."
+```
+
+### 5. Edit Image Tool ✅
+```yaml
+test: edit_image_functionality  
+status: PASS
+details:
+  - Image editing successful with HTTP URLs
+  - gpt-image-1 model integration working
+  - File output functioning
+  - Edit types supported: inpaint, outpaint, style_transfer, etc.
+example_result:
+  - Original: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=512&h=512&fit=crop"
+  - Edit: "Add a red balloon floating in the sky"
+  - Output: "generated_images/edited_1752554030136.png"
+  - File size: 1,378,507 bytes
+  - Processing time: 25,256ms
+```
+
+### 6. Batch Edit Tool ✅
+```yaml
+test: batch_edit_functionality
+status: PASS
+details:
+  - Parallel processing: SUCCESS (2 images)
+  - Style transfer working
+  - File output functioning
+  - Error handling working
+example_result:
+  - Total images: 2
+  - Successfully processed: 2  
+  - Failed: 0
+  - Average time per image: 15,567ms
+  - Parallel processing: true
+```
+
+### 7. English-Only Validation ✅
+```yaml
+test: english_validation
+status: PASS  
+details:
+  - Validation tests passing in test suite
+  - Error messages helpful and clear
+  - Implementation following project requirements
+```
+
+### 8. Code Quality Checks ⚠️
+```yaml
+test: code_quality
+status: PARTIAL
+details:
+  linting:
+    status: FAIL
+    issues: 30 errors, 31 warnings (ESLint)
+    notes: "Primarily VitePress cache files and strict boolean expressions"
+  formatting:
+    status: PASS
+    notes: "Prettier auto-formatting applied successfully"
+  type_checking:
+    status: FAIL  
+    issues: "TypeScript strict mode errors in test files"
+    notes: "Undefined object access and type conversion issues"
+```
+
+## Critical Issues Identified
+
+### 1. MCP Tool Parameter Schema Mismatch 🚨
+```yaml
+issue: parameter_schema_discrepancy
+severity: HIGH
+description: |
+  The MCP tools available in the test environment don't match the 
+  server implementation in this codebase. The generate-image tool 
+  fails with "Unknown parameter: 'style'" errors.
+impact: |
+  - generate-image functionality not testable through MCP interface
+  - Potential deployment/integration issues
+  - User experience degraded
+root_cause: |
+  Different MCP server implementation being used than the one in the codebase
+```
+
+### 2. Code Quality Issues 🚨
+```yaml
+issue: typescript_strict_mode_violations
+severity: MEDIUM
+description: |
+  Multiple TypeScript strict mode errors in test files
+examples:
+  - "Object is possibly 'undefined'" errors
+  - Type conversion issues in mocks
+  - Nullable value handling in conditionals
+impact: |
+  - Type safety compromised
+  - Potential runtime errors
+  - CI/CD pipeline failures
+```
+
+## Recommendations
+
+### Immediate Actions Required
+1. **Investigate MCP Tool Registration**: Verify which MCP server is actually being used
+2. **Fix Parameter Schema**: Align MCP tool interface with server implementation  
+3. **Resolve TypeScript Errors**: Fix test file type issues for strict mode compliance
+4. **Update Documentation**: Correct parameter examples in documentation
+
+### Medium-term Improvements
+1. **Add E2E Integration Tests**: Automated tests for actual MCP tool functionality
+2. **Improve Error Handling**: Better error messages for parameter validation
+3. **Add Health Check Endpoint**: Monitor MCP server status
+4. **Parameter Validation Documentation**: Clear examples of correct usage
+
+## Test Environment Details
+```yaml
+platform: Linux 6.6.87.2-microsoft-standard-WSL2
+node_version: Latest (via mise)
+package_manager: pnpm v10.7.1
+typescript_config: strict mode enabled
+test_framework: Vitest v3.2.4
+build_tool: tsup v8.5.0
+```
+
+## Conclusion
+The chatgpt-image-gen-mcp project has solid core functionality with working image editing, analysis, and batch processing capabilities. However, the primary image generation tool has critical parameter schema issues that prevent proper testing through the MCP interface. The automated test suite provides confidence in the underlying implementation, but the MCP integration needs immediate attention.
+
+**Confidence Level**: 70% - Core functionality verified, but primary user interface has blocking issues.
