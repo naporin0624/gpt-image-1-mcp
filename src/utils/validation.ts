@@ -1,5 +1,5 @@
 /**
- * English-only validation utilities
+ * Text validation utilities
  */
 
 export class ValidationError extends Error {
@@ -14,54 +14,27 @@ export class ValidationError extends Error {
 }
 
 /**
- * Validate that text contains only English characters
+ * Validate that text is not empty
  * @param text - Text to validate
  * @param fieldName - Name of the field being validated (for error messages)
- * @throws ValidationError if text contains non-English characters
+ * @throws ValidationError if text is empty
  */
-export function validateEnglishOnly(
-  text: string,
-  fieldName: string = "text",
-): void {
+export function validateText(text: string, fieldName: string = "text"): void {
   if (!text || typeof text !== "string" || text.trim().length === 0) {
     throw new ValidationError(
       `${fieldName} cannot be empty.`,
       "EMPTY_TEXT",
-      "Please provide a descriptive English prompt.",
-    );
-  }
-
-  // Check for CJK (Chinese, Japanese, Korean) characters
-  const cjkRegex =
-    /[\u1100-\u11FF\u3040-\u30FF\u3130-\u318F\u4E00-\u9FFF\uA960-\uA97F\uAC00-\uD7AF]/;
-
-  if (cjkRegex.test(text)) {
-    throw new ValidationError(
-      `${fieldName} only accepts English text. Please translate your prompt to English first.`,
-      "NON_ENGLISH_TEXT",
-      "Use your LLM to translate the prompt to English, then try again.",
-    );
-  }
-
-  // Check for other non-Latin scripts (Arabic, Hebrew, Thai, etc.)
-  const nonLatinRegex =
-    /[\u0590-\u06FF\u0E00-\u0E7F\u1000-\u109F\u1200-\u137F]/;
-
-  if (nonLatinRegex.test(text)) {
-    throw new ValidationError(
-      `${fieldName} only accepts English text. Please translate your prompt to English first.`,
-      "NON_ENGLISH_TEXT",
-      "Use your LLM to translate the prompt to English, then try again.",
+      "Please provide a descriptive prompt.",
     );
   }
 }
 
 /**
- * Validate an array of English-only text strings
+ * Validate an array of text strings
  * @param texts - Array of texts to validate
  * @param fieldName - Name of the field being validated
  */
-export function validateEnglishOnlyArray(
+export function validateTextArray(
   texts: string[],
   fieldName: string = "text",
 ): void {
@@ -69,12 +42,12 @@ export function validateEnglishOnlyArray(
     throw new ValidationError(
       `${fieldName} must be an array.`,
       "INVALID_TYPE",
-      "Provide an array of English text strings.",
+      "Provide an array of text strings.",
     );
   }
 
   texts.forEach((text, index) => {
-    validateEnglishOnly(text, `${fieldName}[${index}]`);
+    validateText(text, `${fieldName}[${index}]`);
   });
 }
 
@@ -98,7 +71,7 @@ export function formatValidationError(error: Error) {
 - "Modern minimalist logo design with blue accents"
 - "Portrait of a person reading a book by a window"
 
-This tool only accepts English text to ensure optimal results. Use your LLM to translate non-English prompts before using this tool.`,
+Please check your input and try again.`,
         },
       ],
       isError: true,

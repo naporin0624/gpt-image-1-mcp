@@ -1,12 +1,12 @@
 # MCP Tools Overview
 
-GPT Image 1 MCP provides tools for image generation through the Model Context Protocol.
+GPT Image 1 MCP provides three powerful tools for image generation and editing through the Model Context Protocol, powered by OpenAI's gpt-image-1 model.
 
 ## Available Tools
 
 ### generate-image
 
-Generate images using OpenAI's gpt-image-1 model.
+Generate images using OpenAI's gpt-image-1 model with advanced text rendering and superior instruction following. **Note: Prompts must be in English for optimal results.**
 
 **Parameters:**
 
@@ -26,7 +26,7 @@ Generate images using OpenAI's gpt-image-1 model.
 
 ### edit-image
 
-Edit existing images with AI-powered modifications including inpainting, outpainting, and style transfer.
+Edit existing images with AI-powered modifications using gpt-image-1 model. Supports inpainting, outpainting, style transfer, and variations with native transparency. **Note: Edit prompts must be in English for optimal results.**
 
 **Parameters:**
 
@@ -42,7 +42,7 @@ Edit existing images with AI-powered modifications including inpainting, outpain
 
 ### batch-edit
 
-Apply the same edit to multiple images efficiently.
+Apply the same edit to multiple images efficiently using gpt-image-1 model. Supports parallel processing for improved performance. **Note: Edit prompts must be in English for optimal results.**
 
 **Parameters:**
 
@@ -59,10 +59,6 @@ Apply the same edit to multiple images efficiently.
 ## Image Analysis
 
 For image analysis capabilities, LLM clients can directly read image files using the file paths returned by the generation and editing tools. This provides better separation of concerns and allows the LLM to use its native vision capabilities.
-
-## Note on Translation
-
-For non-English prompts, it's recommended to use your LLM client to translate prompts to English before using the image generation tools, as gpt-image-1 works best with English input.
 
 ## Tool Response Format
 

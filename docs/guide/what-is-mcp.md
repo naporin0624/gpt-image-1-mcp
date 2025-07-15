@@ -22,12 +22,12 @@ The Model Context Protocol (MCP) is an open protocol that enables AI assistants 
 - **Portrait Format**: 1024×1536 for mobile screens and posters
 - **Quality Options**: Choose between standard and HD quality levels
 
-### 🎯 English-Optimized
+### 🎯 Multilingual Support
 
-- **English-Only Input**: Optimized for English prompts to maximize gpt-image-1 performance
+- **Multi-language Input**: Support for various languages including English, Japanese, Chinese, and more
 - **Input Validation**: Automatic validation with helpful error messages
-- **LLM Integration**: Designed to work with your LLM for translation when needed
-- **Superior Results**: Leverages gpt-image-1's GPT-4o language understanding
+- **Global Accessibility**: Generate images with prompts in your preferred language
+- **Superior Results**: Leverages gpt-image-1's advanced language understanding
 
 ### 🛠️ Image Editing
 
@@ -39,7 +39,7 @@ The Model Context Protocol (MCP) is an open protocol that enables AI assistants 
 ## How It Works
 
 1. **Connect**: Your MCP client connects to the gpt-image-1 MCP server
-2. **Generate**: Use the `generate-image` tool to create images with English prompts
+2. **Generate**: Use the `generate-image` tool to create images with prompts in various languages
 3. **Edit**: Enhance images with the `edit-image` tool
 4. **Optimize**: Leverage MCP-optimized responses for efficient workflows
 
@@ -97,12 +97,12 @@ Ready to start generating images with gpt-image-1 MCP?
 
 ## Architecture Benefits
 
-### English-Only Design
+### Multilingual Design
 
-- **Optimized Performance**: Leverages gpt-image-1's English language strengths
-- **Simplified Architecture**: No internal translation overhead
-- **Better Results**: Direct English processing for superior image quality
-- **User Control**: Choose your preferred translation method
+- **Language Flexibility**: Support for multiple languages for global accessibility
+- **Simplified Architecture**: Direct language processing without translation overhead
+- **Better Results**: Native language processing for superior image quality
+- **User Control**: Use your preferred language for prompts
 
 ### MCP Optimization
 

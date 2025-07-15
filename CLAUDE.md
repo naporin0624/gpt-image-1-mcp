@@ -6,11 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 OpenAI gpt-image-1 MCP server with advanced image generation and editing capabilities. This TypeScript project provides an MCP server that:
 
-- Generates images using OpenAI's gpt-image-1 model with advanced text rendering and instruction following (English prompts only)
+- Generates images using OpenAI's gpt-image-1 model with advanced text rendering and instruction following
 - Analyzes images using GPT-4o vision
 - Supports image editing, inpainting, outpainting with native transparency support
 - Supports batch editing operations
-- Provides comprehensive English-only input validation
+- Provides comprehensive input validation
 
 ## Development Commands
 
@@ -48,7 +48,7 @@ src/
 │   ├── image.ts         # gpt-image-1 related types
 │   └── edit.ts          # Image editing types
 └── utils/
-    ├── validation.ts    # Input validation with English-only enforcement
+    ├── validation.ts    # Input validation
     ├── openai.ts       # OpenAI API integration
     ├── fileManager.ts  # File management utilities
     └── imageUtils.ts   # Image processing utilities
@@ -65,8 +65,6 @@ src/
 **Note**: Variations are handled through edit-image with edit_type="variation"
 
 **⚠️ Removed**: analyze-image tool has been removed. LLM clients can directly read images via file paths for analysis, providing better separation of concerns.
-
-**⚠️ Important**: All text inputs (prompts, style guidance) must be in English. Non-English text will be rejected with helpful error messages guiding users to translate using their LLM first.
 
 ### Image Size Support (gpt-image-1)
 
@@ -148,7 +146,7 @@ Create a `.env` file based on `.env.example` with:
 This is a newly initialized project with comprehensive planning in `features/mcp.yml`. The implementation follows these phases:
 
 1. Core MCP server and OpenAI integration
-2. English-only validation and error handling
+2. Input validation and error handling
 3. Vision analysis integration
 4. Image editing and variation capabilities
 5. Advanced features (batch processing, file management)
@@ -162,37 +160,4 @@ When implementing new features:
 2. Use Zod for runtime validation
 3. Implement proper error handling with retry logic
 4. Add comprehensive tests using Vitest
-5. Ensure English-only validation is properly implemented and tested
-
-## Language Architecture
-
-**English-Only Design**: This MCP server accepts only English text input, optimized for gpt-image-1's superior English language understanding. This design choice:
-
-- **Leverages gpt-image-1's strengths**: Built on GPT-4o's language engine for precise instruction following
-- **Reduces complexity**: No internal translation logic required
-- **Improves performance**: Direct English processing, faster responses
-- **Better user control**: Users can choose their preferred translation method
-- **Clearer responsibility**: LLMs handle translation, MCP handles image generation
-
-### Using Non-English Prompts
-
-To use prompts in other languages:
-
-1. **Ask your LLM to translate first**:
-
-   ```
-   User: "桜の花が咲いている美しい日本庭園を描いて"
-   LLM: "A beautiful Japanese garden with cherry blossoms in bloom"
-   MCP: [generates image with gpt-image-1's superior text rendering]
-   ```
-
-2. **The MCP will validate and provide helpful errors**:
-   - Clear error messages explaining English-only requirement
-   - Suggestions to use LLM translation
-   - Examples of correct English usage
-
-3. **Benefits of this approach**:
-   - Higher quality translations leveraging gpt-image-1's language understanding
-   - Reduced API costs (no translation API calls from MCP)
-   - Better error handling and user guidance
-   - Simplified architecture optimized for gpt-image-1
+5. Ensure input validation is properly implemented and tested
