@@ -4,10 +4,11 @@ export default defineConfig({
   title: "gpt-image-1 MCP",
   description:
     "AI-powered image generation MCP server documentation using gpt-image-1",
-  head: [["link", { rel: "icon", href: "/images/logo.png" }]],
+  base: "/gpt-image-1-mcp/",
+  head: [["link", { rel: "icon", href: "/gpt-image-1-mcp/images/logo.png" }]],
 
   themeConfig: {
-    logo: "/images/logo.png",
+    logo: "/gpt-image-1-mcp/images/logo.png",
 
     nav: [
       { text: "Home", link: "/" },
@@ -90,7 +91,10 @@ export default defineConfig({
     },
 
     socialLinks: [
-      { icon: "github", link: "https://github.com/naporin0624/gen-image-mcp" },
+      {
+        icon: "github",
+        link: "https://github.com/naporin0624/gpt-image-1-mcp",
+      },
     ],
 
     footer: {
