@@ -24,7 +24,7 @@ class WordPressImageGenerator {
     private wpApiUrl: string,
     private wpApiKey: string,
   ) {
-    this.client = new MCPClient("gpt-image-1-mcp");
+    this.client = new MCPClient("@napolab/gpt-image-1-mcp");
   }
 
   async generateFeaturedImage(postId: number, title: string, excerpt: string) {
@@ -97,7 +97,7 @@ class ShopifyProductImageGenerator {
     private shopifyDomain: string,
     private accessToken: string,
   ) {
-    this.client = new MCPClient("gpt-image-1-mcp");
+    this.client = new MCPClient("@napolab/gpt-image-1-mcp");
   }
 
   async generateProductImages(productId: string, productData: any) {
@@ -177,7 +177,7 @@ class TwitterImageBot {
   private twitterClient: any;
 
   constructor(twitterCredentials: any) {
-    this.client = new MCPClient("gpt-image-1-mcp");
+    this.client = new MCPClient("@napolab/gpt-image-1-mcp");
     this.twitterClient = new TwitterApi(twitterCredentials);
   }
 
@@ -225,7 +225,7 @@ class InstagramImageGenerator {
     private instagramBusinessId: string,
     private accessToken: string,
   ) {
-    this.client = new MCPClient("gpt-image-1-mcp");
+    this.client = new MCPClient("@napolab/gpt-image-1-mcp");
   }
 
   async createInstagramPost(caption: string, hashtags: string[]) {
@@ -302,7 +302,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: "20"
 
       - name: Install dependencies
         run: npm install
@@ -375,7 +375,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 export const handler = async (
   event: APIGatewayProxyEvent,
 ): Promise<APIGatewayProxyResult> => {
-  const client = new MCPClient("gpt-image-1-mcp");
+  const client = new MCPClient("@napolab/gpt-image-1-mcp");
 
   try {
     const { prompt, userId, requestId } = JSON.parse(event.body || "{}");
@@ -461,7 +461,7 @@ const redis = new IORedis(process.env.REDIS_URL);
 const imageGenerationWorker = new Worker(
   "image-generation",
   async (job) => {
-    const client = new MCPClient("gpt-image-1-mcp");
+    const client = new MCPClient("@napolab/gpt-image-1-mcp");
     const { prompt, options, userId, requestId } = job.data;
 
     try {
@@ -531,7 +531,7 @@ export default async function handler(
   }
 
   const { prompt, options } = req.body;
-  const client = new MCPClient("gpt-image-1-mcp");
+  const client = new MCPClient("@napolab/gpt-image-1-mcp");
 
   try {
     const result = await client.callTool("generate-image", {
@@ -646,7 +646,7 @@ export const ImageGenerator: React.FC<ImageGeneratorProps> = ({
 import { app, BrowserWindow, ipcMain } from "electron";
 import { MCPClient } from "@anthropic/mcp-client";
 
-const client = new MCPClient("gpt-image-1-mcp");
+const client = new MCPClient("@napolab/gpt-image-1-mcp");
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -763,7 +763,7 @@ class MonitoredImageGenerator {
   private client: MCPClient;
 
   constructor() {
-    this.client = new MCPClient("gpt-image-1-mcp");
+    this.client = new MCPClient("@napolab/gpt-image-1-mcp");
   }
 
   async generateImage(prompt: string, options: any = {}) {

@@ -23,7 +23,7 @@ await client.callTool("edit-image", {
 | Parameter      | Type   | Description                                       |
 | -------------- | ------ | ------------------------------------------------- |
 | `source_image` | string | Path to source image file or base64 encoded image |
-| `edit_prompt`  | string | Description of desired changes (English only)     |
+| `edit_prompt`  | string | Description of desired changes                    |
 | `edit_type`    | string | Type of edit to perform                           |
 
 ### Optional Parameters
@@ -200,12 +200,12 @@ await client.callTool("edit-image", {
 
 ### Common Errors
 
-| Error Code             | Description                    | Solution                    |
-| ---------------------- | ------------------------------ | --------------------------- |
-| `INVALID_SOURCE_IMAGE` | Source image not found/invalid | Check image path or format  |
-| `VALIDATION_ERROR`     | Non-English text detected      | Translate prompt to English |
-| `UNSUPPORTED_FORMAT`   | Unsupported image format       | Use PNG, JPEG, or WebP      |
-| `EDIT_FAILED`          | Image editing operation failed | Try different parameters    |
+| Error Code             | Description                    | Solution                   |
+| ---------------------- | ------------------------------ | -------------------------- |
+| `INVALID_SOURCE_IMAGE` | Source image not found/invalid | Check image path or format |
+| `VALIDATION_ERROR`     | Invalid input detected         | Check input format         |
+| `UNSUPPORTED_FORMAT`   | Unsupported image format       | Use PNG, JPEG, or WebP     |
+| `EDIT_FAILED`          | Image editing operation failed | Try different parameters   |
 
 ### Error Response Format
 

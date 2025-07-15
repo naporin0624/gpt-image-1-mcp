@@ -20,9 +20,6 @@ features:
   - icon: 🎨
     title: gpt-image-1 Powered
     details: Advanced text rendering, native transparency, and superior instruction following with GPT-4o language understanding
-  - icon: 🎯
-    title: English-Optimized
-    details: Optimized for English input with validation to ensure best quality. Use your LLM for translation when needed
   - icon: 🖼️
     title: Multiple Formats
     details: Support for PNG, JPEG, WebP with native transparency. Square, landscape, and portrait aspect ratios
@@ -34,15 +31,14 @@ features:
 ## Quick Start
 
 ```bash
-# Install dependencies
-pnpm install
+# Install globally (optional)
+npm install -g @napolab/gpt-image-1-mcp
 
-# Set up your OpenAI API key
-cp .env.example .env
-# Edit .env and add your OPENAI_API_KEY
+# Or use directly with npx (recommended)
+npx @napolab/gpt-image-1-mcp
 
-# Run the MCP server
-pnpm dev
+# Set up your OpenAI API key as environment variable
+export OPENAI_API_KEY="sk-your-api-key-here"
 ```
 
 ## Why gpt-image-1 MCP?
@@ -51,11 +47,12 @@ This MCP server bridges the gap between AI-powered image generation and modern d
 
 ### Key Features
 
+- **gpt-image-1 Model**: Latest OpenAI model with superior instruction following and spatial reasoning
 - **Advanced Text Rendering**: Crisp, legible typography and logos in generated images
 - **Native Transparency**: Built-in transparent background support without post-processing
+- **Multi-modal Editing**: Text-to-image, image-to-image, inpainting, and outpainting in one endpoint
 - **Multiple Formats**: PNG, JPEG, and WebP output with optimized compression
 - **Flexible Dimensions**: Square (1024×1024), landscape (1536×1024), and portrait (1024×1536)
-- **Style Control**: Choose between vivid and natural styles for different use cases
 - **Token-Optimized**: Efficient MCP responses with optional base64 data inclusion
 
 ## Integration Example
@@ -64,10 +61,10 @@ This MCP server bridges the gap between AI-powered image generation and modern d
 {
   "mcpServers": {
     "gpt-image-1-mcp": {
-      "command": "node",
-      "args": ["path/to/gpt-image-1-mcp/dist/index.js"],
+      "command": "npx",
+      "args": ["@napolab/gpt-image-1-mcp"],
       "env": {
-        "OPENAI_API_KEY": "your-api-key-here"
+        "OPENAI_API_KEY": "sk-your-api-key-here"
       }
     }
   }

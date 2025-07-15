@@ -24,11 +24,11 @@ await client.callTool("batch-edit", {
 
 ### Required Parameters
 
-| Parameter     | Type     | Description                                   |
-| ------------- | -------- | --------------------------------------------- |
-| `image_urls`  | string[] | Array of image file paths or URLs to edit     |
-| `edit_prompt` | string   | Description of desired changes (English only) |
-| `edit_type`   | string   | Type of edit to apply to all images           |
+| Parameter     | Type     | Description                               |
+| ------------- | -------- | ----------------------------------------- |
+| `image_urls`  | string[] | Array of image file paths or URLs to edit |
+| `edit_prompt` | string   | Description of desired changes            |
+| `edit_type`   | string   | Type of edit to apply to all images       |
 
 ### Optional Parameters
 
@@ -92,7 +92,7 @@ All edit types from the `edit-image` tool are supported:
 
 ### English-Only Requirement
 
-All edit prompts must be in English:
+All edit prompts must be in English for optimal gpt-image-1 performance:
 
 ```typescript
 // ✅ Correct - English prompt
@@ -102,7 +102,7 @@ await client.callTool("batch-edit", {
   edit_type: "enhancement",
 });
 
-// ❌ Rejected - Non-English text
+// ❌ Validation error - Non-English text
 await client.callTool("batch-edit", {
   image_urls: ["img1.jpg", "img2.jpg"],
   edit_prompt: "色を強調してコントラストを上げる",
@@ -110,7 +110,7 @@ await client.callTool("batch-edit", {
 });
 ```
 
-### Translation Workflow
+### LLM Translation Workflow
 
 ```typescript
 // Step 1: Translate with your LLM
@@ -118,7 +118,7 @@ const englishPrompt =
   await yourLLM.translate("色を強調してコントラストを上げる");
 // Result: "Enhance colors and increase contrast"
 
-// Step 2: Batch edit images
+// Step 2: Batch edit with English prompt
 const result = await client.callTool("batch-edit", {
   image_urls: ["img1.jpg", "img2.jpg"],
   edit_prompt: englishPrompt,

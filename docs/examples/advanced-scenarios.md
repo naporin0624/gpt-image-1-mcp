@@ -217,40 +217,24 @@ async function contentModerationPipeline(
     console.log(`Moderating image ${index + 1}/${imageUrls.length}`);
 
     try {
-      const analysis = await client.callTool("analyze-image", {
-        image_url: imageUrl,
-        analysis_type: "general",
-        questions: moderationCriteria[moderationLevel],
-      });
+      // Note: Image analysis is now handled by LLM clients directly
+      // This is a placeholder for external moderation service integration
 
-      // Calculate moderation score
-      const responses = analysis.data.questions.map((q) =>
-        q.answer.toLowerCase(),
-      );
-      const positiveResponses = responses.filter(
-        (r) =>
-          r.includes("yes") || r.includes("appropriate") || r.includes("safe"),
-      ).length;
-
-      const moderationScore = positiveResponses / responses.length;
+      // Simulate moderation score based on image processing
+      const mockModerationScore = Math.random() * 0.4 + 0.6; // 0.6-1.0 range
       const status =
-        moderationScore >= 0.8
+        mockModerationScore >= 0.8
           ? "approved"
-          : moderationScore >= 0.6
+          : mockModerationScore >= 0.6
             ? "review"
             : "rejected";
 
       results.push({
         imageUrl,
         status,
-        moderationScore,
-        analysis: analysis.data,
+        moderationScore: mockModerationScore,
         level: moderationLevel,
-        flaggedQuestions: analysis.data.questions.filter(
-          (q) =>
-            q.answer.toLowerCase().includes("no") ||
-            q.answer.toLowerCase().includes("inappropriate"),
-        ),
+        note: "Moderation should be implemented using external services or LLM client image analysis",
       });
 
       // Rate limiting
@@ -484,40 +468,14 @@ async function automatedQualityAssessment(
     console.log(`Assessing quality of image ${index + 1}/${imageUrls.length}`);
 
     try {
-      // Technical quality assessment
-      const technicalAnalysis = await client.callTool("analyze-image", {
-        image_url: imageUrl,
-        analysis_type: "technical",
-        questions: [
-          "Rate the technical quality from 0-1 (sharpness, exposure, etc.)",
-          "Are there any technical flaws or artifacts?",
-          "Is the image resolution appropriate?",
-          "How is the color accuracy and saturation?",
-        ],
-      });
+      // Note: Image analysis is now handled by LLM clients directly
+      // This example shows placeholder quality assessment
 
-      // Artistic quality assessment
-      const artisticAnalysis = await client.callTool("analyze-image", {
-        image_url: imageUrl,
-        analysis_type: "artistic",
-        questions: [
-          "Rate the artistic composition from 0-1",
-          "How appealing is the overall aesthetic?",
-          "Is the style consistent and coherent?",
-          "How effective is the use of color and light?",
-        ],
-      });
-
-      // Extract scores
-      const technicalScore = extractScore(
-        technicalAnalysis.data.questions[0].answer,
-      );
-      const artisticScore = extractScore(
-        artisticAnalysis.data.questions[0].answer,
-      );
-
-      // Overall assessment
+      // Simulate quality scores (in production, use external services or LLM client analysis)
+      const technicalScore = Math.random() * 0.4 + 0.6; // 0.6-1.0 range
+      const artisticScore = Math.random() * 0.4 + 0.6; // 0.6-1.0 range
       const overallScore = (technicalScore + artisticScore) / 2;
+
       const passed = {
         technical: technicalScore >= qualityThresholds.technical,
         artistic: artisticScore >= qualityThresholds.artistic,
@@ -534,11 +492,8 @@ async function automatedQualityAssessment(
           overall: overallScore,
         },
         passed,
-        analyses: {
-          technical: technicalAnalysis.data,
-          artistic: artisticAnalysis.data,
-        },
         status: passed.overall ? "approved" : "rejected",
+        note: "Quality assessment should use external services or LLM client image analysis",
       });
     } catch (error) {
       results.push({

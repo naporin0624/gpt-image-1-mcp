@@ -34,10 +34,6 @@ export default defineConfig({
             { text: "Image Generation", link: "/guide/image-generation" },
             { text: "Image Editing", link: "/guide/edit-image" },
             { text: "Batch Editing", link: "/guide/batch-edit" },
-            {
-              text: "English-Only Input",
-              link: "/guide/japanese-translation",
-            },
           ],
         },
         {

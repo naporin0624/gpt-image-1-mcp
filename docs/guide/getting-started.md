@@ -7,61 +7,68 @@ This guide will help you set up and start using gpt-image-1 MCP in your projects
 Before you begin, ensure you have:
 
 - Node.js 18+ installed
-- pnpm package manager
 - An OpenAI API key with access to gpt-image-1
 - A Model Context Protocol (MCP) compatible client
 
 ## Installation
 
-### 1. Clone the Repository
+### Recommended: Using npx (No Installation Required)
 
 ```bash
-git clone https://github.com/naporin0624/gen-image-mcp.git
-cd gen-image-mcp
+# Use directly with npx - no installation needed
+npx @napolab/gpt-image-1-mcp
 ```
 
-### 2. Install Dependencies
+### Alternative: Global Installation
 
 ```bash
-pnpm install
+# Install globally
+npm install -g @napolab/gpt-image-1-mcp
+
+# Then run
+@napolab/gpt-image-1-mcp
 ```
 
-### 3. Configure Environment
+### Configure Environment
 
-Create a `.env` file from the example:
+Set your OpenAI API key as an environment variable:
 
 ```bash
-cp .env.example .env
-```
+# Linux/macOS
+export OPENAI_API_KEY="sk-your-api-key-here"
 
-Edit the `.env` file and add your OpenAI API key:
+# Windows (Command Prompt)
+set OPENAI_API_KEY=sk-your-api-key-here
 
-```env
-OPENAI_API_KEY=sk-your-api-key-here
-```
-
-### 4. Build the Project
-
-```bash
-pnpm build
+# Windows (PowerShell)
+$env:OPENAI_API_KEY="sk-your-api-key-here"
 ```
 
 ## Running the Server
 
-### Development Mode
+### Using npx (Recommended)
+
+```bash
+# Run with npx (automatically uses latest version)
+npx @napolab/gpt-image-1-mcp
+```
+
+### Using Global Installation
+
+```bash
+# If installed globally
+@napolab/gpt-image-1-mcp
+```
+
+### Development Mode (For Contributors)
 
 For development with hot reload:
 
 ```bash
+git clone https://github.com/naporin0624/gen-image-mcp.git
+cd gen-image-mcp
+pnpm install
 pnpm dev
-```
-
-### Production Mode
-
-For production use:
-
-```bash
-pnpm start
 ```
 
 ## MCP Client Configuration
@@ -71,9 +78,9 @@ Add the server to your MCP client configuration:
 ```json
 {
   "mcpServers": {
-    "gpt-image-1-mcp": {
-      "command": "node",
-      "args": ["/absolute/path/to/gen-image-mcp/dist/index.js"],
+    "@napolab/gpt-image-1-mcp": {
+      "command": "npx",
+      "args": ["@napolab/gpt-image-1-mcp"],
       "env": {
         "OPENAI_API_KEY": "sk-your-api-key-here"
       }
@@ -106,7 +113,7 @@ await client.callTool("generate-image", {
 ## Next Steps
 
 - Learn about [Image Generation](/guide/image-generation) features
-- Understand [English-Only Input](/guide/japanese-translation) requirements
+- Understand multilingual input patterns with LLM translation
 - Configure [Environment Variables](/guide/environment-variables)
 - Check out [Examples](/examples/basic-usage)
 
@@ -117,12 +124,13 @@ await client.callTool("generate-image", {
 **API Key Not Working**
 
 - Ensure your API key has access to gpt-image-1 and GPT-4o Vision
-- Check that the key is correctly set in your `.env` file
+- Check that the key is correctly set as an environment variable
 
 **MCP Connection Failed**
 
-- Verify the absolute path to the built `index.js` file
-- Ensure the server is built (`pnpm build`)
+- Ensure npx can access the @napolab/gpt-image-1-mcp package
+- Check that Node.js 18+ is installed
+- Verify your internet connection for npm package downloads
 - Check MCP client logs for errors
 
 **Image Generation Failed**

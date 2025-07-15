@@ -94,35 +94,6 @@ Futuristic cityscape at sunset, cyberpunk aesthetic, neon lights
 reflecting on wet streets, flying vehicles, digital art style
 ```
 
-## English-Only Input Requirement
-
-The server requires English prompts for optimal gpt-image-1 performance:
-
-```typescript
-// ✅ Correct - English prompt
-{
-  prompt: "A serene Japanese garden with blooming cherry blossoms",
-  aspect_ratio: "landscape"
-}
-
-// ❌ Rejected - Non-English text
-{
-  prompt: "桜の花が咲く静かな日本庭園",
-  aspect_ratio: "landscape"
-}
-// Error: VALIDATION_ERROR - Please translate to English first
-```
-
-### Translation Workflow
-
-Use your LLM to translate non-English prompts:
-
-```
-1. User: "桜の花が咲く静かな日本庭園を描いて"
-2. LLM: "A serene Japanese garden with blooming cherry blossoms"
-3. MCP: Generate image with English prompt
-```
-
 ## File Management
 
 ### Naming Strategies
@@ -189,7 +160,7 @@ const result = await client.callTool("batch-edit", {
 
 ## Next Steps
 
-- Learn about [English-Only Input](/guide/japanese-translation) and translation workflows
+- Learn about LLM translation patterns for multilingual support
 - Explore [Image Editing](/guide/edit-image) capabilities for post-processing
 - Try [Batch Editing](/guide/batch-edit) for processing multiple images
 - Check out [Examples](/examples/basic-usage) for more use cases

@@ -722,7 +722,7 @@ ERROR_LOG_LEVEL=error
 ```json
 {
   "mcpServers": {
-    "gpt-image-1-mcp": {
+    "@napolab/gpt-image-1-mcp": {
       "env": {
         "ERROR_RETRY_ATTEMPTS": "3",
         "ERROR_RETRY_DELAY": "1000",
