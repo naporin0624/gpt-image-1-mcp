@@ -1,12 +1,12 @@
 # MCP Tools Overview
 
-GPT Image 1 MCP provides several tools for image generation and analysis through the Model Context Protocol.
+GPT Image 1 MCP provides tools for image generation through the Model Context Protocol.
 
 ## Available Tools
 
 ### generate-image
 
-Generate images using OpenAI's OpenAI gpt-image-1 model.
+Generate images using OpenAI's gpt-image-1 model.
 
 **Parameters:**
 
@@ -24,36 +24,45 @@ Generate images using OpenAI's OpenAI gpt-image-1 model.
 - Local file path (if saved)
 - Generation metadata
 
-### analyze-image
+### edit-image
 
-Analyze images using GPT-4o Vision.
-
-**Parameters:**
-
-- `image_url` (string, required): URL of the image to analyze
-- `analysis_type` (string): "general", "detailed", "artistic", or "technical"
-- `questions` (string[]): Specific questions about the image
-
-**Returns:**
-
-- Analysis results
-- Detected elements
-- Answers to specific questions
-
-### translate-prompt
-
-Translate Japanese prompts to English for better OpenAI gpt-image-1 results.
+Edit existing images with AI-powered modifications including inpainting, outpainting, and style transfer.
 
 **Parameters:**
 
-- `japanese_prompt` (string, required): Japanese text to translate
-- `context` (string): Translation context
-- `preserve_technical_terms` (boolean): Keep technical terms unchanged
+- `source_image` (string, required): Image URL or base64 encoded image
+- `edit_prompt` (string, required): Description of desired changes
+- `edit_type` (string, required): Type of edit ("inpaint", "outpaint", "variation", "style_transfer", etc.)
+- `strength` (number): Edit strength (0.0 = minimal, 1.0 = maximum)
 
 **Returns:**
 
-- Translated English prompt
-- Translation confidence score
+- Edited image file path
+- Metadata about the edited image
+
+### batch-edit
+
+Apply the same edit to multiple images efficiently.
+
+**Parameters:**
+
+- `image_urls` (string[], required): Array of image URLs to edit
+- `edit_prompt` (string, required): Edit description to apply to all images
+- `edit_type` (string, required): Type of edit to apply
+- `batch_settings` (object): Configuration for batch processing
+
+**Returns:**
+
+- Array of edited image file paths
+- Processing status for each image
+
+## Image Analysis
+
+For image analysis capabilities, LLM clients can directly read image files using the file paths returned by the generation and editing tools. This provides better separation of concerns and allows the LLM to use its native vision capabilities.
+
+## Note on Translation
+
+For non-English prompts, it's recommended to use your LLM client to translate prompts to English before using the image generation tools, as gpt-image-1 works best with English input.
 
 ## Tool Response Format
 

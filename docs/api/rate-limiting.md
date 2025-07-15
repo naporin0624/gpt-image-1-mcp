@@ -24,15 +24,9 @@ Rate limiting controls the frequency of API requests to prevent overwhelming the
 | Tier 3 | 200                       | 2000            |
 | Tier 4 | 500                       | 5000            |
 
-### Vision Analysis (GPT-4o)
+### Image Editing
 
-| Tier   | Requests per Minute (RPM) | Tokens per Minute (TPM) |
-| ------ | ------------------------- | ----------------------- |
-| Free   | 3                         | 40,000                  |
-| Tier 1 | 500                       | 2,000,000               |
-| Tier 2 | 5,000                     | 10,000,000              |
-| Tier 3 | 10,000                    | 20,000,000              |
-| Tier 4 | 30,000                    | 40,000,000              |
+Rate limits for image editing operations follow the same structure as image generation, as they use the same underlying API endpoints.
 
 ## Rate Limiting Implementation
 
