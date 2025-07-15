@@ -1,5 +1,7 @@
 import { defineConfig } from "tsup";
 
+import { version } from "./package.json";
+
 export default defineConfig({
   entry: ["src/index.ts"],
   format: ["esm"],
@@ -18,5 +20,6 @@ export default defineConfig({
   },
   env: {
     NODE_ENV: "production",
+    PACKAGE_VERSION: version,
   },
 });
