@@ -20,24 +20,24 @@ await client.callTool("edit-image", {
 
 ### Required Parameters
 
-| Parameter     | Type   | Description                                           |
-| ------------- | ------ | ----------------------------------------------------- |
-| `source_image`| string | Path to source image file or base64 encoded image    |
-| `edit_prompt` | string | Description of desired changes (English only)        |
-| `edit_type`   | string | Type of edit to perform                               |
+| Parameter      | Type   | Description                                       |
+| -------------- | ------ | ------------------------------------------------- |
+| `source_image` | string | Path to source image file or base64 encoded image |
+| `edit_prompt`  | string | Description of desired changes (English only)     |
+| `edit_type`    | string | Type of edit to perform                           |
 
 ### Optional Parameters
 
-| Parameter               | Type    | Default     | Description                        |
-| ----------------------- | ------- | ----------- | ---------------------------------- |
-| `strength`              | number  | `0.8`       | Edit strength (0.0 to 1.0)        |
-| `mask_area`             | string  | `null`      | Mask specification for targeted editing |
-| `preserve_composition`  | boolean | `true`      | Maintain original image composition |
-| `output_directory`      | string  | `"./edited_images"` | Directory to save edited images |
-| `filename_prefix`       | string  | `"edited_"` | Prefix for edited image filename   |
-| `save_to_file`          | boolean | `true`      | Whether to save edited image locally |
-| `output_format`         | string  | `"png"`     | Output format (png, jpeg, webp)   |
-| `include_base64`        | boolean | `false`     | Include base64 data in response    |
+| Parameter              | Type    | Default             | Description                             |
+| ---------------------- | ------- | ------------------- | --------------------------------------- |
+| `strength`             | number  | `0.8`               | Edit strength (0.0 to 1.0)              |
+| `mask_area`            | string  | `null`              | Mask specification for targeted editing |
+| `preserve_composition` | boolean | `true`              | Maintain original image composition     |
+| `output_directory`     | string  | `"./edited_images"` | Directory to save edited images         |
+| `filename_prefix`      | string  | `"edited_"`         | Prefix for edited image filename        |
+| `save_to_file`         | boolean | `true`              | Whether to save edited image locally    |
+| `output_format`        | string  | `"png"`             | Output format (png, jpeg, webp)         |
+| `include_base64`       | boolean | `false`             | Include base64 data in response         |
 
 ## Edit Types
 
@@ -200,12 +200,12 @@ await client.callTool("edit-image", {
 
 ### Common Errors
 
-| Error Code            | Description                    | Solution                    |
-| --------------------- | ------------------------------ | --------------------------- |
-| `INVALID_SOURCE_IMAGE`| Source image not found/invalid| Check image path or format  |
-| `VALIDATION_ERROR`    | Non-English text detected      | Translate prompt to English |
-| `UNSUPPORTED_FORMAT`  | Unsupported image format       | Use PNG, JPEG, or WebP     |
-| `EDIT_FAILED`         | Image editing operation failed | Try different parameters    |
+| Error Code             | Description                    | Solution                    |
+| ---------------------- | ------------------------------ | --------------------------- |
+| `INVALID_SOURCE_IMAGE` | Source image not found/invalid | Check image path or format  |
+| `VALIDATION_ERROR`     | Non-English text detected      | Translate prompt to English |
+| `UNSUPPORTED_FORMAT`   | Unsupported image format       | Use PNG, JPEG, or WebP      |
+| `EDIT_FAILED`          | Image editing operation failed | Try different parameters    |
 
 ### Error Response Format
 
@@ -282,6 +282,7 @@ for (const format of formats) {
 ### Example Prompts
 
 **Good Prompts:**
+
 ```
 "Replace the cloudy sky with a clear blue sky with wispy white clouds"
 "Add warm golden hour lighting to the entire scene"
@@ -290,6 +291,7 @@ for (const format of formats) {
 ```
 
 **Basic Prompts:**
+
 ```
 "Change sky"
 "Add lighting"

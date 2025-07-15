@@ -149,14 +149,14 @@ Edit and enhance generated images:
 // Generate base image
 const baseImage = await client.callTool("generate-image", {
   prompt: "A mountain landscape",
-  aspect_ratio: "landscape"
+  aspect_ratio: "landscape",
 });
 
 // Edit the image
 const editedImage = await client.callTool("edit-image", {
   source_image: baseImage.data.file_path,
   edit_prompt: "Add dramatic storm clouds",
-  edit_type: "background_change"
+  edit_type: "background_change",
 });
 ```
 
@@ -168,7 +168,7 @@ Apply the same edit to multiple images:
 const result = await client.callTool("batch-edit", {
   image_urls: ["image1.png", "image2.png", "image3.png"],
   edit_prompt: "Convert to black and white",
-  edit_type: "style_transfer"
+  edit_type: "style_transfer",
 });
 ```
 

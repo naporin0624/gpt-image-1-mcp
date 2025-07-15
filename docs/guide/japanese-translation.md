@@ -19,7 +19,7 @@ This MCP server uses an **English-only input validation** architecture that:
 gpt-image-1 is built on GPT-4o's language engine, providing:
 
 - **Superior instruction following** in English
-- **Advanced text rendering** capabilities 
+- **Advanced text rendering** capabilities
 - **Better spatial reasoning** with English descriptions
 - **Consistent quality** across generations
 
@@ -47,21 +47,24 @@ For Japanese users, follow this recommended workflow:
 #### Example Workflow
 
 **Step 1: Japanese Prompt**
+
 ```
 User: "桜の花が咲いている美しい日本庭園を描いて"
 ```
 
 **Step 2: LLM Translation**
+
 ```
 LLM: "A beautiful Japanese garden with cherry blossoms in bloom"
 ```
 
 **Step 3: MCP Image Generation**
+
 ```typescript
 await client.callTool("generate-image", {
   prompt: "A beautiful Japanese garden with cherry blossoms in bloom",
   aspect_ratio: "landscape",
-  quality: "hd"
+  quality: "hd",
 });
 ```
 
@@ -70,12 +73,14 @@ await client.callTool("generate-image", {
 #### Use Your LLM for Translation
 
 **Good:**
+
 ```
 User: "この文章を英語に翻訳して、画像生成用に最適化してください: 印象派スタイルの油絵で描かれた夕暮れの風景"
 LLM: "A sunset landscape painted in impressionist oil painting style, with soft brushstrokes and warm lighting"
 ```
 
 **Better:**
+
 ```
 User: "Translate and optimize this for gpt-image-1: 印象派スタイルの油絵で描かれた夕暮れの風景"
 LLM: "An impressionist oil painting of a sunset landscape with visible brushstrokes, vibrant warm colors blending in the sky, and soft golden light illuminating the scene"
@@ -118,7 +123,7 @@ When non-English text is detected, you'll receive helpful errors:
 ```typescript
 // This will be rejected
 await client.callTool("generate-image", {
-  prompt: "A beautiful 日本庭園 with flowers"
+  prompt: "A beautiful 日本庭園 with flowers",
 });
 
 // Error: Mixed language detected
@@ -129,7 +134,7 @@ await client.callTool("generate-image", {
 ```typescript
 // This will be rejected
 await client.callTool("generate-image", {
-  prompt: "美しい桜の花"
+  prompt: "美しい桜の花",
 });
 
 // Error: Japanese text detected
@@ -141,7 +146,10 @@ await client.callTool("generate-image", {
 
 ```typescript
 class EnglishOptimizedImageGenerator {
-  constructor(private llmClient: LLMClient, private mcpClient: MCPClient) {}
+  constructor(
+    private llmClient: LLMClient,
+    private mcpClient: MCPClient,
+  ) {}
 
   async generateFromJapanese(japanesePrompt: string) {
     // Step 1: Translate with your LLM
@@ -151,13 +159,13 @@ class EnglishOptimizedImageGenerator {
     // Step 2: Generate with MCP
     const result = await this.mcpClient.callTool("generate-image", {
       prompt: englishPrompt,
-      quality: "hd"
+      quality: "hd",
     });
 
     return {
       originalPrompt: japanesePrompt,
       englishPrompt,
-      image: result.data
+      image: result.data,
     };
   }
 }
@@ -172,20 +180,20 @@ async function batchTranslateAndGenerate(japanesePrompts: string[]) {
   for (const jpPrompt of japanesePrompts) {
     // Translate each prompt
     const englishPrompt = await translateWithLLM(jpPrompt);
-    
+
     // Generate image
     const image = await client.callTool("generate-image", {
-      prompt: englishPrompt
+      prompt: englishPrompt,
     });
 
     results.push({
       original: jpPrompt,
       translated: englishPrompt,
-      image: image.data
+      image: image.data,
     });
 
     // Rate limiting
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
   return results;
@@ -195,7 +203,7 @@ async function translateWithLLM(japaneseText: string): Promise<string> {
   // Use your preferred LLM for translation
   // This could be Claude, GPT-4, or any other LLM
   const translationPrompt = `Translate this Japanese text to English, optimizing for image generation with gpt-image-1: ${japaneseText}`;
-  
+
   // Implementation depends on your LLM client
   return await yourLLMClient.complete(translationPrompt);
 }
@@ -208,27 +216,30 @@ async function translateWithLLM(japaneseText: string): Promise<string> {
 When using LLMs for translation, include these instructions:
 
 **Basic Translation:**
+
 ```
 "Translate to English: [Japanese text]"
 ```
 
 **Optimized Translation:**
+
 ```
 "Translate this Japanese text to English and optimize for gpt-image-1 image generation. Include specific visual details, lighting, composition, and artistic style: [Japanese text]"
 ```
 
 **Cultural Preservation:**
+
 ```
 "Translate to English while preserving cultural context and adding visual details that would help an AI understand the Japanese aesthetic: [Japanese text]"
 ```
 
 ### Examples of Optimized Translations
 
-| Japanese | Basic Translation | Optimized Translation |
-|----------|------------------|----------------------|
-| 桜の花 | Cherry blossoms | Delicate pink cherry blossoms on branches with soft petals falling |
-| 日本庭園 | Japanese garden | Traditional Japanese zen garden with carefully arranged stones, moss, and pruned trees |
-| 侘寂 | Wabi-sabi | Wabi-sabi aesthetic with weathered textures, subtle imperfections, and serene simplicity |
+| Japanese | Basic Translation | Optimized Translation                                                                    |
+| -------- | ----------------- | ---------------------------------------------------------------------------------------- |
+| 桜の花   | Cherry blossoms   | Delicate pink cherry blossoms on branches with soft petals falling                       |
+| 日本庭園 | Japanese garden   | Traditional Japanese zen garden with carefully arranged stones, moss, and pruned trees   |
+| 侘寂     | Wabi-sabi         | Wabi-sabi aesthetic with weathered textures, subtle imperfections, and serene simplicity |
 
 ## Best Practices
 
@@ -252,25 +263,27 @@ When using LLMs for translation, include these instructions:
 If you prefer external translation services:
 
 ### DeepL Integration
+
 ```typescript
-import { DeepL } from 'deepl-api';
+import { DeepL } from "deepl-api";
 
 const deepl = new DeepL(process.env.DEEPL_API_KEY);
 
 async function translateWithDeepL(text: string) {
-  const result = await deepl.translate(text, 'JA', 'EN');
+  const result = await deepl.translate(text, "JA", "EN");
   return result.text;
 }
 ```
 
 ### Google Translate Integration
+
 ```typescript
-import { Translate } from '@google-cloud/translate';
+import { Translate } from "@google-cloud/translate";
 
 const translate = new Translate();
 
 async function translateWithGoogle(text: string) {
-  const [translation] = await translate.translate(text, 'en');
+  const [translation] = await translate.translate(text, "en");
   return translation;
 }
 ```
@@ -304,24 +317,26 @@ INCLUDE_EXAMPLE_PROMPTS=true
 If you were previously using the translate-prompt tool:
 
 ### Before (deprecated)
+
 ```typescript
 // Old workflow with translate-prompt
 const translation = await client.callTool("translate-prompt", {
-  japanese_prompt: "美しい風景"
+  japanese_prompt: "美しい風景",
 });
 
 const image = await client.callTool("generate-image", {
-  prompt: translation.data.english_prompt
+  prompt: translation.data.english_prompt,
 });
 ```
 
 ### After (recommended)
+
 ```typescript
 // New workflow with LLM translation
 const englishPrompt = await yourLLM.translate("美しい風景");
 
 const image = await client.callTool("generate-image", {
-  prompt: englishPrompt
+  prompt: englishPrompt,
 });
 ```
 

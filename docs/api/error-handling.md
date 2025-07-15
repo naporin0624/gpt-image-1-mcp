@@ -545,7 +545,7 @@ async function generateImage(prompt: string) {
     switch (error.code) {
       case "VALIDATION_ERROR":
         throw new Error(
-          "Please translate your prompt to English using your LLM first."
+          "Please translate your prompt to English using your LLM first.",
         );
       case "RATE_LIMIT_EXCEEDED":
         throw new Error("Rate limit exceeded. Please try again later.");

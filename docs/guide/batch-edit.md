@@ -13,7 +13,7 @@ await client.callTool("batch-edit", {
   image_urls: [
     "/path/to/image1.jpg",
     "/path/to/image2.jpg",
-    "/path/to/image3.jpg"
+    "/path/to/image3.jpg",
   ],
   edit_prompt: "Apply vintage sepia filter",
   edit_type: "style_transfer",
@@ -24,23 +24,23 @@ await client.callTool("batch-edit", {
 
 ### Required Parameters
 
-| Parameter     | Type     | Description                                      |
-| ------------- | -------- | ------------------------------------------------ |
-| `image_urls`  | string[] | Array of image file paths or URLs to edit       |
-| `edit_prompt` | string   | Description of desired changes (English only)   |
-| `edit_type`   | string   | Type of edit to apply to all images             |
+| Parameter     | Type     | Description                                   |
+| ------------- | -------- | --------------------------------------------- |
+| `image_urls`  | string[] | Array of image file paths or URLs to edit     |
+| `edit_prompt` | string   | Description of desired changes (English only) |
+| `edit_type`   | string   | Type of edit to apply to all images           |
 
 ### Optional Parameters
 
-| Parameter          | Type    | Default              | Description                           |
-| ------------------ | ------- | -------------------- | ------------------------------------- |
-| `batch_settings`   | object  | `{}`                 | Batch processing configuration        |
-| `output_directory` | string  | `"./batch_edited"`   | Directory to save edited images       |
-| `filename_prefix`  | string  | `"batch_"`           | Prefix for edited image filenames     |
-| `save_to_file`     | boolean | `true`               | Whether to save edited images locally |
-| `output_format`    | string  | `"png"`              | Output format (png, jpeg, webp)      |
-| `naming_strategy`  | string  | `"timestamp"`        | Filename generation strategy          |
-| `organize_by`      | string  | `"none"`             | Subdirectory organization method      |
+| Parameter          | Type    | Default            | Description                           |
+| ------------------ | ------- | ------------------ | ------------------------------------- |
+| `batch_settings`   | object  | `{}`               | Batch processing configuration        |
+| `output_directory` | string  | `"./batch_edited"` | Directory to save edited images       |
+| `filename_prefix`  | string  | `"batch_"`         | Prefix for edited image filenames     |
+| `save_to_file`     | boolean | `true`             | Whether to save edited images locally |
+| `output_format`    | string  | `"png"`            | Output format (png, jpeg, webp)       |
+| `naming_strategy`  | string  | `"timestamp"`      | Filename generation strategy          |
+| `organize_by`      | string  | `"none"`           | Subdirectory organization method      |
 
 ## Batch Settings
 
@@ -60,21 +60,21 @@ Configure parallel processing and error handling:
 
 ### Batch Settings Options
 
-| Setting              | Type    | Default              | Description                         |
-| -------------------- | ------- | -------------------- | ----------------------------------- |
-| `max_concurrent`     | number  | `3`                  | Maximum concurrent operations (1-10) |
-| `parallel_processing`| boolean | `true`               | Process images in parallel          |
-| `error_handling`     | string  | `"continue_on_error"`| How to handle errors               |
-| `progress_callback`  | boolean | `true`               | Enable progress tracking            |
-| `retry_failed`       | boolean | `false`              | Retry failed operations once        |
+| Setting               | Type    | Default               | Description                          |
+| --------------------- | ------- | --------------------- | ------------------------------------ |
+| `max_concurrent`      | number  | `3`                   | Maximum concurrent operations (1-10) |
+| `parallel_processing` | boolean | `true`                | Process images in parallel           |
+| `error_handling`      | string  | `"continue_on_error"` | How to handle errors                 |
+| `progress_callback`   | boolean | `true`                | Enable progress tracking             |
+| `retry_failed`        | boolean | `false`               | Retry failed operations once         |
 
 ### Error Handling Strategies
 
-| Strategy            | Description                                    |
-| ------------------- | ---------------------------------------------- |
-| `"fail_fast"`       | Stop processing on first error                |
-| `"continue_on_error"` | Continue processing remaining images         |
-| `"retry_failed"`    | Retry failed operations once, then continue   |
+| Strategy              | Description                                 |
+| --------------------- | ------------------------------------------- |
+| `"fail_fast"`         | Stop processing on first error              |
+| `"continue_on_error"` | Continue processing remaining images        |
+| `"retry_failed"`      | Retry failed operations once, then continue |
 
 ## Edit Types
 
@@ -114,7 +114,8 @@ await client.callTool("batch-edit", {
 
 ```typescript
 // Step 1: Translate with your LLM
-const englishPrompt = await yourLLM.translate("色を強調してコントラストを上げる");
+const englishPrompt =
+  await yourLLM.translate("色を強調してコントラストを上げる");
 // Result: "Enhance colors and increase contrast"
 
 // Step 2: Batch edit images
@@ -199,9 +200,9 @@ await client.callTool("batch-edit", {
     max_concurrent: 8,
     parallel_processing: true,
     error_handling: "continue_on_error",
-    retry_failed: true
+    retry_failed: true,
   },
-  organize_by: "date"
+  organize_by: "date",
 });
 ```
 
@@ -210,20 +211,16 @@ await client.callTool("batch-edit", {
 ```typescript
 // High-quality processing with error handling
 await client.callTool("batch-edit", {
-  image_urls: [
-    "product1.jpg",
-    "product2.jpg",
-    "product3.jpg"
-  ],
+  image_urls: ["product1.jpg", "product2.jpg", "product3.jpg"],
   edit_prompt: "Remove background and make transparent",
   edit_type: "background_change",
   batch_settings: {
     max_concurrent: 2,
     parallel_processing: true,
-    error_handling: "fail_fast"
+    error_handling: "fail_fast",
   },
   output_format: "png",
-  naming_strategy: "custom"
+  naming_strategy: "custom",
 });
 ```
 
@@ -237,10 +234,10 @@ await client.callTool("batch-edit", {
   edit_type: "style_transfer",
   batch_settings: {
     max_concurrent: 5,
-    progress_callback: true
+    progress_callback: true,
   },
   organize_by: "aspect_ratio",
-  filename_prefix: "branded_"
+  filename_prefix: "branded_",
 });
 ```
 
@@ -248,12 +245,12 @@ await client.callTool("batch-edit", {
 
 ### Common Errors
 
-| Error Code              | Description                          | Solution                     |
-| ----------------------- | ------------------------------------ | ---------------------------- |
-| `BATCH_SIZE_EXCEEDED`   | Too many images in batch             | Reduce batch size or split   |
-| `INVALID_IMAGE_URLS`    | One or more image URLs invalid       | Check image paths/URLs       |
-| `CONCURRENT_LIMIT`      | max_concurrent exceeds limit         | Reduce concurrent operations |
-| `PROCESSING_TIMEOUT`    | Batch processing timed out           | Reduce batch size or timeout |
+| Error Code            | Description                    | Solution                     |
+| --------------------- | ------------------------------ | ---------------------------- |
+| `BATCH_SIZE_EXCEEDED` | Too many images in batch       | Reduce batch size or split   |
+| `INVALID_IMAGE_URLS`  | One or more image URLs invalid | Check image paths/URLs       |
+| `CONCURRENT_LIMIT`    | max_concurrent exceeds limit   | Reduce concurrent operations |
+| `PROCESSING_TIMEOUT`  | Batch processing timed out     | Reduce batch size or timeout |
 
 ### Error Response Format
 
@@ -281,20 +278,20 @@ const result = await client.callTool("batch-edit", {
   edit_prompt: "Enhance brightness",
   edit_type: "color_adjustment",
   batch_settings: {
-    error_handling: "continue_on_error"
-  }
+    error_handling: "continue_on_error",
+  },
 });
 
 // Process results
-const successful = result.data.results.filter(r => r.success);
-const failed = result.data.results.filter(r => !r.success);
+const successful = result.data.results.filter((r) => r.success);
+const failed = result.data.results.filter((r) => !r.success);
 
 console.log(`Processed ${successful.length} images successfully`);
 console.log(`Failed to process ${failed.length} images`);
 
 // Retry failed images
 if (failed.length > 0) {
-  const retryUrls = failed.map(f => f.source_image);
+  const retryUrls = failed.map((f) => f.source_image);
   // Retry with different parameters
 }
 ```
@@ -316,26 +313,26 @@ if (failed.length > 0) {
 // Process large batches in chunks
 async function processLargeBatch(imageUrls: string[], chunkSize: number = 25) {
   const results = [];
-  
+
   for (let i = 0; i < imageUrls.length; i += chunkSize) {
     const chunk = imageUrls.slice(i, i + chunkSize);
-    
+
     const chunkResult = await client.callTool("batch-edit", {
       image_urls: chunk,
       edit_prompt: "Apply consistent branding",
       edit_type: "style_transfer",
       batch_settings: {
         max_concurrent: 5,
-        error_handling: "continue_on_error"
-      }
+        error_handling: "continue_on_error",
+      },
     });
-    
+
     results.push(...chunkResult.data.results);
-    
+
     // Brief pause between chunks
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
-  
+
   return results;
 }
 ```
@@ -352,10 +349,10 @@ await client.callTool("batch-edit", {
   edit_type: "background_change",
   batch_settings: {
     max_concurrent: 4,
-    error_handling: "continue_on_error"
+    error_handling: "continue_on_error",
   },
   output_format: "png",
-  organize_by: "date"
+  organize_by: "date",
 });
 ```
 
@@ -369,10 +366,10 @@ await client.callTool("batch-edit", {
   edit_type: "style_transfer",
   batch_settings: {
     max_concurrent: 6,
-    progress_callback: true
+    progress_callback: true,
   },
   filename_prefix: "social_",
-  organize_by: "aspect_ratio"
+  organize_by: "aspect_ratio",
 });
 ```
 
@@ -386,9 +383,9 @@ await client.callTool("batch-edit", {
   edit_type: "enhancement",
   batch_settings: {
     max_concurrent: 3,
-    error_handling: "retry_failed"
+    error_handling: "retry_failed",
   },
-  organize_by: "quality"
+  organize_by: "quality",
 });
 ```
 
@@ -406,15 +403,15 @@ async function processUploadedImages(imageUrls: string[]) {
     edit_type: "enhancement",
     batch_settings: {
       max_concurrent: 4,
-      error_handling: "continue_on_error"
-    }
+      error_handling: "continue_on_error",
+    },
   });
-  
+
   // Step 2: Process successful edits
   const successfulImages = editResult.data.results
-    .filter(r => r.success)
-    .map(r => r.file_path);
-  
+    .filter((r) => r.success)
+    .map((r) => r.file_path);
+
   // Step 3: Upload to CDN, update database, etc.
   return await uploadToCDN(successfulImages);
 }
@@ -431,19 +428,19 @@ async function qualityBatchEdit(imageUrls: string[]) {
     edit_type: "enhancement",
     batch_settings: {
       max_concurrent: 3,
-      error_handling: "fail_fast"
-    }
+      error_handling: "fail_fast",
+    },
   });
-  
+
   // Quality validation
-  const qualityCheck = result.data.results.every(r => 
-    r.success && r.file_size > 100000 // Minimum size check
+  const qualityCheck = result.data.results.every(
+    (r) => r.success && r.file_size > 100000, // Minimum size check
   );
-  
+
   if (!qualityCheck) {
     throw new Error("Quality standards not met");
   }
-  
+
   return result;
 }
 ```

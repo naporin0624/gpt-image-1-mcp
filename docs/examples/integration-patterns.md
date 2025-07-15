@@ -478,7 +478,7 @@ const imageGenerationWorker = new Worker(
 
       await job.updateProgress(70);
 
-            await job.updateProgress(90);
+      await job.updateProgress(90);
 
       // Store result
       await storeResult(userId, requestId, {
@@ -674,19 +674,22 @@ ipcMain.handle("generate-image", async (event, { prompt, options }) => {
   }
 });
 
-ipcMain.handle("edit-image", async (event, { sourceImage, editPrompt, editType }) => {
-  try {
-    const result = await client.callTool("edit-image", {
-      source_image: sourceImage,
-      edit_prompt: editPrompt,
-      edit_type: editType,
-    });
+ipcMain.handle(
+  "edit-image",
+  async (event, { sourceImage, editPrompt, editType }) => {
+    try {
+      const result = await client.callTool("edit-image", {
+        source_image: sourceImage,
+        edit_prompt: editPrompt,
+        edit_type: editType,
+      });
 
-    return { success: true, data: result.data };
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
-});
+      return { success: true, data: result.data };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  },
+);
 
 app.whenReady().then(createWindow);
 ```

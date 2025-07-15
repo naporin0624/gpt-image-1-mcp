@@ -306,7 +306,7 @@ async function createHighQualityContent(englishPrompt: string) {
 
 // Usage
 const content = await createHighQualityContent(
-  "A beautiful Japanese garden with cherry blossoms in spring"
+  "A beautiful Japanese garden with cherry blossoms in spring",
 );
 ```
 

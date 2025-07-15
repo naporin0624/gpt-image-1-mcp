@@ -46,16 +46,19 @@ The Model Context Protocol (MCP) is an open protocol that enables AI assistants 
 ## Use Cases
 
 ### Content Creation
+
 - Generate hero images for websites and blogs
 - Create social media graphics and thumbnails
 - Design product mockups and marketing materials
 
 ### Development Workflows
+
 - Generate placeholder images for applications
 - Create assets for user interfaces
 - Design icons and logos programmatically
 
 ### Creative Projects
+
 - Explore artistic concepts and ideas
 - Generate reference images for projects
 - Create variations and iterations quickly
@@ -72,11 +75,13 @@ gpt-image-1 MCP integrates seamlessly with MCP-compatible applications:
 ## Benefits of MCP
 
 ### For Developers
+
 - **Standardized Protocol**: Use the same interface across different AI services
 - **Easy Integration**: Simple JSON-RPC based communication
 - **Extensible**: Add new capabilities without changing client code
 
 ### For Users
+
 - **Seamless Experience**: AI tools work directly within familiar applications
 - **Powerful Combinations**: Combine image generation with other AI capabilities
 - **Efficient Workflows**: Reduce context switching between different tools
@@ -93,12 +98,14 @@ Ready to start generating images with gpt-image-1 MCP?
 ## Architecture Benefits
 
 ### English-Only Design
+
 - **Optimized Performance**: Leverages gpt-image-1's English language strengths
 - **Simplified Architecture**: No internal translation overhead
 - **Better Results**: Direct English processing for superior image quality
 - **User Control**: Choose your preferred translation method
 
 ### MCP Optimization
+
 - **Token Efficient**: Optimized response formats for MCP limits
 - **Fast Responses**: Minimal overhead for better performance
 - **Reliable Integration**: Robust error handling and retry logic

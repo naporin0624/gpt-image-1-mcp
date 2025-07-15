@@ -117,7 +117,7 @@ async function abTestImageGeneration(
     results.push({
       prompt,
       variants: promptResults,
-      bestVariant: promptResults.find(v => v.image) || promptResults[0],
+      bestVariant: promptResults.find((v) => v.image) || promptResults[0],
     });
   }
 
