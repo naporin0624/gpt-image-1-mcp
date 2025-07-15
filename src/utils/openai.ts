@@ -5,7 +5,7 @@ import {
   MaskError,
   BatchProcessingError,
 } from "../types/edit.js";
-import { aspectRatioToSize, mapLegacyQuality } from "../types/image.js";
+import { aspectRatioToSize } from "../types/image.js";
 
 import { FileManager } from "./file-manager.js";
 import { loadImageAsBuffer, normalizeImageInput } from "./image-input.js";
@@ -33,7 +33,7 @@ export class OpenAIService {
 
   constructor() {
     const apiKey = process.env.OPENAI_API_KEY;
-    if (apiKey == null) {
+    if (!apiKey) {
       throw new Error("OPENAI_API_KEY environment variable is required");
     }
 
@@ -74,14 +74,8 @@ export class OpenAIService {
   async generateImage(
     input: GenerateImageInput,
   ): Promise<OptimizedGenerateImageResponse> {
-    const startTime = Date.now();
-
     try {
       const size = aspectRatioToSize(input.aspect_ratio);
-
-      const _defaultQuality = mapLegacyQuality(
-        process.env.DEFAULT_IMAGE_QUALITY ?? "medium",
-      );
 
       // Build parameters only with what gpt-image-1 supports
       const generateParams: OpenAI.ImageGenerateParams = {
@@ -93,16 +87,16 @@ export class OpenAIService {
       };
 
       // Add optional parameters only if provided and supported
-      if (input.output_format && input.output_format.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (input.output_format) {
         generateParams.output_format = input.output_format;
       }
-      if (input.moderation && input.moderation.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (input.moderation) {
         generateParams.moderation = input.moderation;
       }
 
       const openaiResponse = await this.client.images.generate(generateParams);
-
-      const _generationTime = Date.now() - startTime;
 
       if (openaiResponse.data == null || openaiResponse.data.length === 0) {
         throw new Error("No image data returned from OpenAI");
@@ -172,7 +166,8 @@ export class OpenAIService {
       customResponse.metadata = {
         width: parseInt(size.split("x")[0] ?? "1024"),
         height: parseInt(size.split("x")[1] ?? "1024"),
-        format: fileResult?.format || input.output_format || "png",
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        format: fileResult?.format ?? input.output_format ?? "png",
         size_bytes: fileResult?.size_bytes ?? 0,
         created_at: fileResult?.saved_at ?? new Date().toISOString(),
       };
@@ -200,9 +195,9 @@ export class OpenAIService {
           }
 
           // Include base64 data
-          if (b64Data && b64Data.length > 0) {
+          if (b64Data != null && b64Data.length > 0) {
             customResponse.base64_image = b64Data;
-          } else if (imageUrl && imageUrl.length > 0) {
+          } else if (imageUrl != null && imageUrl.length > 0) {
             // For URLs, we'd need to fetch and convert - for now just warn
             warnings.push(
               "Base64 requested but only URL available. Use file_path instead.",
@@ -243,10 +238,12 @@ export class OpenAIService {
       };
 
       const optionalParams: Record<string, unknown> = {};
-      if (input.quality && input.quality.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (input.quality) {
         optionalParams.quality = input.quality;
       }
-      if (input.background && input.background.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (input.background) {
         optionalParams.background = input.background;
       }
 
@@ -276,9 +273,10 @@ export class OpenAIService {
         | undefined;
 
       // Handle different response formats
-      if (imageData.b64_json && imageData.b64_json.length > 0) {
+      if (imageData.b64_json != null && imageData.b64_json.length > 0) {
         // gpt-image-1 returns base64 - save to file immediately to avoid large responses
         const base64Data = imageData.b64_json;
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         const dataUrl = `data:image/${input.output_format ?? "png"};base64,${base64Data}`;
 
         try {
@@ -288,7 +286,7 @@ export class OpenAIService {
               save_to_file: true, // Always save base64 data to file
               output_directory: input.output_directory,
               filename:
-                input.filename_prefix && input.filename_prefix.length > 0
+                input.filename_prefix !== "" && input.filename_prefix.length > 0
                   ? `${input.filename_prefix}${Date.now()}`
                   : undefined,
               naming_strategy: input.naming_strategy,
@@ -306,7 +304,7 @@ export class OpenAIService {
           // If file save fails, we still need to provide the data somehow
           // but this should be rare and we'll log it
         }
-      } else if (imageData.url && imageData.url.length > 0) {
+      } else if (imageData.url !== undefined && imageData.url.length > 0) {
         // dall-e-2 returns URL - can return URL directly
         openaiImageUrl = imageData.url;
 
@@ -319,7 +317,8 @@ export class OpenAIService {
                 save_to_file: input.save_to_file,
                 output_directory: input.output_directory,
                 filename:
-                  input.filename_prefix && input.filename_prefix.length > 0
+                  input.filename_prefix !== "" &&
+                  input.filename_prefix.length > 0
                     ? `${input.filename_prefix}${Date.now()}`
                     : undefined,
                 naming_strategy: input.naming_strategy,
@@ -372,7 +371,7 @@ export class OpenAIService {
           edit_time_ms: editTime,
           model_used: input.model,
           composition_preserved: input.preserve_composition,
-          mask_applied: input.mask_area != null,
+          mask_applied: input.mask_area !== undefined,
         },
       };
     } catch (error) {
@@ -400,10 +399,14 @@ export class OpenAIService {
 
     // Handle both new images array and legacy image_urls for backward compatibility
     const imageInputs =
-      input.images ||
-      (input.image_urls
-        ? input.image_urls.map((url) => ({ type: "url" as const, value: url }))
-        : []);
+      input.images.length > 0
+        ? input.images
+        : input.image_urls
+          ? input.image_urls.map((url) => ({
+              type: "url" as const,
+              value: url,
+            }))
+          : [];
 
     try {
       const processImage = async (imageInput: ImageInput, index: number) => {
@@ -556,7 +559,7 @@ export class OpenAIService {
             content: [
               {
                 type: "text",
-                text: `Generate a mask for the following image${input.target_object != null ? ` focusing on: ${input.target_object}` : ""}. Describe the mask areas in detail.`,
+                text: `Generate a mask for the following image${input.target_object !== undefined ? ` focusing on: ${input.target_object}` : ""}. Describe the mask areas in detail.`,
               },
               {
                 type: "image_url",
@@ -576,10 +579,11 @@ export class OpenAIService {
         mask_type: input.mask_type,
         confidence: 0.8,
         detected_objects:
-          input.target_object != null ? [input.target_object] : [],
+          input.target_object !== undefined ? [input.target_object] : [],
         metadata: {
           generation_time_ms: 1000,
           model_used: "gpt-4o",
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
           precision_level: input.precision ?? "medium",
         },
       };
@@ -609,7 +613,7 @@ export class OpenAIService {
         error: { type: string; message: string } | null;
       };
 
-      if (!openaiError.error) {
+      if (openaiError.error === null) {
         return new Error("OpenAI API error: Unknown error");
       }
 

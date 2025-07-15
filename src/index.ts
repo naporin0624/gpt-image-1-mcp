@@ -1,18 +1,20 @@
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
-  CallToolRequestSchema,
   ListToolsRequestSchema,
+  CallToolRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { config } from "dotenv";
 
-import { EditImageInputSchema, BatchEditInputSchema } from "./types/edit.js";
-import type { OptimizedGenerateImageResponse } from "./types/image.js";
-import { GenerateImageInputSchema, mapLegacyQuality } from "./types/image.js";
+import { EditImageInputSchema, BatchEditInputSchema } from "./types/edit";
+import {
+  mapLegacyQuality,
+  GenerateImageInputSchema,
+  type OptimizedGenerateImageResponse,
+} from "./types/image";
 
-import { normalizeImageInput } from "./utils/image-input.js";
-import { OpenAIService } from "./utils/openai.js";
-import { validateText, formatValidationError } from "./utils/validation.js";
+import { normalizeImageInput } from "./utils/image-input";
+import { OpenAIService } from "./utils/openai";
+import { validateText, formatValidationError } from "./utils/validation";
 
 // Type guards for runtime type checking
 function isStringArray(value: unknown): value is string[] {
@@ -21,7 +23,6 @@ function isStringArray(value: unknown): value is string[] {
     value.every((item): item is string => typeof item === "string")
   );
 }
-
 function hasImageUrls(obj: unknown): obj is { image_urls: string[] } {
   return (
     typeof obj === "object" &&
@@ -30,7 +31,6 @@ function hasImageUrls(obj: unknown): obj is { image_urls: string[] } {
     isStringArray((obj as Record<string, unknown>).image_urls)
   );
 }
-
 function hasImages(obj: unknown): obj is { images: unknown[] } {
   return (
     typeof obj === "object" &&
@@ -39,7 +39,6 @@ function hasImages(obj: unknown): obj is { images: unknown[] } {
     Array.isArray((obj as Record<string, unknown>).images)
   );
 }
-
 function hasSourceImage(obj: unknown): obj is { source_image: string } {
   return (
     typeof obj === "object" &&
@@ -48,15 +47,11 @@ function hasSourceImage(obj: unknown): obj is { source_image: string } {
     typeof (obj as Record<string, unknown>).source_image === "string"
   );
 }
-
-config();
-
 const openaiService = new OpenAIService();
-
-const server = new Server(
+export const server = new Server(
   {
     name: "gpt-image-1-mcp",
-    version: "0.1.0",
+    version: process.env.PACKAGE_VERSION,
   },
   {
     capabilities: {
@@ -64,7 +59,6 @@ const server = new Server(
     },
   },
 );
-
 server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
@@ -353,7 +347,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
     ],
   };
 });
-
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 
@@ -390,7 +383,7 @@ Quality: ${input.quality || "medium"}
 Model: gpt-image-1
 
 ${
-  result.file_path && result.file_path.length > 0
+  result.file_path != null && result.file_path.length > 0
     ? `Local file: ${result.file_path}
 File size: ${result.metadata.size_bytes} bytes
 Format: ${result.metadata.format}
@@ -398,7 +391,7 @@ Created at: ${result.metadata.created_at}
 `
     : ""
 }${
-                result.base64_image && result.base64_image.length > 0
+                result.base64_image != null && result.base64_image.length > 0
                   ? `Base64 data included in response (${Math.ceil((result.base64_image as string).length * 0.75)} bytes)`
                   : ""
               }${
@@ -466,7 +459,6 @@ Mask applied: ${result.metadata.mask_applied}`,
 
     // REMOVED: create-variation case - variations not supported by gpt-image-1
     // Use edit-image with edit_type: "variation" instead
-
     case "batch-edit":
       try {
         const rawInput = args || {};
@@ -558,9 +550,5 @@ async function main() {
   console.error("MCP Image Generation Server started");
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-  // eslint-disable-next-line no-console
-  main().catch(console.error);
-}
-
-export { server };
+// eslint-disable-next-line no-console
+main().catch(console.error);
