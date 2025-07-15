@@ -3,6 +3,7 @@
 [![npm version](https://badge.fury.io/js/@napolab/gpt-image-1-mcp.svg)](https://badge.fury.io/js/@napolab/gpt-image-1-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![OpenAI](https://img.shields.io/badge/OpenAI-gpt--image--1-blue.svg)](https://openai.com/)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://naporin0624.github.io/gpt-image-1-mcp/)
 
 MCP server for AI-powered image generation using OpenAI's gpt-image-1 model with advanced text rendering and native transparency support.
 
@@ -272,6 +273,7 @@ MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Support
 
+- [Documentation](https://naporin0624.github.io/gpt-image-1-mcp/) - Full documentation and examples
 - [GitHub Issues](https://github.com/naporin0624/gen-image-mcp/issues)
 - [OpenAI API Documentation](https://platform.openai.com/docs)
 - [MCP Protocol Documentation](https://modelcontextprotocol.io/docs)
