@@ -12,10 +12,7 @@ import { GenerateImageInputSchema, mapLegacyQuality } from "./types/image.js";
 
 import { normalizeImageInput } from "./utils/image-input.js";
 import { OpenAIService } from "./utils/openai.js";
-import {
-  validateEnglishOnly,
-  formatValidationError,
-} from "./utils/validation.js";
+import { validateText, formatValidationError } from "./utils/validation.js";
 
 // Type guards for runtime type checking
 function isStringArray(value: unknown): value is string[] {
@@ -80,8 +77,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           properties: {
             prompt: {
               type: "string",
-              description:
-                "Image description (English only - use LLM to translate if needed)",
+              description: "Image description",
             },
             aspect_ratio: {
               type: "string",
@@ -179,7 +175,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             edit_prompt: {
               type: "string",
-              description: "Description of desired changes (English only)",
+              description: "Description of desired changes",
             },
             edit_type: {
               type: "string",
@@ -284,8 +280,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             edit_prompt: {
               type: "string",
-              description:
-                "Edit description to apply to all images (English only)",
+              description: "Edit description to apply to all images",
             },
             edit_type: {
               type: "string",
@@ -376,8 +371,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         const input = GenerateImageInputSchema.parse(mappedArgs);
 
-        // Validate English-only input
-        validateEnglishOnly(input.prompt, "prompt");
+        // Validate input
+        validateText(input.prompt, "prompt");
 
         const result: OptimizedGenerateImageResponse =
           await openaiService.generateImage(input);
@@ -389,25 +384,21 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               text: `Generated image successfully!
 
 Prompt: "${input.prompt}"
-Size: ${result.metadata?.width ?? "unknown"}x${result.metadata?.height ?? "unknown"}
+Size: ${result.metadata.width}x${result.metadata.height}
 Aspect ratio: ${input.aspect_ratio}
 Quality: ${input.quality || "medium"}
 Model: gpt-image-1
 
 ${
-  result.file_path !== null &&
-  result.file_path !== undefined &&
-  result.file_path.length > 0
+  result.file_path && result.file_path.length > 0
     ? `Local file: ${result.file_path}
-File size: ${result.metadata?.size_bytes ?? 0} bytes
-Format: ${result.metadata?.format ?? "unknown"}
-Created at: ${result.metadata?.created_at ?? "unknown"}
+File size: ${result.metadata.size_bytes} bytes
+Format: ${result.metadata.format}
+Created at: ${result.metadata.created_at}
 `
     : ""
 }${
-                result.base64_image !== null &&
-                result.base64_image !== undefined &&
-                result.base64_image.length > 0
+                result.base64_image && result.base64_image.length > 0
                   ? `Base64 data included in response (${Math.ceil((result.base64_image as string).length * 0.75)} bytes)`
                   : ""
               }${
@@ -436,8 +427,8 @@ Created at: ${result.metadata?.created_at ?? "unknown"}
 
         const input = EditImageInputSchema.parse(processedInput);
 
-        // Validate English-only input
-        validateEnglishOnly(input.edit_prompt, "edit_prompt");
+        // Validate input
+        validateText(input.edit_prompt, "edit_prompt");
 
         const result = await openaiService.editImage(input);
 
@@ -502,8 +493,8 @@ Mask applied: ${result.metadata.mask_applied}`,
 
         const input = BatchEditInputSchema.parse(processedInput);
 
-        // Validate English-only input
-        validateEnglishOnly(input.edit_prompt, "edit_prompt");
+        // Validate input
+        validateText(input.edit_prompt, "edit_prompt");
 
         const result = await openaiService.batchEdit(input);
 

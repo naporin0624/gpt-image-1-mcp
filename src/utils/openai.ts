@@ -93,10 +93,10 @@ export class OpenAIService {
       };
 
       // Add optional parameters only if provided and supported
-      if (input.output_format != null && input.output_format.length > 0) {
+      if (input.output_format && input.output_format.length > 0) {
         generateParams.output_format = input.output_format;
       }
-      if (input.moderation != null && input.moderation.length > 0) {
+      if (input.moderation && input.moderation.length > 0) {
         generateParams.moderation = input.moderation;
       }
 
@@ -172,7 +172,7 @@ export class OpenAIService {
       customResponse.metadata = {
         width: parseInt(size.split("x")[0] ?? "1024"),
         height: parseInt(size.split("x")[1] ?? "1024"),
-        format: fileResult?.format ?? input.output_format ?? "png",
+        format: fileResult?.format || input.output_format || "png",
         size_bytes: fileResult?.size_bytes ?? 0,
         created_at: fileResult?.saved_at ?? new Date().toISOString(),
       };
@@ -182,7 +182,7 @@ export class OpenAIService {
 
       // Handle base64 inclusion based on include_base64 parameter
       if (input.include_base64) {
-        const imageSizeBytes = fileResult?.size_bytes || 0;
+        const imageSizeBytes = fileResult?.size_bytes ?? 0;
         const estimatedTokens = this.estimateResponseTokens(
           imageSizeBytes,
           true,
@@ -200,9 +200,9 @@ export class OpenAIService {
           }
 
           // Include base64 data
-          if (b64Data) {
+          if (b64Data && b64Data.length > 0) {
             customResponse.base64_image = b64Data;
-          } else if (imageUrl) {
+          } else if (imageUrl && imageUrl.length > 0) {
             // For URLs, we'd need to fetch and convert - for now just warn
             warnings.push(
               "Base64 requested but only URL available. Use file_path instead.",
@@ -229,13 +229,8 @@ export class OpenAIService {
       const normalizedInput = normalizeImageInput(input.source_image);
       const imageBuffer = await loadImageAsBuffer(normalizedInput);
 
-      // Determine size based on model capabilities
-      let size: string;
-      if (input.model === "gpt-image-1") {
-        size = "1024x1024";
-      } else {
-        size = "1024x1024";
-      }
+      // Always use 1024x1024 for consistency
+      const size = "1024x1024";
 
       const baseParams = {
         image: new File([new Uint8Array(imageBuffer)], "source.png", {
@@ -248,10 +243,10 @@ export class OpenAIService {
       };
 
       const optionalParams: Record<string, unknown> = {};
-      if (input.quality) {
+      if (input.quality && input.quality.length > 0) {
         optionalParams.quality = input.quality;
       }
-      if (input.background) {
+      if (input.background && input.background.length > 0) {
         optionalParams.background = input.background;
       }
 
@@ -281,7 +276,7 @@ export class OpenAIService {
         | undefined;
 
       // Handle different response formats
-      if (imageData.b64_json) {
+      if (imageData.b64_json && imageData.b64_json.length > 0) {
         // gpt-image-1 returns base64 - save to file immediately to avoid large responses
         const base64Data = imageData.b64_json;
         const dataUrl = `data:image/${input.output_format ?? "png"};base64,${base64Data}`;
@@ -293,8 +288,7 @@ export class OpenAIService {
               save_to_file: true, // Always save base64 data to file
               output_directory: input.output_directory,
               filename:
-                input.filename_prefix != null &&
-                input.filename_prefix.length > 0
+                input.filename_prefix && input.filename_prefix.length > 0
                   ? `${input.filename_prefix}${Date.now()}`
                   : undefined,
               naming_strategy: input.naming_strategy,
@@ -312,7 +306,7 @@ export class OpenAIService {
           // If file save fails, we still need to provide the data somehow
           // but this should be rare and we'll log it
         }
-      } else if (imageData.url) {
+      } else if (imageData.url && imageData.url.length > 0) {
         // dall-e-2 returns URL - can return URL directly
         openaiImageUrl = imageData.url;
 
@@ -325,8 +319,7 @@ export class OpenAIService {
                 save_to_file: input.save_to_file,
                 output_directory: input.output_directory,
                 filename:
-                  input.filename_prefix != null &&
-                  input.filename_prefix.length > 0
+                  input.filename_prefix && input.filename_prefix.length > 0
                     ? `${input.filename_prefix}${Date.now()}`
                     : undefined,
                 naming_strategy: input.naming_strategy,
@@ -407,8 +400,8 @@ export class OpenAIService {
 
     // Handle both new images array and legacy image_urls for backward compatibility
     const imageInputs =
-      input.images ??
-      (input.image_urls != null
+      input.images ||
+      (input.image_urls
         ? input.image_urls.map((url) => ({ type: "url" as const, value: url }))
         : []);
 
@@ -523,7 +516,7 @@ export class OpenAIService {
           total_time_ms: totalTime,
           average_time_per_image_ms: totalTime / imageInputs.length,
           model_used: "gpt-image-1",
-          parallel_processing: settings.parallel_processing ?? false,
+          parallel_processing: settings.parallel_processing || false,
         },
       };
     } catch (error) {
