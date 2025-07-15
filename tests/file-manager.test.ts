@@ -8,8 +8,6 @@ import {
   statSync,
   readdirSync,
   unlinkSync,
-  type Stats,
-  type Dirent,
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -124,14 +122,15 @@ describe("FileManager", () => {
           const reader = source.getReader();
           let totalBytes = 0;
 
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
           while (true) {
             const { done, value } = await reader.read();
-            if (done) break;
+            if (done === true) break;
 
             // Process through the transform (the async generator)
             const generator = transform(source);
             const { value: chunk } = await generator.next();
-            if (chunk) {
+            if (chunk != null) {
               totalBytes += chunk.length;
             }
           }
@@ -648,12 +647,14 @@ describe("FileManager", () => {
       const mockReaddirSync = vi.mocked(readdirSync);
       const mockUnlinkSync = vi.mocked(unlinkSync);
 
-      mockReaddirSync.mockReturnValue(["recent-file.png"] as any);
+      // @ts-ignore
+      mockReaddirSync.mockReturnValue(["recent-file.png"]);
+      // @ts-ignore
       mockStatSync.mockReturnValue({
         mtime: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
         isFile: () => true,
         isDirectory: () => false,
-      } as any);
+      });
       mockUnlinkSync.mockImplementation(() => {});
 
       await fileManager.cleanupOldFiles(testDir);

@@ -1,7 +1,4 @@
-import { config } from "dotenv";
 import { vi } from "vitest";
-
-config({ path: ".env.test" });
 
 global.console = {
   ...console,
