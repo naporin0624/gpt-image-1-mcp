@@ -1,0 +1,308 @@
+# Image File Output Feature Implementation Plan
+
+project_update:
+  name: gpt-image-1-mcp-mcp
+  version: 0.2.0
+  description: Add local file output capability to OpenAI gpt-image-1 image generation
+
+overview:
+  current_state:
+    - Images are generated via OpenAI gpt-image-1 API
+    - API returns image URLs (hosted on OpenAI CDN)
+    - No local file storage is implemented
+    - URLs are temporary and expire after a period
+    
+  proposed_changes:
+    - Download images from OpenAI URLs
+    - Save images to local filesystem
+    - Support custom output directories
+    - Provide flexible naming options
+    - Return local file paths along with URLs
+
+feature_requirements:
+  file_output:
+    description: Save generated images to local files
+    capabilities:
+      - Download images from OpenAI CDN URLs
+      - Save to specified directory or default location
+      - Support multiple image formats (PNG, JPEG, WebP)
+      - Generate meaningful filenames
+      - Handle file conflicts gracefully
+      - Return both URL and local file path
+      
+  naming_strategies:
+    timestamp_based:
+      format: "image_{timestamp}_{hash}.{ext}"
+      example: "image_20250715_022700_a3b2c1.png"
+      
+    prompt_based:
+      format: "{sanitized_prompt}_{timestamp}.{ext}"
+      example: "sunset_landscape_20250715_022700.png"
+      max_length: 100
+      
+    custom:
+      format: "{prefix}_{counter}.{ext}"
+      example: "generated_001.png"
+      
+  directory_structure:
+    default_output_dir: "./generated_images"
+    organized_structure:
+      - by_date: "generated_images/2025-07-15/"
+      - by_aspect_ratio: "generated_images/landscape/"
+      - by_quality: "generated_images/hd/"
+      - custom: specified by user
+
+implementation_changes:
+  new_dependencies:
+    - "node-fetch": "^3.x" # For downloading images
+    - "mime-types": "^2.x" # For file extension detection
+    - "fs-extra": "^11.x" # Enhanced file operations
+    
+  new_files:
+    src/utils/fileManager.ts:
+      description: Handle file operations and naming
+      exports:
+        - class FileManager
+        - function downloadImage
+        - function generateFileName
+        - function ensureDirectory
+        
+    src/types/file.ts:
+      description: File-related type definitions
+      types:
+        - FileOutputOptions
+        - NamingStrategy
+        - SaveImageResult
+        
+  modified_files:
+    src/index.ts:
+      changes:
+        - Add file output options to generate-image tool schema
+        - Update tool handler to save files
+        - Return local file paths in response
+        
+    src/utils/openai.ts:
+      changes:
+        - Add file download functionality
+        - Update generateImage return type
+        - Include file path in result
+        
+    src/types/image.ts:
+      changes:
+        - Add file output fields to schemas
+        - Update result types
+        
+    .env.example:
+      additions:
+        - DEFAULT_OUTPUT_DIR
+        - ENABLE_FILE_OUTPUT
+        - FILE_NAMING_STRATEGY
+        - MAX_FILE_SIZE_MB
+
+new_tool_parameters:
+  generate-image:
+    save_to_file:
+      type: boolean
+      default: true
+      description: Save the generated image to local file
+      
+    output_directory:
+      type: string
+      required: false
+      description: Directory to save the image (defaults to ./generated_images)
+      
+    filename:
+      type: string
+      required: false
+      description: Custom filename (without extension)
+      
+    naming_strategy:
+      type: string
+      enum: ["timestamp", "prompt", "custom", "hash"]
+      default: "timestamp"
+      description: Strategy for generating filenames
+      
+    organize_by:
+      type: string
+      enum: ["none", "date", "aspect_ratio", "quality"]
+      default: "none"
+      description: Subdirectory organization strategy
+
+updated_output_schema:
+  generate-image:
+    image:
+      url: string # Original OpenAI URL
+      local_path: string # Local file path
+      filename: string # Just the filename
+      directory: string # Directory path
+      size_bytes: number # File size
+      format: string # Image format (png, jpg, etc)
+      saved_at: string # ISO timestamp
+      # ... existing fields ...
+
+implementation_steps:
+  phase_1_core_download:
+    duration: "4 hours"
+    tasks:
+      - Create FileManager class
+      - Implement image download with retry logic
+      - Add progress tracking for large files
+      - Handle network errors gracefully
+      - Add timeout configuration
+      
+  phase_2_file_management:
+    duration: "3 hours"
+    tasks:
+      - Implement naming strategies
+      - Create directory management
+      - Handle filename conflicts
+      - Add file size validation
+      - Implement cleanup for old files
+      
+  phase_3_integration:
+    duration: "3 hours"
+    tasks:
+      - Update generate-image tool
+      - Modify OpenAI service
+      - Update response formats
+      - Add configuration options
+      - Test error scenarios
+      
+  phase_4_enhancements:
+    duration: "2 hours"
+    tasks:
+      - Add batch download support
+      - Implement file compression options
+      - Add metadata to saved files
+      - Create file index/catalog
+      - Add file deletion tool
+
+error_handling:
+  download_errors:
+    - NetworkError: Retry with exponential backoff
+    - TimeoutError: Configurable timeout, user notification
+    - InvalidURLError: Validate before download
+    - FileSizeError: Check size limits
+    
+  file_system_errors:
+    - DiskSpaceError: Check available space
+    - PermissionError: Graceful fallback to temp directory
+    - PathError: Validate and sanitize paths
+    - ConflictError: Auto-rename or prompt user
+
+testing_approach:
+  unit_tests:
+    - File naming generation
+    - Path sanitization
+    - Download retry logic
+    - Directory creation
+    - Conflict resolution
+    
+  integration_tests:
+    - Full download flow
+    - Error recovery
+    - Concurrent downloads
+    - Large file handling
+    - Cleanup operations
+    
+  e2e_tests:
+    - Complete generation with file save
+    - Batch operations
+    - Various naming strategies
+    - Directory organization
+    - File format handling
+
+security_considerations:
+  - Path traversal prevention
+  - File size limits to prevent DoS
+  - Sanitize filenames to prevent injection
+  - Validate image content types
+  - Secure temporary file handling
+  - No sensitive data in filenames
+
+performance_optimizations:
+  - Stream downloads for large files
+  - Parallel downloads for batch operations
+  - Lazy directory creation
+  - Efficient filename generation
+  - Optional image optimization/compression
+  - Cleanup old files automatically
+
+configuration_example:
+  ```env
+  # File Output Configuration
+  DEFAULT_OUTPUT_DIR=./generated_images
+  ENABLE_FILE_OUTPUT=true
+  FILE_NAMING_STRATEGY=timestamp
+  MAX_FILE_SIZE_MB=50
+  AUTO_ORGANIZE_FILES=true
+  KEEP_FILES_DAYS=30
+  COMPRESS_IMAGES=false
+  ```
+
+usage_examples:
+  basic_save:
+    ```typescript
+    // Tool call
+    {
+      "name": "generate-image",
+      "arguments": {
+        "prompt": "A beautiful sunset",
+        "save_to_file": true
+      }
+    }
+    
+    // Response includes
+    {
+      "image": {
+        "url": "https://oaidalleapi....",
+        "local_path": "./generated_images/image_20250715_022700_a3b2c1.png",
+        "filename": "image_20250715_022700_a3b2c1.png",
+        "size_bytes": 2048576
+      }
+    }
+    ```
+    
+  custom_directory:
+    ```typescript
+    {
+      "name": "generate-image", 
+      "arguments": {
+        "prompt": "Mountain landscape",
+        "save_to_file": true,
+        "output_directory": "./my_images/landscapes",
+        "naming_strategy": "prompt"
+      }
+    }
+    ```
+    
+  organized_output:
+    ```typescript
+    {
+      "name": "generate-image",
+      "arguments": {
+        "prompt": "Portrait photo",
+        "aspect_ratio": "portrait",
+        "save_to_file": true,
+        "organize_by": "aspect_ratio"
+      }
+    }
+    // Saves to: ./generated_images/portrait/image_20250715_022700.png
+    ```
+
+backwards_compatibility:
+  - save_to_file defaults to true but can be disabled
+  - Existing API responses remain unchanged
+  - Additional fields are additive only
+  - URL-only mode still supported
+  - No breaking changes to existing tools
+
+future_enhancements:
+  - Cloud storage integration (S3, GCS)
+  - Image format conversion
+  - Automatic image optimization
+  - EXIF metadata embedding
+  - Gallery generation
+  - Duplicate detection
+  - Smart organization using AI
+  - Integration with image editors

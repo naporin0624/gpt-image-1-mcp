@@ -1,0 +1,130 @@
+feature:
+  name: mcp-response-size-optimization
+  description: MCPツールレスポンスサイズ制限（25000トークン）問題の解決
+  version: 1.0.0
+  priority: high
+  created_at: 2025-07-14
+
+problem:
+  description: |
+    画像編集（edit-image）とバッチ編集（batch-edit）のレスポンスに完全な画像データ（Base64）が
+    含まれているため、MCPツールの25000トークン制限を超えてエラーが発生する。
+    実際の画像生成は成功しているが、レスポンスが返せない状態。
+  impact:
+    - ユーザーが処理結果を確認できない
+    - エラーメッセージが表示されて混乱を招く
+    - 大きな画像を扱う際に常に問題が発生
+  current_behavior:
+    - 3MB以上のレスポンスでエラー
+    - Base64エンコードされた完全な画像データを返している
+
+solution:
+  approach: "URLベースのレスポンス構造への変更"
+  principles:
+    - 画像データのインライン化を避ける
+    - URLとメタデータのみを返す
+    - ローカルファイルパスを含める
+    - 必要に応じてサムネイルを提供
+
+implementation_plan:
+  phase1_response_structure:
+    description: "レスポンス構造の最適化"
+    tasks:
+      - name: "EditResultインターフェースの変更"
+        changes:
+          - url フィールドを image_url に変更（OpenAI URLのみ）
+          - local_file_path フィールドを追加
+          - file_size フィールドを追加
+          - base64データの除去
+      
+      - name: "VariationResultインターフェースの変更"
+        changes:
+          - 各variation内のurlをimage_urlに変更
+          - local_file_pathを追加
+          - file_sizeを追加
+      
+      - name: "BatchEditResultインターフェースの変更"
+        changes:
+          - edited_imageのurlをimage_urlに変更
+          - local_file_pathを追加
+          - file_sizeを追加
+
+  phase2_implementation:
+    description: "OpenAIServiceクラスの修正"
+    tasks:
+      - name: "editImage メソッドの修正"
+        file: "src/utils/openai.ts"
+        changes:
+          - editedImageUrlをそのまま返すのではなく、URLのみを抽出
+          - Base64データの場合は一時的に保存してファイルパスを返す
+          - レスポンスにlocal_file_pathとfile_sizeを含める
+      
+      - name: "createVariation メソッドの修正"
+        file: "src/utils/openai.ts"
+        changes:
+          - 同様にURLとファイルパスのみを返すように変更
+      
+      - name: "batchEdit メソッドの修正"
+        file: "src/utils/openai.ts"
+        changes:
+          - 各結果のimage URLとファイルパスのみを返す
+
+  phase3_optional_enhancements:
+    description: "オプショナルな機能強化"
+    tasks:
+      - name: "サムネイル生成機能"
+        description: "必要に応じて小さなプレビュー画像を生成"
+        implementation:
+          - 最大50KBのサムネイルを生成
+          - thumbnail_urlフィールドを追加
+          - sharp等のライブラリを使用
+      
+      - name: "レスポンスサイズ監視"
+        description: "レスポンスサイズの事前チェック"
+        implementation:
+          - レスポンス作成前にサイズを推定
+          - 制限に近い場合は警告ログ
+          - 自動的に最適化を適用
+
+code_examples:
+  before: |
+    // 現在の実装（問題あり）
+    const editedImage: EditedImageData = {
+      url: editedImageUrl, // 完全なBase64データを含む
+      revised_prompt: imageData.revised_prompt || input.edit_prompt,
+      // ...
+    };
+    
+  after: |
+    // 修正後の実装
+    const editedImage: EditedImageData = {
+      image_url: imageData.url || undefined, // OpenAI URLのみ
+      local_file_path: fileResult?.path || undefined,
+      file_size: fileResult?.size || undefined,
+      revised_prompt: imageData.revised_prompt || input.edit_prompt,
+      // Base64データは含めない
+    };
+
+testing_plan:
+  - 大きな画像（5MB以上）での編集テスト
+  - バッチ編集での複数画像処理
+  - レスポンスサイズの確認（25000トークン以下）
+  - 既存機能の互換性確認
+
+rollout_plan:
+  - Phase 1: タイプ定義の更新（破壊的変更）
+  - Phase 2: 実装の修正
+  - Phase 3: テストとドキュメント更新
+  - Phase 4: オプショナル機能の追加
+
+success_metrics:
+  - MCPツールレスポンスエラーの解消
+  - レスポンスサイズ 90%以上削減
+  - 処理速度の向上
+  - ユーザー体験の改善
+
+references:
+  - "MCP best practices for large data responses"
+  - "Base64 encoding increases size by ~33%"
+  - "Prefer pointer-to-data over inlining data"
+  - "50KB threshold for inline data"

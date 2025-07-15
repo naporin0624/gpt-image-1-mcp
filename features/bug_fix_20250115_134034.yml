@@ -1,0 +1,206 @@
+# Bug Fix Implementation Plan - Response Size Optimization
+# Generated: 2025-01-15 13:40:34
+# Based on: e2e/report_20250115_143400.yml
+
+metadata:
+  plan_date: "2025-01-15"
+  plan_time: "13:40:34"
+  priority: "CRITICAL"
+  estimated_effort: "2-3 hours"
+  breaking_changes: false
+  backward_compatible: true
+
+# Issue Summary
+issues_to_fix:
+  - id: "RESP_SIZE_001"
+    severity: "CRITICAL"
+    title: "Response Size Exceeds MCP Token Limits"
+    current_behavior: "Returns base64 encoded images (>1.5M tokens)"
+    target_behavior: "Return metadata + file path (<1K tokens)"
+    
+# Architectural Decision
+architectural_notes:
+  analyze_image_removal:
+    decision: "Remove analyze-image tool entirely"
+    rationale: |
+      - MCP clients (LLMs) can directly read images via file paths
+      - Reduces API complexity and maintenance burden
+      - Eliminates the local file path issue entirely
+      - Better separation of concerns: MCP generates, LLM analyzes
+
+# Implementation Plan
+implementation_phases:
+  phase_1_tool_cleanup:
+    description: "Remove analyze-image tool and related code"
+    priority: "IMMEDIATE"
+    tasks:
+      - task: "Remove analyze-image tool"
+        description: "Clean up vision analysis functionality"
+        files_to_modify:
+          - src/index.ts (remove analyze-image tool definition)
+          - src/types/vision.ts (delete file)
+          - src/utils/openai.ts (remove analyzeImage function)
+        changes:
+          - "Remove analyze-image from tools array"
+          - "Delete vision-related types and functions"
+          - "Update imports and exports"
+      
+      - task: "Update tests"
+        description: "Remove analyze-image related tests"
+        files_to_modify:
+          - tests/openai.test.ts
+          - tests/validation.test.ts
+        changes:
+          - "Remove vision analysis test cases"
+          - "Update test coverage requirements"
+
+  phase_2_response_optimization:
+    description: "Optimize generate-image response to fit within MCP token limits"
+    priority: "CRITICAL"
+    tasks:
+      - task: "Update response structure"
+        description: "Return file path instead of base64"
+        files_to_modify:
+          - src/index.ts
+          - src/types/image.ts
+        implementation:
+          - "Remove base64_image from default response"
+          - "Always return file_path when save_to_file=true"
+          - "Return metadata for image inspection"
+      
+      - task: "Add optional base64 support"
+        description: "Allow base64 only when explicitly requested and size permits"
+        implementation:
+          - "Add include_base64 parameter (default: false)"
+          - "Calculate response size before encoding"
+          - "Return error if size would exceed 20K tokens"
+          - "Include warning about token limits in error message"
+
+  phase_3_testing_documentation:
+    description: "Update tests and documentation"
+    priority: "HIGH"
+    tasks:
+      - task: "Add response size tests"
+        description: "Ensure responses stay within limits"
+        test_cases:
+          - "Default response (file_path only) < 1K tokens"
+          - "Response with metadata < 2K tokens"
+          - "Error when base64 would exceed limits"
+          - "Warning messages for large images"
+      
+      - task: "Update documentation"
+        description: "Document changes and best practices"
+        files_to_update:
+          - README.md
+          - docs/api/generate-image.md
+          - docs/api/tools.md (remove analyze-image)
+          - docs/guide/vision-analysis.md (mark as deprecated)
+          - CLAUDE.md
+
+# Technical Implementation Details
+technical_details:
+  response_structure:
+    current:
+      base64_image: "string (>1.5M chars)"
+      saved_to: "string"
+    
+    proposed_default:
+      # Always included when save_to_file=true
+      file_path: "string (relative path from output directory)"
+      
+      # Always included metadata
+      metadata:
+        width: "number"
+        height: "number"
+        format: "string (png/jpeg/webp)"
+        size_bytes: "number"
+        created_at: "string (ISO timestamp)"
+      
+      # Optional (when include_base64=true AND size permits)
+      base64_image: "string (only if < 20K tokens)"
+      
+      # Warnings/errors
+      warnings: "string[] (optional)"
+
+  parameter_changes:
+    new_parameters:
+      - name: "include_base64"
+        type: "boolean"
+        default: false
+        description: "Include base64 in response if size permits"
+    
+    modified_behavior:
+      save_to_file:
+        current: "Optional, defaults to true"
+        proposed: "Keep as-is, but always return file_path when true"
+
+  token_calculation:
+    formula: |
+      // Token estimation for response size checking
+      const estimateResponseTokens = (imageSizeBytes: number, includeBase64: boolean): number => {
+        const metadataTokens = 200; // Rough estimate for JSON structure
+        
+        if (!includeBase64) {
+          return metadataTokens; // File path response only
+        }
+        
+        // Base64 is ~4/3 size of original
+        const base64Chars = Math.ceil(imageSizeBytes * 4 / 3);
+        // 1 token ≈ 4 characters
+        const base64Tokens = Math.ceil(base64Chars / 4);
+        // Add 20% overhead for JSON escaping
+        return Math.ceil((metadataTokens + base64Tokens) * 1.2);
+      };
+    
+    limits:
+      max_tokens: 20000  # Conservative limit (MCP limit is ~25K)
+      warning_threshold: 15000  # Warn before hitting limit
+
+# Rollback Plan
+rollback:
+  strategy: "Backward compatible implementation"
+  steps:
+    - "Default behavior returns file path only (safe)"
+    - "Base64 only returned when explicitly requested"
+    - "No changes needed for existing integrations"
+
+# Success Criteria
+success_metrics:
+  - "All default generate-image responses < 1K tokens"
+  - "Base64 responses only when size < 20K tokens"
+  - "Zero breaking changes for existing users"
+  - "Response time improvement > 80% for default mode"
+  - "Clean removal of analyze-image without errors"
+
+# Risk Mitigation
+risks:
+  - risk: "Users expecting base64 responses by default"
+    mitigation: "Clear documentation about include_base64 parameter"
+  
+  - risk: "Users relying on analyze-image tool"
+    mitigation: "Document that LLMs can read images directly via file paths"
+
+# Migration Guide
+migration:
+  for_base64_users:
+    - "Add include_base64=true to maintain current behavior"
+    - "Check for warnings about response size"
+    - "Consider using file paths for better performance"
+  
+  for_analyze_image_users:
+    - "Use LLM's native image reading capability"
+    - "Pass file_path directly to LLM for analysis"
+    - "Better integration with no intermediate API calls"
+
+# Next Steps After Implementation
+post_implementation:
+  - "Run E2E tests to verify response sizes"
+  - "Benchmark performance improvements"
+  - "Update all documentation and examples"
+  - "Create migration guide for users"
+
+# Notes
+notes: |
+  This simplified plan focuses on the critical response size issue.
+  Removing analyze-image simplifies the architecture and leverages
+  LLM's native capabilities for better user experience.

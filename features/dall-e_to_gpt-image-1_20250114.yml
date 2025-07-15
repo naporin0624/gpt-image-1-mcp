@@ -1,0 +1,159 @@
+---
+feature_name: "DALL-E to gpt-image-1 Migration"
+description: "Migrate all DALL-E model references to use the new gpt-image-1 model for improved capabilities"
+created_at: "2025-01-14"
+priority: high
+status: planned
+
+# Migration Benefits
+benefits:
+  - "Native transparent background support (unique to gpt-image-1)"
+  - "Better text rendering capabilities"
+  - "Improved instruction following from GPT-4 inheritance"
+  - "More flexible size options: 1024x1024, 1536x1024, 1024x1536"
+  - "Token-based pricing may be more cost-effective"
+  - "New output formats: png, jpeg, webp"
+  - "Adjustable moderation levels"
+
+# Implementation Plan
+implementation_phases:
+  - phase: 1
+    name: "Core Model Updates"
+    tasks:
+      - task: "Update generateImage method"
+        file: "src/utils/openai.ts"
+        changes:
+          - "Change model from 'dall-e-3' to 'gpt-image-1'"
+          - "Add support for new parameters: background, output_format, moderation"
+          - "Update size handling for new options (1536x1024, 1024x1536)"
+          - "Adjust quality parameter mapping (high/medium/low instead of standard/hd)"
+      
+      - task: "Update editImage method"
+        file: "src/utils/openai.ts"
+        changes:
+          - "Ensure consistent use of 'gpt-image-1' model"
+          - "Update size parameter to use gpt-image-1 formats"
+          - "Remove dall-e-2 specific logic"
+      
+      - task: "Update createVariation method"
+        file: "src/utils/openai.ts"
+        changes:
+          - "Change default model from 'dall-e-2' to 'gpt-image-1'"
+          - "Update size options to support new formats"
+          - "Add support for background parameter"
+
+  - phase: 2
+    name: "Type Updates"
+    tasks:
+      - task: "Update image types"
+        file: "src/types/image.ts"
+        changes:
+          - "Add new size options to ImageSizeSchema"
+          - "Update quality options (high/medium/low)"
+          - "Add background parameter type"
+          - "Add output_format parameter type"
+          - "Add moderation parameter type"
+      
+      - task: "Update edit types"
+        file: "src/types/edit.ts"
+        changes:
+          - "Ensure model types support 'gpt-image-1'"
+          - "Add new parameter types for background and moderation"
+
+  - phase: 3
+    name: "API Compatibility"
+    tasks:
+      - task: "Update request/response handling"
+        file: "src/utils/openai.ts"
+        changes:
+          - "Handle new response format if different"
+          - "Update error handling for gpt-image-1 specific errors"
+          - "Ensure backward compatibility with existing API"
+      
+      - task: "Update file output handling"
+        file: "src/utils/openai.ts"
+        changes:
+          - "Support new output formats (webp)"
+          - "Handle transparent backgrounds properly"
+
+  - phase: 4
+    name: "Test Updates"
+    tasks:
+      - task: "Update unit tests"
+        file: "tests/openai.test.ts"
+        changes:
+          - "Update all model references from dall-e-3/dall-e-2 to gpt-image-1"
+          - "Add tests for new parameters"
+          - "Test transparent background functionality"
+          - "Test new size options"
+      
+      - task: "Update integration tests"
+        files:
+          - "tests/response-size.test.ts"
+          - "tests/*.test.ts"
+        changes:
+          - "Update expected model names"
+          - "Test new output formats"
+          - "Verify token-based billing compatibility"
+
+  - phase: 5
+    name: "Documentation Updates"
+    tasks:
+      - task: "Update CLAUDE.md"
+        file: "CLAUDE.md"
+        changes:
+          - "Document gpt-image-1 as the primary model"
+          - "Note transparent background support"
+          - "Update size options documentation"
+      
+      - task: "Update API documentation"
+        files:
+          - "docs/api/*.md"
+          - "docs/guide/*.md"
+        changes:
+          - "Replace DALL-E references with gpt-image-1"
+          - "Document new parameters and capabilities"
+          - "Update examples with new model"
+
+# Breaking Changes
+breaking_changes:
+  - "Quality parameter values change from 'standard/hd' to 'high/medium/low'"
+  - "Default quality changes from 'standard' to 'high'"
+  - "Size options expanded but some DALL-E specific sizes may not be supported"
+  - "Model name in responses will change from 'dall-e-3' to 'gpt-image-1'"
+
+# Backward Compatibility Strategy
+compatibility:
+  - "Map old quality values: standard -> medium, hd -> high"
+  - "Support legacy size values where possible"
+  - "Add deprecation warnings for DALL-E specific parameters"
+  - "Maintain existing API surface while adding new capabilities"
+
+# Environment Variable Updates
+env_updates:
+  - "DEFAULT_IMAGE_QUALITY: Update default from 'standard' to 'medium'"
+  - "Add DEFAULT_BACKGROUND: 'auto'"
+  - "Add DEFAULT_OUTPUT_FORMAT: 'png'"
+  - "Add DEFAULT_MODERATION: 'auto'"
+
+# Testing Requirements
+testing:
+  - "Verify all existing functionality works with gpt-image-1"
+  - "Test new transparent background feature"
+  - "Verify new size options work correctly"
+  - "Test quality parameter mapping"
+  - "Ensure error handling works for new model"
+  - "Test file output with new formats"
+
+# Rollback Plan
+rollback:
+  - "Keep model name configurable via environment variable"
+  - "Maintain compatibility layer for old parameters"
+  - "Document how to revert to DALL-E models if needed"
+
+# Notes
+notes:
+  - "gpt-image-1 requires paid tier API access (no free tier)"
+  - "File size limit remains 25MB"
+  - "Token-based pricing may affect cost calculations"
+  - "C2PA watermarking is automatic and cannot be disabled"

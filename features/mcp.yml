@@ -1,0 +1,479 @@
+# OpenAI gpt-image-1 Image Generation MCP Server Implementation Plan
+
+project:
+  name: gpt-image-1-mcp
+  version: 0.1.0
+  description: OpenAI gpt-image-1 image generation MCP server with vision analysis
+  language: TypeScript
+
+structure:
+  directories:
+    src:
+      - index.ts # Main server file
+      - types: # Type definitions
+          - image.ts # Image generation related types
+          - vision.ts # Vision analysis types
+      - utils: # Utility functions
+          - validation.ts # Validation functions
+          - error.ts # Error handling
+          - translation.ts # Japanese to English translation
+          - imageUtils.ts # Image processing utilities
+    dist: [] # Build output
+    tests: [] # Test files
+    files:
+      - .env.example # Environment variables sample
+
+dependencies:
+  production:
+    - "@modelcontextprotocol/sdk": "^latest"
+    - "openai": "^4.x"
+    - "zod": "^3.x"
+    - "dotenv": "^16.x"
+    - "sharp": "^0.33.x" # For image processing (background removal)
+    - "axios": "^1.x" # For downloading images
+
+  development:
+    - "@types/node": "^20.x"
+    - "typescript": "^5.x"
+    - "tsx": "^4.x"
+    - "jest": "^29.x"
+    - "@types/jest": "^29.x"
+    - "eslint": "^8.x"
+    - "@typescript-eslint/eslint-plugin": "^6.x"
+    - "@typescript-eslint/parser": "^6.x"
+
+environment_variables:
+  OPENAI_API_KEY:
+    type: string
+    required: true
+    description: OpenAI API key
+
+  OPENAI_MAX_RETRIES:
+    type: number
+    default: 3
+    description: Maximum API call retries
+
+  OPENAI_API_TIMEOUT:
+    type: number
+    default: 120000
+    description: API timeout (ms) - longer for image generation
+
+  DEFAULT_IMAGE_SIZE:
+    type: string
+    default: "1024x1024"
+    options: ["1024x1024", "1792x1024", "1024x1792"]
+    description: Default image size (square, landscape, portrait)
+
+  DEFAULT_IMAGE_QUALITY:
+    type: string
+    default: "standard"
+    options: ["standard", "hd"]
+    description: Default image quality
+
+  DEFAULT_STYLE:
+    type: string
+    default: "vivid"
+    options: ["vivid", "natural"]
+    description: Default image style
+
+  AUTO_TRANSLATE_JAPANESE:
+    type: boolean
+    default: true
+    description: Automatically translate Japanese prompts to English
+
+  ENABLE_BACKGROUND_REMOVAL:
+    type: boolean
+    default: false
+    description: Enable background removal feature (requires additional API)
+
+tools:
+  generate-image:
+    description: Generate images using OpenAI gpt-image-1 with aspect ratio support and advanced capabilities
+    input_schema:
+      prompt:
+        type: string
+        required: true
+        description: Image description (auto-translates from Japanese if needed)
+
+      aspect_ratio:
+        type: string
+        required: false
+        enum: ["square", "landscape", "portrait", "1:1", "16:9", "9:16"]
+        default: "square"
+        description: Aspect ratio (square=1024x1024, landscape=1792x1024, portrait=1024x1792)
+
+      quality:
+        type: string
+        required: false
+        enum: ["standard", "hd"]
+        description: Image quality
+
+      style:
+        type: string
+        required: false
+        enum: ["vivid", "natural"]
+        description: Image style
+
+      analyze_after_generation:
+        type: boolean
+        required: false
+        default: false
+        description: Analyze the generated image and return description
+
+      remove_background:
+        type: boolean
+        required: false
+        default: false
+        description: Attempt to remove background (experimental, requires post-processing)
+
+    output:
+      image:
+        url: string
+        revised_prompt: string
+        original_prompt: string
+        was_translated: boolean
+        aspect_ratio: string
+        size: string
+      analysis:
+        description: string # Only if analyze_after_generation is true
+        detected_elements: array<string>
+        colors: array<string>
+        style_analysis: string
+      metadata:
+        generation_time_ms: number
+        model_used: string
+        background_removed: boolean
+
+  analyze-image:
+    description: Analyze an existing image using GPT-4o vision
+    input_schema:
+      image_url:
+        type: string
+        required: true
+        description: URL of the image to analyze
+
+      analysis_type:
+        type: string
+        required: false
+        enum: ["general", "detailed", "artistic", "technical"]
+        default: "general"
+        description: Type of analysis to perform
+
+      questions:
+        type: array
+        required: false
+        items:
+          type: string
+        description: Specific questions to answer about the image
+
+    output:
+      description: string
+      elements:
+        - name: string
+          confidence: number
+          location: string
+      colors:
+        dominant: array<string>
+        palette: array<string>
+      technical_details:
+        format: string
+        dimensions:
+          width: number
+          height: number
+        aspect_ratio: string
+      custom_answers: array<string> # Answers to specific questions
+
+  translate-prompt:
+    description: Translate Japanese prompt to English for better gpt-image-1 results
+    input_schema:
+      japanese_prompt:
+        type: string
+        required: true
+        description: Japanese prompt
+
+      preserve_technical_terms:
+        type: boolean
+        required: false
+        default: true
+        description: Keep technical/artistic terms unchanged
+
+      context:
+        type: string
+        required: false
+        enum: ["general", "artistic", "photographic", "technical"]
+        default: "general"
+        description: Translation context for better accuracy
+
+    output:
+      english_prompt: string
+      confidence_score: number
+      preserved_terms: array<string>
+      translation_notes: string
+
+  enhance-prompt:
+    description: Enhance prompts for better image generation
+    input_schema:
+      original_prompt:
+        type: string
+        required: true
+        description: Original prompt (any language)
+
+      enhancement_type:
+        type: string
+        required: false
+        enum: ["detailed", "artistic", "photorealistic", "minimal"]
+        default: "detailed"
+        description: Enhancement style
+
+      target_aspect_ratio:
+        type: string
+        required: false
+        enum: ["square", "landscape", "portrait"]
+        description: Optimize prompt for specific aspect ratio
+
+    output:
+      enhanced_prompt: string
+      suggestions: array<string>
+      aspect_ratio_tips: string
+
+  batch-generate:
+    description: Generate multiple variations of an image
+    input_schema:
+      base_prompt:
+        type: string
+        required: true
+        description: Base prompt for variations
+
+      variations:
+        type: array
+        required: true
+        items:
+          style: string
+          aspect_ratio: string
+          additional_details: string
+        description: List of variations to generate
+
+      analyze_all:
+        type: boolean
+        required: false
+        default: false
+        description: Analyze all generated images
+
+    output:
+      images:
+        - url: string
+          prompt: string
+          aspect_ratio: string
+          analysis: object # If analyze_all is true
+      comparison:
+        similarities: array<string>
+        differences: array<string>
+      total_generation_time_ms: number
+
+features:
+  automatic_translation:
+    enabled: true
+    description: Automatically detect and translate Japanese prompts to English
+    detection_method: regex_and_unicode_range
+    fallback: use_original_if_translation_fails
+
+  aspect_ratio_support:
+    enabled: true
+    supported_ratios:
+      - name: "square"
+        size: "1024x1024"
+        aspect: "1:1"
+        use_cases: ["profile pictures", "social media posts", "icons"]
+      - name: "landscape"
+        size: "1792x1024"
+        aspect: "16:9"
+        use_cases: ["wallpapers", "banners", "landscapes"]
+      - name: "portrait"
+        size: "1024x1792"
+        aspect: "9:16"
+        use_cases: ["mobile wallpapers", "posters", "portraits"]
+
+  vision_analysis:
+    enabled: true
+    models_supported: ["gpt-4o", "gpt-4-turbo-vision"]
+    max_image_size: "20MB"
+    supported_formats: ["jpg", "jpeg", "png", "gif", "webp"]
+
+  background_removal:
+    enabled: false # OpenAI gpt-image-1 doesn't support transparency natively
+    method: "post_processing"
+    description: Use third-party services or libraries for background removal
+    alternatives:
+      - service: "remove.bg API"
+        cost: "paid"
+      - library: "sharp + ML models"
+        cost: "free but complex"
+      - prompt_technique: "white/solid background + post-processing"
+
+  prompt_enhancement:
+    enabled: true
+    description: Automatically enhance prompts for better results
+    techniques:
+      - add_lighting_details
+      - specify_camera_angle
+      - include_style_references
+      - optimize_for_aspect_ratio
+
+  safety_filter:
+    enabled: true
+    description: Filter inappropriate content
+
+  caching:
+    enabled: true
+    ttl: 3600
+    key_strategy: "hash(prompt + settings)"
+
+error_handling:
+  api_errors:
+    - type: RateLimitError
+      retry: true
+      max_retries: 3
+      backoff: exponential
+
+    - type: InvalidRequestError
+      retry: false
+      user_message: Invalid prompt. Please check content.
+
+    - type: AuthenticationError
+      retry: false
+      user_message: Invalid API key. Check environment variables.
+
+    - type: ContentPolicyViolation
+      retry: false
+      user_message: Content policy violation. Please modify prompt.
+
+    - type: TimeoutError
+      retry: true
+      max_retries: 2
+      user_message: Image generation timed out. Please retry.
+
+    - type: TranslationError
+      retry: true
+      fallback: use_original_prompt
+      user_message: Translation failed, using original prompt.
+
+    - type: VisionAnalysisError
+      retry: true
+      max_retries: 2
+      user_message: Image analysis failed. Please retry.
+
+implementation_phases:
+  phase_1:
+    name: Core Implementation
+    duration: 3-4 days
+    tasks:
+      - MCP server setup
+      - OpenAI API integration
+      - Basic image generation with aspect ratios
+      - Error handling framework
+      - Japanese language detection
+
+  phase_2:
+    name: Translation & Enhancement
+    duration: 2-3 days
+    tasks:
+      - Japanese to English translation
+      - Prompt enhancement engine
+      - Aspect ratio optimization
+      - Batch generation support
+
+  phase_3:
+    name: Vision Integration
+    duration: 2-3 days
+    tasks:
+      - GPT-4o vision integration
+      - Image analysis pipeline
+      - Post-generation analysis
+      - Result formatting
+
+  phase_4:
+    name: Advanced Features
+    duration: 2-3 days
+    tasks:
+      - Background removal research
+      - Caching implementation
+      - Performance optimization
+      - Comprehensive testing
+
+  phase_5:
+    name: Polish & Documentation
+    duration: 1-2 days
+    tasks:
+      - API documentation
+      - Usage examples
+      - Best practices guide
+      - Deployment guide
+
+testing:
+  unit_tests:
+    - Prompt validation
+    - Translation accuracy
+    - Aspect ratio mapping
+    - Error handling
+    - Cache operations
+
+  integration_tests:
+    - OpenAI API integration
+    - Vision API integration
+    - MCP server communication
+    - End-to-end workflows
+
+  e2e_tests:
+    - Complete generation flow
+    - Translation + generation
+    - Generation + analysis
+    - Batch operations
+    - Error scenarios
+
+documentation:
+  - README.md: Installation and quick start
+  - API.md: Detailed tool specifications
+  - EXAMPLES.md: Usage examples in multiple languages
+  - ASPECT_RATIOS.md: Guide to using different ratios
+  - TRANSLATION.md: Japanese prompt optimization
+  - VISION.md: Image analysis capabilities
+  - TROUBLESHOOTING.md: Common issues and solutions
+
+performance_considerations:
+  - Implement request queuing for batch operations
+  - Use streaming for large image downloads
+  - Optimize translation caching
+  - Implement progressive image loading
+  - Monitor API rate limits
+  - Use connection pooling
+
+security_considerations:
+  - Secure API key management
+  - Input sanitization for all prompts
+  - URL validation for image analysis
+  - Rate limiting per user/session
+  - Content filtering before API calls
+  - Secure temporary file handling
+  - No sensitive data in logs
+
+limitations_and_workarounds:
+  transparent_backgrounds:
+    limitation: "gpt-image-1 provides native transparency support"
+    workarounds:
+      - Generate with solid color background
+      - Use post-processing services
+      - Recommend external tools
+
+  custom_aspect_ratios:
+    limitation: "Only 3 fixed ratios supported"
+    workarounds:
+      - Map custom ratios to nearest supported
+      - Suggest cropping strategies
+      - Provide composition tips
+
+  batch_generation:
+    limitation: "gpt-image-1 only generates 1 image at a time"
+    workarounds:
+      - Sequential generation with progress tracking
+      - Parallel API calls with rate limiting
+      - Result aggregation

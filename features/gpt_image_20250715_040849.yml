@@ -1,0 +1,558 @@
+# GPT Image API Migration and Image Edit Feature Implementation Plan
+
+project:
+  name: gpt-image-1-mcp-mcp
+  version: 0.2.0
+  description: Migration to GPT Image API with image editing capabilities
+  migration_date: 2025-07-15
+  plan_id: gpt_image_20250715_040849
+
+## MIGRATION OVERVIEW
+
+migration_scope:
+  primary_goals:
+    - Migrate from OpenAI gpt-image-1 to GPT Image API
+    - Add comprehensive image editing capabilities
+    - Maintain backward compatibility where possible
+    - Enhance Japanese language support
+    - Improve error handling and performance
+
+  breaking_changes:
+    - API endpoint changes for image generation
+    - New parameters for image editing
+    - Response format modifications
+    - New tool additions for edit functionality
+
+## CURRENT STATE ANALYSIS
+
+existing_implementation:
+  tools:
+    - generate-image: OpenAI gpt-image-1 based image generation
+    - analyze-image: GPT-4o vision analysis
+    - translate-prompt: Japanese to English translation
+  
+  core_files:
+    - src/index.ts: MCP server with 3 tools
+    - src/utils/openai.ts: OpenAI API integration
+    - src/utils/translation.ts: Translation service
+    - src/utils/fileManager.ts: File management
+    - src/types/image.ts: OpenAI gpt-image-1 types
+    - src/types/vision.ts: Vision analysis types
+    - src/types/file.ts: File management types
+
+  current_capabilities:
+    - Image generation with aspect ratio support
+    - Japanese prompt translation
+    - Image analysis and description
+    - Local file management
+    - Error handling with retry logic
+
+## GPT IMAGE API MIGRATION PLAN
+
+### Phase 1: Core API Migration (3-4 days)
+
+api_changes:
+  endpoint_migration:
+    old: "client.images.generate()"
+    new: "client.images.generate()" # Same endpoint, new parameters
+    changes:
+      - Enhanced model parameter options
+      - New image editing parameters
+      - Improved response format
+      - Better error handling
+
+  new_parameters:
+    image_generation:
+      - model: "dall-e-3" | "gpt-4o-image" # New model options
+      - enhanced_prompts: boolean # Better prompt processing
+      - safety_level: "strict" | "standard" | "relaxed"
+      - generation_speed: "fast" | "standard" | "quality"
+      - batch_size: number # Multiple images in one request
+      
+    image_editing:
+      - image: string # Base64 encoded image or URL
+      - mask: string # Optional mask for specific area editing
+      - prompt: string # Edit description
+      - edit_type: "inpaint" | "outpaint" | "variation" | "style_transfer"
+      - strength: number # 0.0-1.0 edit strength
+      - preserve_composition: boolean
+      - background_handling: "preserve" | "remove" | "change"
+
+### Phase 2: Image Edit Feature Implementation (4-5 days)
+
+new_tools:
+  edit-image:
+    description: "Edit existing images with AI-powered modifications"
+    input_schema:
+      image_input:
+        type: "object"
+        properties:
+          source_image:
+            type: "string"
+            description: "Image URL or base64 encoded image"
+          edit_prompt:
+            type: "string"
+            description: "Description of desired changes"
+          edit_type:
+            type: "string"
+            enum: ["inpaint", "outpaint", "variation", "style_transfer", "object_removal", "background_change"]
+            description: "Type of edit to perform"
+          mask_area:
+            type: "string"
+            description: "Mask specification for targeted editing (optional)"
+          strength:
+            type: "number"
+            minimum: 0.0
+            maximum: 1.0
+            default: 0.8
+            description: "Edit strength (0.0 = minimal, 1.0 = maximum)"
+          preserve_composition:
+            type: "boolean"
+            default: true
+            description: "Maintain original image composition"
+          output_format:
+            type: "string"
+            enum: ["png", "jpeg", "webp"]
+            default: "png"
+            description: "Output image format"
+          # Japanese support
+          auto_translate:
+            type: "boolean"
+            default: true
+            description: "Automatically translate Japanese prompts"
+          # File management
+          save_to_file:
+            type: "boolean"
+            default: true
+          output_directory:
+            type: "string"
+            description: "Directory to save edited image"
+          filename_prefix:
+            type: "string"
+            default: "edited_"
+            description: "Prefix for edited image filename"
+
+  create-variation:
+    description: "Create variations of existing images"
+    input_schema:
+      image_url:
+        type: "string"
+        description: "Source image URL"
+      variation_count:
+        type: "number"
+        minimum: 1
+        maximum: 4
+        default: 1
+        description: "Number of variations to generate"
+      variation_strength:
+        type: "number"
+        minimum: 0.1
+        maximum: 1.0
+        default: 0.5
+        description: "How different variations should be"
+      style_guidance:
+        type: "string"
+        description: "Optional style guidance for variations"
+      preserve_subject:
+        type: "boolean"
+        default: true
+        description: "Keep main subject unchanged"
+
+  batch-edit:
+    description: "Apply same edit to multiple images"
+    input_schema:
+      image_urls:
+        type: "array"
+        items:
+          type: "string"
+        description: "Array of image URLs to edit"
+      edit_prompt:
+        type: "string"
+        description: "Edit description to apply to all images"
+      edit_type:
+        type: "string"
+        enum: ["style_transfer", "background_change", "color_adjustment", "enhancement"]
+      batch_settings:
+        type: "object"
+        properties:
+          parallel_processing:
+            type: "boolean"
+            default: true
+          progress_callback:
+            type: "boolean"
+            default: true
+          error_handling:
+            type: "string"
+            enum: ["fail_fast", "continue_on_error", "retry_failed"]
+            default: "continue_on_error"
+
+### Phase 3: Enhanced Features (2-3 days)
+
+advanced_capabilities:
+  mask_generation:
+    description: "AI-powered mask generation for precise editing"
+    features:
+      - automatic_object_detection: "Generate masks for detected objects"
+      - semantic_segmentation: "Create masks based on image understanding"
+      - manual_mask_input: "Support for user-provided masks"
+      - mask_refinement: "AI-assisted mask improvement"
+
+  style_transfer:
+    description: "Advanced style transfer capabilities"
+    features:
+      - artistic_styles: "Apply famous artistic styles"
+      - photo_styles: "Apply photography styles"
+      - custom_style_reference: "Use reference images for style"
+      - style_mixing: "Combine multiple styles"
+
+  background_operations:
+    description: "Advanced background manipulation"
+    features:
+      - background_removal: "Remove backgrounds with AI precision"
+      - background_replacement: "Replace with custom backgrounds"
+      - background_blur: "Apply selective blur effects"
+      - background_extension: "Extend backgrounds intelligently"
+
+  batch_operations:
+    description: "Efficient batch processing"
+    features:
+      - queue_management: "Manage large batch operations"
+      - progress_tracking: "Real-time progress updates"
+      - result_aggregation: "Collect and organize results"
+      - selective_processing: "Process only changed images"
+
+## TECHNICAL IMPLEMENTATION
+
+### File Structure Changes
+
+new_files:
+  - src/types/edit.ts: "Image editing type definitions"
+  - src/utils/imageEditor.ts: "Image editing service"
+  - src/utils/maskGenerator.ts: "Mask generation utilities"
+  - src/utils/batchProcessor.ts: "Batch operation handler"
+  - src/utils/styleTransfer.ts: "Style transfer utilities"
+  - tests/imageEditor.test.ts: "Image editing tests"
+  - tests/batchProcessor.test.ts: "Batch processing tests"
+  - examples/image_editing_examples.ts: "Usage examples"
+
+modified_files:
+  - src/index.ts: "Add new tools and handlers"
+  - src/utils/openai.ts: "Migrate to GPT Image API"
+  - src/types/image.ts: "Update for new API parameters"
+  - src/utils/fileManager.ts: "Handle edit-specific file operations"
+  - tests/openai.test.ts: "Update for new API"
+
+### API Integration Changes
+
+openai_service_updates:
+  new_methods:
+    - editImage(input: EditImageInput): Promise<EditImageResult>
+    - createVariation(input: VariationInput): Promise<VariationResult>
+    - batchEdit(input: BatchEditInput): Promise<BatchEditResult>
+    - generateMask(input: MaskGenerationInput): Promise<MaskResult>
+    - transferStyle(input: StyleTransferInput): Promise<StyleTransferResult>
+
+  enhanced_methods:
+    - generateImage(): "Updated for GPT Image API"
+    - analyzeImage(): "Enhanced with edit-specific analysis"
+    - handleOpenAIError(): "New error types for editing"
+
+### Type System Updates
+
+new_types:
+  edit_types:
+    - EditImageInput: "Input for image editing"
+    - EditImageResult: "Result of image editing"
+    - EditType: "Enum for edit types"
+    - MaskInput: "Mask specification"
+    - EditStrength: "Edit strength parameters"
+    - BackgroundOperation: "Background handling options"
+
+  batch_types:
+    - BatchEditInput: "Batch editing input"
+    - BatchEditResult: "Batch editing results"
+    - BatchProgress: "Progress tracking"
+    - BatchSettings: "Batch operation settings"
+
+  variation_types:
+    - VariationInput: "Image variation input"
+    - VariationResult: "Variation results"
+    - VariationSettings: "Variation parameters"
+
+### Error Handling Enhancements
+
+new_error_types:
+  - ImageEditError: "Image editing specific errors"
+  - MaskError: "Mask generation/validation errors"
+  - BatchProcessingError: "Batch operation errors"
+  - StyleTransferError: "Style transfer specific errors"
+
+error_handling_improvements:
+  - enhanced_retry_logic: "Retry failed edit operations"
+  - partial_success_handling: "Handle partial batch success"
+  - edit_validation: "Validate edit parameters before processing"
+  - resource_management: "Manage memory for large batch operations"
+
+## TESTING STRATEGY
+
+### Unit Tests
+
+test_categories:
+  image_editing:
+    - test_edit_image_basic: "Basic image editing functionality"
+    - test_edit_with_mask: "Masked image editing"
+    - test_edit_strength_variations: "Different edit strengths"
+    - test_edit_type_variations: "All edit types"
+    - test_japanese_edit_prompts: "Japanese prompt translation for edits"
+
+  batch_processing:
+    - test_batch_edit_success: "Successful batch editing"
+    - test_batch_edit_partial_failure: "Partial batch failure handling"
+    - test_batch_progress_tracking: "Progress updates"
+    - test_batch_error_handling: "Error handling in batch operations"
+
+  style_transfer:
+    - test_style_transfer_basic: "Basic style transfer"
+    - test_custom_style_reference: "Custom reference images"
+    - test_style_mixing: "Multiple style combination"
+
+  variations:
+    - test_create_variations: "Image variation generation"
+    - test_variation_strength: "Different variation strengths"
+    - test_preserve_subject: "Subject preservation"
+
+### Integration Tests
+
+integration_test_scenarios:
+  - full_edit_workflow: "Complete edit process from input to output"
+  - file_management_integration: "Edit results file handling"
+  - translation_integration: "Japanese edit prompts with translation"
+  - batch_file_operations: "Batch editing with file management"
+  - error_recovery: "Error handling and recovery"
+
+### Performance Tests
+
+performance_metrics:
+  - edit_operation_speed: "Time for different edit types"
+  - batch_processing_efficiency: "Throughput for batch operations"
+  - memory_usage: "Memory consumption during editing"
+  - file_io_performance: "File operation speed"
+
+## DEPLOYMENT PLAN
+
+### Phase 1: Core Migration (Week 1)
+deployment_steps:
+  day_1_2:
+    - Migrate generateImage() to GPT Image API
+    - Update type definitions
+    - Basic testing
+  day_3_4:
+    - Implement edit-image tool
+    - Add mask generation
+    - Update file management
+  day_5_7:
+    - Testing and bug fixes
+    - Documentation updates
+    - Integration testing
+
+### Phase 2: Advanced Features (Week 2)
+deployment_steps:
+  day_8_10:
+    - Implement create-variation tool
+    - Add batch-edit functionality
+    - Style transfer implementation
+  day_11_12:
+    - Advanced background operations
+    - Performance optimizations
+    - Error handling improvements
+  day_13_14:
+    - Comprehensive testing
+    - Performance validation
+    - Documentation completion
+
+### Phase 3: Polish and Documentation (Week 3)
+deployment_steps:
+  day_15_17:
+    - Code review and refactoring
+    - Performance optimization
+    - Security review
+  day_18_19:
+    - Documentation updates
+    - Example creation
+    - User guide updates
+  day_20_21:
+    - Final testing
+    - Release preparation
+    - Deployment
+
+## CONFIGURATION UPDATES
+
+### Environment Variables
+
+new_environment_variables:
+  # GPT Image API settings
+  GPT_IMAGE_API_VERSION:
+    type: string
+    default: "v1"
+    description: "GPT Image API version"
+  
+  DEFAULT_EDIT_STRENGTH:
+    type: number
+    default: 0.8
+    description: "Default edit strength for image modifications"
+  
+  MAX_BATCH_SIZE:
+    type: number
+    default: 10
+    description: "Maximum images in batch operations"
+  
+  ENABLE_MASK_GENERATION:
+    type: boolean
+    default: true
+    description: "Enable AI-powered mask generation"
+  
+  EDIT_TIMEOUT_MS:
+    type: number
+    default: 180000
+    description: "Timeout for image editing operations (3 minutes)"
+  
+  # File management for edits
+  EDIT_OUTPUT_DIR:
+    type: string
+    default: "./edited_images"
+    description: "Directory for edited images"
+  
+  PRESERVE_ORIGINAL:
+    type: boolean
+    default: true
+    description: "Keep original images when editing"
+  
+  # Performance settings
+  CONCURRENT_EDITS:
+    type: number
+    default: 3
+    description: "Maximum concurrent edit operations"
+  
+  ENABLE_EDIT_CACHE:
+    type: boolean
+    default: true
+    description: "Cache edit results for similar operations"
+
+### Updated Package Dependencies
+
+new_dependencies:
+  production:
+    - "canvas": "^2.11.0" # For image manipulation
+    - "sharp": "^0.33.0" # Enhanced image processing
+    - "image-js": "^0.35.0" # Advanced image operations
+    - "node-canvas": "^2.11.0" # Canvas operations for masks
+  
+  development:
+    - "@types/canvas": "^2.11.0"
+    - "image-size": "^1.0.0" # Image dimension utilities
+
+## MIGRATION CHECKLIST
+
+### Pre-migration Tasks
+- [ ] Backup current codebase
+- [ ] Test current functionality
+- [ ] Document current API usage
+- [ ] Prepare test images for validation
+- [ ] Set up staging environment
+
+### Migration Tasks
+- [ ] Update OpenAI client configuration
+- [ ] Migrate generateImage() method
+- [ ] Update type definitions
+- [ ] Implement edit-image tool
+- [ ] Add create-variation tool
+- [ ] Implement batch-edit functionality
+- [ ] Update file management
+- [ ] Add mask generation utilities
+- [ ] Implement style transfer
+- [ ] Update error handling
+- [ ] Add comprehensive logging
+- [ ] Update documentation
+
+### Post-migration Tasks
+- [ ] Validate all functionality
+- [ ] Performance testing
+- [ ] Security review
+- [ ] Update examples
+- [ ] User acceptance testing
+- [ ] Production deployment
+- [ ] Monitor performance
+- [ ] Gather user feedback
+
+## BACKWARD COMPATIBILITY
+
+compatibility_strategy:
+  existing_tools:
+    - generate-image: "Maintain same interface, enhanced backend"
+    - analyze-image: "No changes required"
+    - translate-prompt: "No changes required"
+  
+  api_responses:
+    - maintain_response_format: "Keep existing response structure"
+    - add_new_fields: "Add new fields for enhanced capabilities"
+    - deprecation_warnings: "Warn about deprecated features"
+  
+  configuration:
+    - environment_variables: "Maintain backward compatibility"
+    - default_values: "Preserve existing defaults"
+    - graceful_degradation: "Fall back to OpenAI gpt-image-1 if needed"
+
+## RISK MITIGATION
+
+potential_risks:
+  api_changes:
+    risk: "GPT Image API may have breaking changes"
+    mitigation: "Implement adapter pattern for API calls"
+  
+  performance_impact:
+    risk: "Image editing may be slower than generation"
+    mitigation: "Implement caching and optimization"
+  
+  file_storage:
+    risk: "Increased storage requirements for edits"
+    mitigation: "Implement automatic cleanup and compression"
+  
+  error_handling:
+    risk: "More complex error scenarios with editing"
+    mitigation: "Comprehensive error handling and recovery"
+
+## SUCCESS METRICS
+
+key_metrics:
+  functionality:
+    - all_tools_working: "100% tool functionality"
+    - edit_success_rate: ">95% successful edits"
+    - batch_processing_efficiency: "<10% failure rate"
+  
+  performance:
+    - edit_response_time: "<30 seconds for standard edits"
+    - batch_processing_time: "<5 minutes for 10 images"
+    - memory_usage: "<500MB for batch operations"
+  
+  user_experience:
+    - japanese_translation_accuracy: ">90% accuracy"
+    - error_message_clarity: "Clear, actionable error messages"
+    - documentation_completeness: "100% API coverage"
+
+## FUTURE ENHANCEMENTS
+
+roadmap:
+  phase_4_advanced_ai:
+    - video_generation: "Extend to video generation capabilities"
+    - 3d_image_generation: "3D image creation"
+    - real_time_editing: "Real-time image editing preview"
+  
+  phase_5_integrations:
+    - adobe_integration: "Adobe Creative Suite integration"
+    - figma_plugin: "Figma plugin for design workflows"
+    - api_marketplace: "Marketplace for custom edit filters"
+  
+  phase_6_enterprise:
+    - enterprise_features: "Enterprise-level features"
+    - custom_models: "Custom model training"
+    - advanced_analytics: "Usage analytics and insights"

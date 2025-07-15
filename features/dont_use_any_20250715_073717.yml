@@ -1,0 +1,304 @@
+name: Remove any type usage in TypeScript codebase
+description: Replace all any type usages with proper TypeScript types using best practices
+created_at: 2025-07-15T07:37:17Z
+priority: high
+status: planned
+
+overview: |
+  This plan addresses the issue of any type usage throughout the codebase.
+  We'll replace all any types with proper TypeScript types using modern best practices
+  including the official OpenAI SDK types, Vitest mocking utilities, satisfies operator,
+  unknown type with type guards, and other advanced TypeScript features.
+
+analysis:
+  total_any_usages: 30
+  files_affected:
+    - src/utils/openai.ts: 9 usages
+    - tests/openai.test.ts: 13 usages
+    - tests/fileManager.test.ts: 3 usages
+    - tests/validation.test.ts: 5 usages
+
+tasks:
+  - id: 1
+    title: Fix OpenAI service type casting
+    description: Replace any type casts in src/utils/openai.ts
+    file: src/utils/openai.ts
+    changes:
+      - line: 222-224
+        issue: Using 'as any' for OpenAI API parameters
+        solution: |
+          Use proper OpenAI SDK types:
+          - size should use the specific literal types from OpenAI SDK
+          - quality and background should use the proper enum types
+        code: |
+          // Before:
+          size: size as any,
+          quality: input.quality as any,
+          background: input.background as any,
+          
+          // After:
+          size: size as OpenAI.Images.ImageEditParams['size'],
+          quality: input.quality as OpenAI.Images.ImageEditParams['quality'],
+          background: input.background as OpenAI.Images.ImageEditParams['background'],
+      
+      - line: 250
+        issue: Using 'any' type for editedImage object
+        solution: Create a proper interface for edited image data
+        code: |
+          // Add interface:
+          interface EditedImageData {
+            url: string;
+            revised_prompt: string;
+            original_prompt: string;
+            edit_type: string;
+            strength: number;
+            model_used: string;
+            local_path?: string;
+            filename?: string;
+            directory?: string;
+            size_bytes?: number;
+            format?: string;
+            saved_at?: string;
+          }
+          
+          // Use:
+          const editedImage: EditedImageData = {
+            url: editedImageUrl,
+            revised_prompt: imageData.revised_prompt || input.edit_prompt,
+            // ...
+          };
+      
+      - line: 342
+        issue: Using 'any' type for variationData object
+        solution: Create interface for variation data
+        code: |
+          // Add interface:
+          interface VariationData {
+            url: string;
+            variation_strength: number;
+            style_guidance?: string;
+            model_used: string;
+            local_path?: string;
+            filename?: string;
+            directory?: string;
+            size_bytes?: number;
+            format?: string;
+            saved_at?: string;
+          }
+          
+          // Use:
+          const variationData: VariationData = {
+            url: variationUrl,
+            variation_strength: input.variation_strength,
+            // ...
+          };
+      
+      - line: 599
+        issue: Using 'any' type for styledImage object
+        solution: Create interface for styled image data
+        code: |
+          // Add interface:
+          interface StyledImageData {
+            url: string;
+            style_strength: number;
+            artistic_style?: string;
+            local_path?: string;
+            filename?: string;
+            directory?: string;
+            size_bytes?: number;
+            format?: string;
+            saved_at?: string;
+          }
+          
+          // Use:
+          const styledImage: StyledImageData = {
+            url: styledImageUrl,
+            style_strength: input.style_strength,
+            // ...
+          };
+      
+      - line: 410
+        issue: Using 'any' type in results array interface
+        solution: Use the EditedImageData interface
+        code: |
+          // Before:
+          edited_image?: any;
+          
+          // After:
+          edited_image?: EditedImageData;
+      
+      - line: 126
+        issue: Using 'any' type for async generator source parameter
+        solution: Use proper ReadableStream type
+        code: |
+          // Before:
+          async function* (source: any) {
+          
+          // After:
+          async function* (source: ReadableStream<Uint8Array>) {
+
+  - id: 2
+    title: Fix mock types in openai.test.ts
+    description: Replace any type usage in test mocks with Vitest utilities
+    file: tests/openai.test.ts
+    changes:
+      - line: 19, 40, 81, 120
+        issue: Using 'as any' for mock objects
+        solution: Use vi.mocked() and DeepPartial types
+        code: |
+          // Import at top:
+          import { vi, Mock, Mocked } from 'vitest';
+          
+          // For OpenAI mock:
+          let mockOpenAI: Mocked<OpenAI>;
+          
+          // In beforeEach:
+          mockOpenAI = {
+            images: {
+              generate: vi.fn(),
+              edit: vi.fn(),
+              createVariation: vi.fn(),
+            },
+            chat: {
+              completions: {
+                create: vi.fn(),
+              },
+            },
+          } as unknown as Mocked<OpenAI>;
+      
+      - line: 176, 334, 495
+        issue: Using 'as any' for FileManager mock
+        solution: Create proper typed mock
+        code: |
+          // Define type:
+          type MockFileManager = {
+            saveImage: Mock<[string, FileOutputOptions, ImageMetadata], Promise<SaveImageResult | null>>;
+          };
+          
+          // Use:
+          const mockFileManager: MockFileManager = {
+            saveImage: vi.fn(),
+          };
+      
+      - line: 196, 355, 515
+        issue: Accessing private properties with 'as any'
+        solution: Use module augmentation or test utilities
+        code: |
+          // Create test utility:
+          function getPrivateClient(service: OpenAIService): any {
+            return (service as any).client;
+          }
+          
+          // Or better, expose through a test-only method:
+          // In OpenAIService class, add:
+          // @internal - for testing only
+          _getClientForTesting() {
+            return this.client;
+          }
+
+  - id: 3
+    title: Fix async generator type in fileManager.test.ts
+    description: Replace any type in async generator
+    file: tests/fileManager.test.ts
+    changes:
+      - line: 126
+        issue: Using 'any' type for async generator source
+        solution: Use proper ReadableStream type
+        code: |
+          // Before:
+          async function* (source: any) {
+          
+          // After:
+          async function* (source: ReadableStream<Uint8Array>) {
+      
+      - line: 185
+        issue: Using 'as any' for AbortController mock
+        solution: Use satisfies operator
+        code: |
+          // Before:
+          () => mockAbortController as any
+          
+          // After:
+          () => mockAbortController satisfies AbortController
+      
+      - line: 193
+        issue: Using 'as any' for setTimeout return
+        solution: Use proper NodeJS.Timeout type
+        code: |
+          // Before:
+          return 1 as any;
+          
+          // After:
+          return 1 as unknown as NodeJS.Timeout;
+
+  - id: 4
+    title: Fix validation test type assertions
+    description: Replace any type assertions in validation tests
+    file: tests/validation.test.ts
+    changes:
+      - line: 124, 127, 132
+        issue: Using 'as any' to test invalid inputs
+        solution: Use unknown type for testing invalid inputs
+        code: |
+          // Before:
+          validateEnglishOnlyArray("not an array" as any)
+          validateEnglishOnlyArray(123 as any)
+          
+          // After:
+          // Cast to unknown first, which is safer:
+          validateEnglishOnlyArray("not an array" as unknown as string[])
+          validateEnglishOnlyArray(123 as unknown as string[])
+          
+          // Or better, create a test helper:
+          function testInvalidInput(input: unknown) {
+            expect(() => validateEnglishOnlyArray(input as string[])).toThrow(ValidationError);
+          }
+          
+          testInvalidInput("not an array");
+          testInvalidInput(123);
+
+  - id: 5
+    title: Update tsconfig.json for stricter type checking
+    description: Enable stricter TypeScript compiler options
+    file: tsconfig.json
+    changes:
+      - issue: Missing strict type checking options
+        solution: Enable all strict options
+        code: |
+          {
+            "compilerOptions": {
+              "strict": true,
+              "noImplicitAny": true,
+              "strictNullChecks": true,
+              "exactOptionalPropertyTypes": true,
+              "noUncheckedIndexedAccess": true,
+              // ... existing options
+            }
+          }
+
+implementation_order:
+  - Update tsconfig.json with strict options
+  - Create shared type definitions file (src/types/internal.ts)
+  - Fix production code (src/utils/openai.ts)
+  - Fix test mocks and utilities
+  - Run type checking and fix any new errors
+
+benefits:
+  - Type safety: Catch more errors at compile time
+  - Better IDE support: Improved autocomplete and refactoring
+  - Documentation: Types serve as inline documentation
+  - Maintainability: Easier to understand and modify code
+  - Reduced bugs: Many runtime errors become compile-time errors
+
+testing_strategy:
+  - Run `pnpm typecheck` after each change
+  - Ensure all tests still pass with `pnpm test`
+  - Verify no regression in functionality
+  - Check that build succeeds with `pnpm build`
+
+notes:
+  - Some any usages in tests are acceptable when testing invalid inputs
+  - Consider creating test-specific utility types for partial mocks
+  - The satisfies operator (TS 4.9+) is preferred over type assertions
+  - Use unknown instead of any for values of unknown type
+  - Always prefer specific types from libraries (e.g., OpenAI SDK types)

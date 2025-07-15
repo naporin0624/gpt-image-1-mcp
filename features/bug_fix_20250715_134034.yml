@@ -1,0 +1,317 @@
+name: Bug Fix Implementation Plan
+version: 1.0.0
+generated: 2025-07-15T13:40:34Z
+based_on: e2e/report_20250715_043400.yml
+
+executive_summary:
+  target: Fix critical MCP tool parameter schema mismatches and TypeScript strict mode violations
+  priority: HIGH
+  blocking: core functionality
+  estimated_effort: 4-6 hours
+  methodology: TDD (Red → Green → Refactor)
+
+critical_issues:
+  issue_1:
+    title: MCP Tool Parameter Schema Mismatch
+    severity: CRITICAL
+    description: generate-image tool schema inconsistency
+    root_cause: MCP tool schema vs Zod validation schema mismatch
+    files_affected:
+      - file: src/index.ts
+        lines: 58-67
+        component: MCP tool schema
+      - file: src/types/image.ts  
+        lines: 11,28
+        component: Zod validation schema
+    current_state:
+      mcp_schema:
+        quality: ["standard", "hd"]
+        includes: [prompt, aspect_ratio, quality, style, analyze_after_generation, remove_background, save_to_file, output_directory, filename, naming_strategy, organize_by]
+      zod_schema:
+        quality: ["high", "medium", "low"]
+        includes: [prompt, aspect_ratio, quality, style, background, output_format, moderation, analyze_after_generation, remove_background, save_to_file, output_directory, filename, naming_strategy, organize_by]
+      mapping_function_exists: true
+      mapping_function_name: mapLegacyQuality
+    test_failures:
+      - "Invalid enum value. Expected 'high' | 'medium' | 'low', received 'standard'"
+      - "Invalid request: Unknown parameter: 'style'"
+
+  issue_2:
+    title: TypeScript Strict Mode Violations
+    severity: HIGH
+    description: Multiple undefined/null safety violations in test files
+    files_affected:
+      - file: tests/fileManager.test.ts
+        error_count: 6
+      - file: tests/openai.test.ts
+        error_count: 7
+      - file: tests/response-size.test.ts
+        error_count: 3
+      - file: tests/validation.test.ts
+        error_count: 7
+    error_types:
+      - type: TS2532
+        description: Object is possibly 'undefined'
+      - type: TS2352
+        description: Mock type conversion issues
+      - type: TS2379
+        description: Argument type assignment with exactOptionalPropertyTypes
+
+  issue_3:
+    title: Code Quality Issues  
+    severity: MEDIUM
+    description: ESLint/Prettier formatting violations
+    files_affected:
+      - e2e/report_20250715_043400.yml
+      - Various source files with formatting inconsistencies
+
+implementation_plan:
+  phase_1:
+    name: Fix MCP Tool Schema Alignment
+    priority: HIGH
+    tasks:
+      task_1_1:
+        name: Standardize Quality Parameter Schema
+        test_strategy: |
+          describe('MCP Schema Alignment', () => {
+            it('should accept both legacy and new quality values', () => {
+              // Red: This should fail initially
+              expect(validateGenerateImageInput({
+                prompt: "test",
+                quality: "standard" // legacy value
+              })).toEqual({
+                prompt: "test", 
+                quality: "medium" // mapped value
+              });
+            });
+          });
+        implementation_steps:
+          - Update MCP tool schema to accept both legacy and new quality values
+          - Ensure mapping function is applied in request handler
+          - Update validation logic to handle parameter transformation
+        files_to_modify:
+          - file: src/index.ts
+            lines: 58-67
+            action: update quality enum
+          - file: src/index.ts
+            lines: 313-351
+            action: apply mapping in request handler
+
+      task_1_2:
+        name: Add Missing Parameters to MCP Schema
+        test_strategy: |
+          it('should accept all Zod schema parameters in MCP tool', () => {
+            // Red: This should fail initially
+            const mcpParams = {
+              prompt: "test",
+              background: "transparent",
+              output_format: "png",
+              moderation: "auto"
+            };
+            expect(validateMCPToolParameters(mcpParams)).toBe(true);
+          });
+        implementation_steps:
+          - Add missing parameters: background, output_format, moderation
+          - Ensure parameter forwarding in request handler
+          - Update tool descriptions
+        files_to_modify:
+          - file: src/index.ts
+            lines: 44-107
+            action: add missing parameters to MCP schema
+
+      task_1_3:
+        name: Fix Style Parameter Handling
+        test_strategy: |
+          it('should properly handle style parameter', () => {
+            // Red: This should fail initially
+            const result = validateGenerateImageInput({
+              prompt: "test",
+              style: "vivid"
+            });
+            expect(result.style).toBe("vivid");
+          });
+        implementation_steps:
+          - Verify style parameter is correctly passed through
+          - Update request handler parameter forwarding
+          - Add debug logging for parameter validation
+
+  phase_2:
+    name: Fix TypeScript Strict Mode Violations
+    priority: MEDIUM
+    tasks:
+      task_2_1:
+        name: Fix fileManager.test.ts Type Issues
+        test_strategy: |
+          it('should handle undefined gracefully', () => {
+            const result = someFunction();
+            expect(result).toBeDefined();
+            if (result) {
+              expect(result.property).toBe(expectedValue);
+            }
+          });
+        implementation_steps:
+          - Add null checks with proper type guards
+          - Use non-null assertion operator (!) where appropriate
+          - Update mock types to be more specific
+        files_to_modify:
+          - file: tests/fileManager.test.ts
+            lines: [94, 450, 451, 452, 453, 537, 538]
+
+      task_2_2:
+        name: Fix openai.test.ts Mock Type Issues
+        test_strategy: |
+          interface MockOpenAI extends Partial<OpenAI> {
+            images: {
+              edit: Mock<any>;
+            };
+          }
+          it('should use properly typed mocks', () => {
+            const mockOpenAI = createMockOpenAI();
+            expect(mockOpenAI.images.edit).toBeDefined();
+          });
+        implementation_steps:
+          - Create proper mock interface types
+          - Use type assertions with 'unknown' intermediate
+          - Fix quality parameter type in mock calls
+        files_to_modify:
+          - file: tests/openai.test.ts
+            lines: [73, 218, 227, 395, 404, 460, 461]
+
+      task_2_3:
+        name: Fix remaining test file type issues
+        test_strategy: "pnpm typecheck # Should return 0 errors"
+        implementation_steps:
+          - Add proper undefined checks in response-size.test.ts
+          - Fix validation.test.ts undefined access patterns
+          - Use optional chaining where appropriate
+        files_to_modify:
+          - file: tests/response-size.test.ts
+            lines: [124, 127, 128]
+          - file: tests/validation.test.ts
+            lines: [160, 161, 162, 165, 166, 167, 177, 178]
+
+  phase_3:
+    name: Code Quality and Documentation
+    priority: LOW
+    tasks:
+      task_3_1:
+        name: Fix Linting Issues
+        test_strategy: "pnpm lint # Should return 0 errors/warnings"
+        implementation_steps:
+          - Fix YAML formatting in e2e report
+          - Apply Prettier formatting to all files
+          - Resolve ESLint rule violations
+
+      task_3_2:
+        name: Add Integration Tests
+        test_strategy: |
+          describe('MCP Integration', () => {
+            it('should generate image with correct parameters', async () => {
+              const result = await mcpClient.callTool('generate-image', {
+                prompt: "A red apple",
+                quality: "standard" // Should be mapped to "medium"
+              });
+              expect(result.success).toBe(true);
+            });
+          });
+        implementation_steps:
+          - Create MCP client test utilities
+          - Add comprehensive parameter validation tests
+          - Test actual API integration scenarios
+
+success_criteria:
+  phase_1:
+    - generate-image tool accepts both "standard"/"hd" and "high"/"medium"/"low" quality values
+    - All MCP tool parameters match Zod schema parameters
+    - No "Unknown parameter" errors in tool calls
+    - Parameter mapping works correctly (standard→medium, hd→high)
+
+  phase_2:
+    - "pnpm typecheck returns 0 errors"
+    - All existing tests pass with strict TypeScript mode
+    - No "Object is possibly undefined" errors
+    - Proper mock typing throughout test suite
+
+  phase_3:
+    - "pnpm lint returns 0 errors/warnings"
+    - Code formatted consistently with Prettier
+    - Integration tests cover MCP tool functionality
+    - Documentation updated with correct parameter examples
+
+testing_strategy:
+  methodology: Red-Green-Refactor Cycle
+  steps:
+    red: Write failing tests that expose the current bugs
+    green: Implement minimal fixes to make tests pass
+    refactor: Improve code quality while maintaining test coverage
+  
+  test_coverage_requirements:
+    - unit_tests: All parameter validation logic
+    - integration_tests: MCP tool schema compliance
+    - type_tests: TypeScript strict mode compliance
+    - e2e_tests: Actual API integration scenarios
+
+risk_assessment:
+  high_risk_areas:
+    - name: Parameter Schema Changes
+      impact: Could break existing integrations
+    - name: Type System Changes
+      impact: May reveal runtime errors in production
+
+  mitigation_strategies:
+    - Maintain backward compatibility through parameter mapping
+    - Add comprehensive test coverage before making changes
+    - Use feature flags for gradual rollout of schema changes
+    - Thorough manual testing of all tool functions
+
+dependencies:
+  internal:
+    - Zod schema validation system
+    - OpenAI API integration layer
+    - File management utilities
+    - MCP server framework
+
+  external:
+    - "@modelcontextprotocol/sdk"
+    - openai library
+    - TypeScript compiler
+    - Vitest testing framework
+
+timeline:
+  day_1:
+    phase: "Phase 1: Schema Alignment"
+    morning: "Fix quality parameter schema (Tasks 1.1)"
+    afternoon: "Add missing parameters (Tasks 1.2, 1.3)"
+    evening: "Test and validate schema changes"
+
+  day_2:
+    phase: "Phase 2: TypeScript Fixes"
+    morning: "Fix fileManager and openai test files (Tasks 2.1, 2.2)"
+    afternoon: "Fix remaining test files (Task 2.3)"
+    evening: "Validate all tests pass with strict mode"
+
+  day_3:
+    phase: "Phase 3: Quality and Integration"
+    morning: "Fix linting and formatting (Task 3.1)"
+    afternoon: "Add integration tests (Task 3.2)"
+    evening: "Final validation and documentation update"
+
+post_implementation_validation:
+  acceptance_criteria:
+    - E2E Test Rerun: All previously failing tests now pass
+    - Manual Testing: Generate-image tool works with both legacy and new parameters
+    - "CI/CD Pipeline: All automated checks pass (lint, typecheck, tests)"
+    - "Performance: No regression in API response times"
+    - "Documentation: README and tool descriptions are accurate"
+
+  rollback_plan:
+    - Git branching strategy for safe experimentation
+    - Ability to revert to previous MCP schema if integration issues arise
+    - Backup of current test suite state
+    - Environment variables for toggling new vs legacy behavior
+
+notes:
+  - This plan follows t-wada's TDD methodology as specified in CLAUDE.md
+  - All changes maintain backward compatibility where possible
+  - Implementation prioritizes fixing user-facing issues first (generate-image tool)
+  - Type safety improvements support long-term maintainability

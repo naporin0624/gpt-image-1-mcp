@@ -1,0 +1,397 @@
+# Language Architecture Modification Plan
+
+project:
+  name: gpt-image-1-mcp-mcp
+  modification: language_architecture_simplification
+  version: 0.2.0
+  modification_date: 2025-07-15
+  plan_id: language_20250715_041730
+
+## MODIFICATION OVERVIEW
+
+objective:
+  primary_goal: "Simplify MCP architecture by removing internal translation and requiring English-only input"
+  rationale: "LLMs can handle translation better than internal API calls, reducing complexity and cost"
+  
+current_architecture:
+  flow: "User (Japanese) → MCP (detects Japanese → translates via OpenAI API → generates image)"
+  issues:
+    - additional_api_calls: "Translation requires extra OpenAI API calls"
+    - increased_complexity: "MCP handles both translation and image generation"
+    - translation_dependency: "Translation quality depends on OpenAI API"
+    - cost_overhead: "Additional API costs for translation"
+
+proposed_architecture:
+  flow: "User (Japanese) → LLM (translates) → MCP (generates image in English only)"
+  benefits:
+    - reduced_api_calls: "No translation API calls from MCP"
+    - simplified_architecture: "Single responsibility principle"
+    - better_translation: "LLMs excel at contextual translation"
+    - faster_response: "Fewer API roundtrips"
+    - clearer_validation: "English-only input validation"
+
+## CURRENT STATE ANALYSIS
+
+existing_translation_features:
+  tools:
+    translate-prompt:
+      description: "Translate Japanese prompt to English for better OpenAI gpt-image-1 results"
+      input_schema:
+        japanese_prompt: "string (required)"
+        preserve_technical_terms: "boolean (default: true)"
+        context: "enum: general, artistic, photographic, technical"
+      implementation: "Uses OpenAI GPT-4o for translation"
+      
+  auto_translation:
+    location: "src/index.ts generate-image tool"
+    trigger: "Automatic Japanese detection using Unicode ranges"
+    process: "TranslationService.translateJapaneseToEnglish()"
+    fallback: "Use original prompt if translation fails"
+    
+  translation_service:
+    file: "src/utils/translation.ts"
+    class: "TranslationService"
+    methods:
+      - containsJapanese(): "Unicode range detection"
+      - translateJapaneseToEnglish(): "OpenAI API translation"
+      - getTranslationSystemPrompt(): "Context-aware prompts"
+      - extractTechnicalTerms(): "Preserve technical terms"
+      - generateTranslationNotes(): "Translation metadata"
+
+## IMPLEMENTATION PLAN
+
+### Phase 1: Remove Translation Tools (Day 1)
+
+tasks:
+  remove_translate_prompt_tool:
+    file: "src/index.ts"
+    changes:
+      - remove_tool_definition: "Remove translate-prompt from tools array"
+      - remove_handler: "Remove translate-prompt case from CallToolRequestSchema handler"
+      - remove_import: "Remove TranslationService import"
+    
+  remove_auto_translation:
+    file: "src/index.ts"
+    changes:
+      - remove_translation_logic: "Remove Japanese detection and translation from generate-image"
+      - remove_translation_metadata: "Remove was_translated and related fields"
+      - simplify_prompt_handling: "Use input.prompt directly"
+    
+  remove_translation_service:
+    file: "src/utils/translation.ts"
+    action: "Delete entire file"
+    
+  update_openai_service:
+    file: "src/utils/openai.ts"
+    changes:
+      - remove_translation_imports: "Remove TranslationService imports"
+      - remove_translation_logic: "Remove translation calls from editImage and other methods"
+      - remove_auto_translate_params: "Remove auto_translate parameters"
+
+### Phase 2: Update Input Validation (Day 1)
+
+english_only_validation:
+  approach: "Add English-only validation to all text inputs"
+  implementation:
+    validation_function:
+      name: "validateEnglishOnly"
+      logic: "Check for non-Latin characters (excluding common punctuation)"
+      regex: "/[^\u0000-\u007F\u00A0-\u00FF\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]/g"
+      exceptions: "Allow accented characters and common European characters"
+    
+    error_handling:
+      error_type: "ValidationError"
+      message: "This tool only accepts English text. Please translate your prompt to English before using this tool."
+      suggestion: "Use an LLM to translate your prompt to English first."
+
+  affected_inputs:
+    - generate-image.prompt
+    - edit-image.edit_prompt
+    - analyze-image.questions
+    - any other text inputs
+
+### Phase 3: Update Documentation (Day 2)
+
+documentation_updates:
+  tool_descriptions:
+    generate-image:
+      old: "Generate images using OpenAI gpt-image-1 with aspect ratio support"
+      new: "Generate images using OpenAI gpt-image-1 with aspect ratio support (English prompts only)"
+      
+    edit-image:
+      old: "Edit existing images with AI-powered modifications"
+      new: "Edit existing images with AI-powered modifications (English prompts only)"
+      
+  input_schema_updates:
+    prompt_descriptions:
+      old: "Image description (auto-translates from Japanese if needed)"
+      new: "Image description (English only - use LLM to translate if needed)"
+      
+    edit_prompt_descriptions:
+      old: "Description of desired changes"
+      new: "Description of desired changes (English only)"
+
+  user_guidance:
+    translation_workflow:
+      title: "Using Non-English Prompts"
+      content: |
+        This MCP server only accepts English text input. If you have prompts in other languages:
+        
+        1. Use your LLM (Claude, ChatGPT, etc.) to translate the prompt to English first
+        2. Then use the translated English prompt with this MCP server
+        
+        Example:
+        User: "桜の花が咲いている美しい日本庭園の絵を作って"
+        LLM: "A beautiful Japanese garden with cherry blossoms in bloom"
+        MCP: [generates image with English prompt]
+        
+        This approach:
+        - Reduces API calls and costs
+        - Provides better translation quality
+        - Simplifies the MCP architecture
+        - Gives you more control over translation quality
+
+### Phase 4: Remove Translation Tests (Day 2)
+
+test_cleanup:
+  remove_translation_tests:
+    file: "tests/translation.test.ts"
+    action: "Delete if exists"
+    
+  update_integration_tests:
+    file: "tests/openai.test.ts"
+    changes:
+      - remove_translation_test_cases: "Remove tests for translation functionality"
+      - remove_japanese_prompt_tests: "Remove tests with Japanese input"
+      - add_english_validation_tests: "Add tests for English-only validation"
+      
+  update_type_tests:
+    file: "tests/types.test.ts"
+    changes:
+      - remove_translation_type_tests: "Remove translation-related type tests"
+      - add_validation_type_tests: "Add English validation type tests"
+
+### Phase 5: Clean Up Types (Day 2)
+
+type_cleanup:
+  remove_translation_types:
+    location: "src/types/"
+    types_to_remove:
+      - TranslationInput
+      - TranslationResult
+      - TranslationContext
+      - TranslationNotes
+      - any other translation-related types
+      
+  update_image_types:
+    file: "src/types/image.ts"
+    changes:
+      - remove_translation_fields: "Remove was_translated, translation_notes, etc."
+      - remove_auto_translate_options: "Remove auto_translate boolean fields"
+      
+  update_edit_types:
+    file: "src/types/edit.ts"
+    changes:
+      - remove_auto_translate_fields: "Remove auto_translate from all edit inputs"
+      - remove_translation_metadata: "Remove translation-related metadata fields"
+
+## VALIDATION STRATEGY
+
+english_validation:
+  approach: "Strict English-only validation with helpful error messages"
+  implementation:
+    validation_rules:
+      - latin_characters_only: "Allow Latin characters (a-z, A-Z)"
+      - numbers_and_punctuation: "Allow numbers (0-9) and common punctuation"
+      - accented_characters: "Allow accented characters (é, ñ, ü, etc.)"
+      - emoji_handling: "Allow emojis (they're universal)"
+      - special_characters: "Allow common symbols (@, #, $, %, etc.)"
+      
+    validation_regex:
+      pattern: "/^[\u0000-\u007F\u00A0-\u00FF\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF\u2000-\u206F\u2070-\u209F\u20A0-\u20CF\u2100-\u214F\u2190-\u21FF\u2200-\u22FF\u2300-\u23FF\u2400-\u243F\u2440-\u245F\u2460-\u24FF\u2500-\u257F\u2580-\u259F\u25A0-\u25FF\u2600-\u26FF\u2700-\u27BF\u2800-\u28FF\u2900-\u297F\u2980-\u29FF\u2A00-\u2AFF\u2B00-\u2BFF\u2C00-\u2C5F\u2C60-\u2C7F\u2C80-\u2CFF\u2D00-\u2D2F\u2D30-\u2D7F\u2D80-\u2DDF\u2E00-\u2E7F\u2E80-\u2EFF\u2F00-\u2FDF\u2FF0-\u2FFF\u3000-\u303F\u3040-\u309F\u30A0-\u30FF\u3100-\u312F\u3130-\u318F\u3190-\u319F\u31A0-\u31BF\u31C0-\u31EF\u31F0-\u31FF\u3200-\u32FF\u3300-\u33FF\u3400-\u4DBF\u4DC0-\u4DFF\u4E00-\u9FFF\uA000-\uA48F\uA490-\uA4CF\uA4D0-\uA4FF\uA500-\uA63F\uA640-\uA69F\uA6A0-\uA6FF\uA700-\uA71F\uA720-\uA7FF\uA800-\uA82F\uA830-\uA83F\uA840-\uA87F\uA880-\uA8DF\uA8E0-\uA8FF\uA900-\uA92F\uA930-\uA95F\uA960-\uA97F\uA980-\uA9DF\uA9E0-\uA9FF\uAA00-\uAA5F\uAA60-\uAA7F\uAA80-\uAADF\uAAE0-\uAAFF\uAB00-\uAB2F\uAB30-\uAB6F\uAB70-\uABBF\uABC0-\uABFF\uAC00-\uD7AF\uD7B0-\uD7FF\uD800-\uDB7F\uDB80-\uDBFF\uDC00-\uDFFF\uE000-\uF8FF\uF900-\uFAFF\uFB00-\uFB4F\uFB50-\uFDFF\uFE00-\uFE0F\uFE10-\uFE1F\uFE20-\uFE2F\uFE30-\uFE4F\uFE50-\uFE6F\uFE70-\uFEFF\uFF00-\uFFEF\uFFF0-\uFFFF]*$/"
+      description: "Allow extended Latin and common Unicode ranges, block CJK and other complex scripts"
+      
+    simplified_approach:
+      check_for_cjk: "Block Chinese, Japanese, Korean characters specifically"
+      regex: "/[\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uAC00-\uD7AF]/"
+      message: "This tool only accepts English text. Please translate your prompt to English using an LLM first."
+
+## ERROR HANDLING
+
+error_types:
+  validation_errors:
+    NonEnglishTextError:
+      code: "NON_ENGLISH_TEXT"
+      message: "This tool only accepts English text. Please translate your prompt to English first."
+      suggestion: "Use your LLM to translate the prompt to English, then try again."
+      
+    EmptyPromptError:
+      code: "EMPTY_PROMPT"
+      message: "Prompt cannot be empty."
+      suggestion: "Please provide a descriptive English prompt."
+
+error_response_format:
+  structure:
+    error: true
+    error_code: "NON_ENGLISH_TEXT"
+    message: "User-friendly error message"
+    suggestion: "Helpful suggestion for resolution"
+    examples: "Example of correct usage"
+
+## MIGRATION STRATEGY
+
+backward_compatibility:
+  approach: "Breaking change with clear migration path"
+  communication:
+    - notify_users: "Update documentation to explain the change"
+    - provide_examples: "Show how to use LLM translation"
+    - migration_guide: "Step-by-step transition guide"
+    
+  transition_period:
+    - immediate_change: "No gradual transition - clean break"
+    - clear_documentation: "Explicit English-only requirement"
+    - helpful_errors: "Error messages guide users to correct usage"
+
+## TESTING PLAN
+
+test_categories:
+  english_validation_tests:
+    - test_valid_english_prompts: "Ensure valid English prompts work"
+    - test_invalid_japanese_prompts: "Ensure Japanese prompts are rejected"
+    - test_invalid_chinese_prompts: "Ensure Chinese prompts are rejected"
+    - test_mixed_language_prompts: "Ensure mixed language prompts are rejected"
+    - test_accented_characters: "Ensure accented English characters work"
+    - test_emoji_handling: "Ensure emojis are allowed"
+    - test_special_characters: "Ensure special characters work"
+    
+  functionality_tests:
+    - test_generate_image_english_only: "Test image generation with English prompts"
+    - test_edit_image_english_only: "Test image editing with English prompts"
+    - test_analyze_image_english_only: "Test image analysis with English questions"
+    
+  error_handling_tests:
+    - test_helpful_error_messages: "Ensure error messages are helpful"
+    - test_error_format_consistency: "Ensure consistent error response format"
+    - test_suggestion_quality: "Ensure suggestions are actionable"
+
+## PERFORMANCE IMPACT
+
+expected_improvements:
+  api_call_reduction:
+    before: "1 translation call + 1 image generation call per request"
+    after: "1 image generation call per request"
+    savings: "~50% reduction in OpenAI API calls"
+    
+  response_time_improvement:
+    before: "Translation time + Image generation time"
+    after: "Image generation time only"
+    estimated_improvement: "20-30% faster response times"
+    
+  cost_reduction:
+    translation_cost_elimination: "No more GPT-4o calls for translation"
+    estimated_savings: "30-40% reduction in API costs"
+
+## DEPLOYMENT CHECKLIST
+
+pre_deployment:
+  - [ ] Code review for all changes
+  - [ ] Update unit tests
+  - [ ] Update integration tests
+  - [ ] Update documentation
+  - [ ] Test with various English prompts
+  - [ ] Test error handling with non-English inputs
+  - [ ] Performance testing
+  - [ ] Backward compatibility impact assessment
+
+deployment:
+  - [ ] Deploy to staging environment
+  - [ ] Validate all functionality
+  - [ ] Test error scenarios
+  - [ ] User acceptance testing
+  - [ ] Update production documentation
+  - [ ] Deploy to production
+  - [ ] Monitor for issues
+
+post_deployment:
+  - [ ] Monitor error rates
+  - [ ] Collect user feedback
+  - [ ] Monitor performance improvements
+  - [ ] Update examples and tutorials
+  - [ ] Create migration guide for existing users
+
+## SUCCESS METRICS
+
+key_performance_indicators:
+  functionality:
+    - english_prompt_success_rate: ">99% success rate for valid English prompts"
+    - error_detection_accuracy: ">95% accuracy in detecting non-English text"
+    - helpful_error_rate: ">90% of users find error messages helpful"
+    
+  performance:
+    - response_time_improvement: "20-30% faster average response time"
+    - api_call_reduction: "50% reduction in OpenAI API calls"
+    - cost_savings: "30-40% reduction in API costs"
+    
+  user_experience:
+    - error_message_clarity: "Clear, actionable error messages"
+    - migration_ease: "Smooth transition for existing users"
+    - documentation_completeness: "Complete English-only usage guide"
+
+## FUTURE CONSIDERATIONS
+
+potential_enhancements:
+  smart_validation:
+    - language_detection: "More sophisticated language detection"
+    - confidence_scoring: "Confidence scores for language detection"
+    - mixed_language_handling: "Handle mixed language inputs more gracefully"
+    
+  user_experience:
+    - translation_suggestions: "Suggest specific translation prompts"
+    - example_translations: "Provide example translations for common use cases"
+    - integration_guides: "Guides for integrating with different LLMs"
+    
+  advanced_features:
+    - optional_translation_mode: "Optional translation mode for advanced users"
+    - translation_quality_scoring: "Score translation quality when provided"
+    - multi_language_support: "Support for other languages in the future"
+
+## ROLLBACK PLAN
+
+rollback_strategy:
+  triggers:
+    - high_error_rate: ">10% error rate in production"
+    - user_complaints: "Significant user complaints about English-only requirement"
+    - functionality_issues: "Core functionality broken by changes"
+    
+  rollback_steps:
+    - revert_code_changes: "Revert all language-related changes"
+    - restore_translation_service: "Restore TranslationService functionality"
+    - restore_translate_prompt_tool: "Restore translate-prompt tool"
+    - restore_auto_translation: "Restore automatic translation in generate-image"
+    - update_documentation: "Revert documentation changes"
+    - communicate_rollback: "Communicate rollback to users"
+
+## CONCLUSION
+
+summary:
+  this_modification_will:
+    - simplify_architecture: "Remove translation complexity from MCP"
+    - improve_performance: "Reduce API calls and response time"
+    - reduce_costs: "Eliminate translation API costs"
+    - enhance_reliability: "Fewer failure points in the system"
+    - improve_maintainability: "Simpler codebase with single responsibility"
+    
+  user_benefits:
+    - faster_responses: "Quicker image generation"
+    - lower_costs: "Reduced API usage costs"
+    - better_translations: "LLM-powered translation quality"
+    - clearer_workflow: "Explicit translation step"
+    - more_control: "User controls translation quality"
+
+expected_outcome:
+  success_criteria:
+    - functional_english_only_mcp: "MCP works perfectly with English input"
+    - helpful_error_handling: "Clear guidance for non-English users"
+    - improved_performance: "Measurable performance improvements"
+    - satisfied_users: "Positive user feedback on changes"
+    - maintainable_codebase: "Simpler, more maintainable code"

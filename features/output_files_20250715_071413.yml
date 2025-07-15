@@ -1,0 +1,185 @@
+feature: local_file_output_for_edit_tools
+version: 1.0.0
+created_at: 2025-01-15T07:14:13Z
+author: assistant
+
+overview: |
+  Add local file output functionality to edit-image, create-variation, and batch-edit tools.
+  These tools currently have file output parameters in their schemas but lack implementation.
+  The implementation should follow the same pattern as generate-image, using FileManager.
+
+current_status:
+  analyze_image:
+    local_file_support: false
+    reason: "Designed to work with URLs only as OpenAI API requires URLs. No changes needed per user request."
+  
+  generate_image:
+    local_file_support: true
+    implementation_status: complete
+    features:
+      - save_to_file parameter
+      - output_directory configuration
+      - filename customization
+      - naming_strategy (timestamp, prompt, custom, hash)
+      - organize_by (none, date, aspect_ratio, quality)
+  
+  edit_image:
+    local_file_support: false
+    implementation_status: todo
+    schema_exists: true
+    note: "Has all file parameters in schema but editImage() method doesn't implement file saving"
+  
+  create_variation:
+    local_file_support: false
+    implementation_status: todo
+    schema_exists: true
+    note: "Has all file parameters in schema but createVariation() method doesn't implement file saving"
+  
+  batch_edit:
+    local_file_support: false
+    implementation_status: todo
+    schema_exists: true
+    note: "Has all file parameters in schema, calls editImage() internally which lacks implementation"
+
+implementation_plan:
+  edit_image:
+    location: src/utils/openai.ts
+    method: editImage
+    changes:
+      - After line 218 (where edited_image object is created)
+      - Add file saving logic similar to generateImage (lines 90-123)
+      - Use FileManager.saveImage() with appropriate parameters
+      - Handle errors gracefully without failing the entire operation
+    
+    code_pattern: |
+      // Save to file if requested
+      if (input.save_to_file) {
+        try {
+          const fileResult = await this.fileManager.saveImage(
+            editedImageUrl, // This needs to be the actual edited image URL
+            {
+              save_to_file: input.save_to_file,
+              output_directory: input.output_directory,
+              filename: input.filename_prefix 
+                ? `${input.filename_prefix}${Date.now()}`
+                : undefined,
+              naming_strategy: input.naming_strategy,
+              organize_by: input.organize_by,
+            },
+            {
+              prompt: input.edit_prompt,
+              aspectRatio: "square", // Need to detect from source image
+              quality: "standard",
+            },
+          );
+
+          if (fileResult) {
+            Object.assign(editedImage, {
+              local_path: fileResult.local_path,
+              filename: fileResult.filename,
+              directory: fileResult.directory,
+              size_bytes: fileResult.size_bytes,
+              format: fileResult.format,
+              saved_at: fileResult.saved_at,
+            });
+          }
+        } catch (error) {
+          console.warn("Failed to save edited image to file:", error);
+        }
+      }
+
+  create_variation:
+    location: src/utils/openai.ts
+    method: createVariation
+    changes:
+      - Inside the variation generation loop (after line 254)
+      - Add file saving for each variation
+      - Use index-based naming for multiple variations
+    
+    code_pattern: |
+      // Save to file if requested
+      if (input.save_to_file) {
+        try {
+          const fileResult = await this.fileManager.saveImage(
+            variationUrl, // This needs to be the actual variation URL
+            {
+              save_to_file: input.save_to_file,
+              output_directory: input.output_directory,
+              filename: input.filename_prefix 
+                ? `${input.filename_prefix}${i + 1}_${Date.now()}`
+                : undefined,
+              naming_strategy: input.naming_strategy,
+              organize_by: input.organize_by,
+            },
+            {
+              prompt: input.style_guidance || "variation",
+              aspectRatio: "square", // Need to detect from source image
+              quality: "standard",
+            },
+          );
+
+          if (fileResult) {
+            Object.assign(variationData, {
+              local_path: fileResult.local_path,
+              filename: fileResult.filename,
+              directory: fileResult.directory,
+              size_bytes: fileResult.size_bytes,
+              format: fileResult.format,
+              saved_at: fileResult.saved_at,
+            });
+          }
+        } catch (error) {
+          console.warn(`Failed to save variation ${i + 1} to file:`, error);
+        }
+      }
+
+  batch_edit:
+    location: src/utils/openai.ts
+    method: batchEdit
+    changes:
+      - No direct changes needed
+      - Already passes file parameters to editImage (lines 314-320)
+      - Will work automatically once editImage is fixed
+      - Includes index-based filename prefixing
+
+important_notes:
+  - All implementations must handle errors gracefully without failing the main operation
+  - File saving failures should be logged but not throw errors
+  - The actual image URLs need to be obtained from OpenAI API responses
+  - Currently these methods return placeholder data (TODO comments)
+  - Real implementation requires proper OpenAI API integration
+  - Aspect ratio detection from source images would be beneficial
+  - Consider adding metadata about the edit/variation type to saved files
+
+dependencies:
+  - FileManager class (already imported)
+  - OpenAI API integration (needs completion)
+  - Error handling utilities
+
+testing_requirements:
+  - Unit tests for file saving logic
+  - Integration tests with mock OpenAI responses
+  - Error scenario testing (disk full, permissions, etc.)
+  - Multi-file batch processing tests
+
+schema_reference:
+  edit_image:
+    - save_to_file: boolean
+    - output_directory: string
+    - filename_prefix: string (default: "edited_")
+    - naming_strategy: enum
+    - organize_by: enum
+  
+  create_variation:
+    - save_to_file: boolean
+    - output_directory: string
+    - filename_prefix: string (default: "variation_")
+    - naming_strategy: enum
+    - organize_by: enum
+  
+  batch_edit:
+    - save_to_file: boolean
+    - output_directory: string
+    - filename_prefix: string (default: "batch_")
+    - naming_strategy: enum
+    - organize_by: enum

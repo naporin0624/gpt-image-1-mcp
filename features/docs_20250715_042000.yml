@@ -1,0 +1,303 @@
+# Documentation Update Implementation Plan
+# Created: 2025-07-15 04:20:00
+# Context: Major image generation model changes require documentation updates and asset regeneration
+
+project_context:
+  name: "GPT Image 1 MCP Server Documentation Update"
+  description: "Comprehensive documentation refresh due to image generation model changes"
+  status: "planning"
+  priority: "high"
+  
+  current_state:
+    - Outdated documentation references removed features (Japanese translation)
+    - Current docs describe placeholder features as fully implemented
+    - Image assets (icons, thumbnails) generated with previous model
+    - Implementation gaps between documented and actual features
+    - VitePress documentation structure is solid but content needs refresh
+
+architecture_decisions:
+  documentation_strategy:
+    approach: "Truth-first documentation"
+    principles:
+      - Document only implemented features accurately
+      - Clearly mark experimental/placeholder features
+      - Separate "working now" vs "planned" features
+      - Maintain beginner-friendly approach with progressive complexity
+      
+  asset_regeneration:
+    scope: "Complete visual identity refresh"
+    reasoning: "Image generation model changes affect consistency and quality"
+    targets:
+      - Hero images for landing page
+      - Feature demonstration screenshots
+      - Tutorial step-by-step images
+      - Logo and branding elements
+      - Documentation section icons
+
+implementation_phases:
+
+  phase_1:
+    name: "Content Audit and Cleanup"
+    priority: "critical"
+    estimated_time: "2-3 hours"
+    
+    tasks:
+      - audit_current_docs:
+          description: "Review all existing documentation for accuracy"
+          deliverables:
+            - List of outdated/incorrect content
+            - Features documented but not implemented
+            - Missing documentation for implemented features
+            
+      - remove_outdated_content:
+          description: "Clean up references to removed features"
+          targets:
+            - Remove japanese-translation.md guide
+            - Remove translate-prompt.md API docs
+            - Update index.md to reflect actual capabilities
+            - Clean up environment variables docs
+            
+      - categorize_features:
+          description: "Clearly separate implemented vs placeholder features"
+          implementation:
+            - Create "Working Features" vs "Planned Features" sections
+            - Add status badges to each tool documentation
+            - Include implementation status in API docs
+
+  phase_2:
+    name: "Asset Regeneration with New Model"
+    priority: "high"
+    estimated_time: "3-4 hours"
+    
+    tasks:
+      - generate_hero_assets:
+          description: "Create new hero images for landing page"
+          specifications:
+            - hero.png: Modern, clean AI/image generation theme
+            - Aspect ratio: landscape (16:9) for responsive design
+            - Style: Professional, approachable, technology-focused
+            - Colors: Consistent with tech documentation standards
+            
+      - create_feature_demonstration_images:
+          description: "Generate images showing actual capabilities"
+          requirements:
+            - Before/after examples for image generation
+            - Sample outputs for different aspect ratios
+            - Vision analysis examples with actual results
+            - Error handling examples
+            
+      - regenerate_section_icons:
+          description: "Update documentation section icons"
+          targets:
+            - API documentation icons
+            - Guide section icons
+            - Example category icons
+            - Navigation elements
+            
+      - create_tutorial_assets:
+          description: "Step-by-step visual guides"
+          content:
+            - Installation screenshots
+            - Configuration examples
+            - MCP setup visuals
+            - Claude integration examples
+
+  phase_3:
+    name: "Content Rewrite and Accuracy Updates"
+    priority: "high"
+    estimated_time: "4-5 hours"
+    
+    tasks:
+      - rewrite_getting_started:
+          description: "Update getting started guide for current implementation"
+          focus_areas:
+            - Accurate feature list
+            - Clear prerequisites
+            - Realistic expectations
+            - Working examples only
+            
+      - update_api_documentation:
+          description: "Ensure API docs match actual implementation"
+          requirements:
+            - Accurate schema documentation
+            - Real request/response examples
+            - Error scenarios that actually occur
+            - Rate limiting information
+            
+      - refresh_examples:
+          description: "Create working examples for all documented features"
+          deliverables:
+            - Basic usage examples that work out of the box
+            - Advanced scenarios using only implemented features
+            - Integration patterns with real Claude workflows
+            
+      - implementation_status_guide:
+          description: "New guide explaining what works vs what's planned"
+          content:
+            - Feature implementation matrix
+            - Roadmap for placeholder features
+            - Contributing guidelines for missing features
+            - Workarounds for common use cases
+
+  phase_4:
+    name: "Enhanced Documentation Features"
+    priority: "medium"
+    estimated_time: "2-3 hours"
+    
+    tasks:
+      - add_interactive_examples:
+          description: "Create copy-paste ready examples"
+          implementation:
+            - Code blocks with full working examples
+            - Environment variable templates
+            - MCP configuration snippets
+            - Error handling examples
+            
+      - create_troubleshooting_guide:
+          description: "Comprehensive troubleshooting documentation"
+          coverage:
+            - Common error messages and solutions
+            - OpenAI API key issues
+            - File permission problems
+            - Network connectivity issues
+            
+      - add_performance_guidance:
+          description: "Performance and optimization guide"
+          topics:
+            - API rate limiting best practices
+            - File management optimization
+            - Batch processing guidelines
+            - Resource usage monitoring
+
+  phase_5:
+    name: "Visual Polish and User Experience"
+    priority: "low"
+    estimated_time: "2-3 hours"
+    
+    tasks:
+      - improve_navigation:
+          description: "Optimize documentation navigation"
+          enhancements:
+            - Clear feature status indicators
+            - Progressive disclosure of complexity
+            - Quick reference sections
+            - Search optimization
+            
+      - add_visual_examples:
+          description: "Rich visual documentation"
+          content:
+            - Screenshot galleries
+            - Before/after comparisons
+            - Feature demonstration videos (if applicable)
+            - Architecture diagrams
+            
+      - mobile_optimization:
+          description: "Ensure mobile-friendly documentation"
+          requirements:
+            - Responsive image sizing
+            - Touch-friendly navigation
+            - Readable on small screens
+            - Fast loading times
+
+technical_requirements:
+
+  image_generation_specifications:
+    tool: "generate-image MCP tool (using new model)"
+    settings:
+      quality: "hd"
+      style: "natural"
+      save_to_file: true
+      
+    asset_specifications:
+      hero_image:
+        prompt: "Modern AI brain neural network with flowing data streams, clean tech aesthetic, purple and blue gradient background"
+        aspect_ratio: "landscape"
+        filename: "hero_new"
+        
+      feature_icons:
+        prompts:
+          - "Minimalist icon representing image generation, clean lines, tech style"
+          - "Simple icon for image analysis, eye with circuit patterns"
+          - "Clean icon for file management, folder with organized documents"
+          - "Modern icon for API integration, connected nodes"
+        aspect_ratio: "square"
+        naming_strategy: "custom"
+        
+      tutorial_screenshots:
+        requirements:
+          - High contrast for readability
+          - Clear UI elements
+          - Consistent styling
+          - Professional appearance
+
+  documentation_structure:
+    organization:
+      docs/
+        index.md: "Updated hero page with accurate feature list"
+        guide/
+          getting-started.md: "Accurate installation and setup"
+          image-generation.md: "Complete working examples"
+          vision-analysis.md: "Real API usage patterns"
+          implementation-status.md: "NEW: What works vs what's planned"
+          troubleshooting.md: "NEW: Common issues and solutions"
+          environment-variables.md: "Updated for current implementation"
+          mcp-configuration.md: "Updated configuration examples"
+          what-is-mcp.md: "Enhanced with current context"
+        api/
+          tools.md: "Updated with implementation status"
+          generate-image.md: "Complete working examples"
+          analyze-image.md: "Real request/response examples"
+          error-handling.md: "Actual error scenarios"
+          rate-limiting.md: "Current OpenAI limits and handling"
+        examples/
+          basic-usage.md: "Working examples only"
+          advanced-scenarios.md: "Complex workflows using implemented features"
+          integration-patterns.md: "Real Claude integration examples"
+        public/images/: "All new assets with consistent style"
+
+validation_criteria:
+
+  content_accuracy:
+    - All documented features must be actually implemented
+    - All examples must be tested and working
+    - No placeholder or "coming soon" features in main docs
+    - Clear separation of experimental features
+    
+  visual_consistency:
+    - All images use consistent style and quality
+    - Professional appearance across all assets
+    - Responsive design compatibility
+    - Accessibility compliance
+    
+  user_experience:
+    - New users can successfully complete getting started guide
+    - Examples work without modification
+    - Clear indication of what requires API keys
+    - Troubleshooting covers common real issues
+
+success_metrics:
+  - Documentation reflects actual implementation (100% accuracy)
+  - All assets generated with new model for consistency
+  - User can complete full workflow from docs alone
+  - No confusion about implemented vs planned features
+  - Professional appearance matching current AI tool standards
+
+notes:
+  implementation_gaps_to_address:
+    - edit-image, create-variation, batch-edit tools are placeholders
+    - Should be clearly marked as "planned" not "available"
+    - Provide timeline for actual implementation
+    - Suggest workarounds using available tools
+    
+  asset_generation_priority:
+    1. Hero image (most visible)
+    2. Feature demonstration images
+    3. Tutorial step-by-step images
+    4. Section icons and navigation elements
+    5. Advanced example screenshots
+    
+  maintenance_plan:
+    - Update docs immediately when features are implemented
+    - Regular audit of accuracy vs implementation
+    - User feedback integration process
+    - Automated testing of documentation examples
