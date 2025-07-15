@@ -188,7 +188,8 @@ this.client = new OpenAI({
 // File manager configuration
 this.fileManager = new FileManager({
   defaultOutputDir: process.env.DEFAULT_OUTPUT_DIR ?? "./generated_images",
-  maxFileSizeBytes: parseInt(process.env.MAX_FILE_SIZE_MB ?? "50") * 1024 * 1024,
+  maxFileSizeBytes:
+    parseInt(process.env.MAX_FILE_SIZE_MB ?? "50") * 1024 * 1024,
   enableFileOutput: process.env.ENABLE_FILE_OUTPUT !== "false",
   autoCleanupDays: parseInt(process.env.KEEP_FILES_DAYS ?? "30"),
 });
