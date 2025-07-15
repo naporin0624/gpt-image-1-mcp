@@ -1,16 +1,14 @@
 # Environment Variables
 
-gpt-image-1 MCP can be configured through environment variables to customize behavior, set defaults, and manage API credentials.
+Configure gpt-image-1 MCP server behavior through environment variables in your MCP client configuration.
 
 ## Overview
 
-Environment variables provide a flexible way to configure the MCP server without modifying code. They control:
+Environment variables are set in the MCP client configuration (e.g., Claude Desktop's `config.json`) to customize:
 
-- **API Credentials**: OpenAI API key and authentication
-- **Default Settings**: Image quality, aspect ratios, and styles
-- **Feature Toggles**: Enable/disable specific functionality
-- **Performance Tuning**: Rate limiting and caching options
-- **File Management**: Output directories and naming conventions
+- **API Credentials**: OpenAI API key and authentication settings
+- **File Management**: Output directories and file handling
+- **Performance Tuning**: Request timeouts and retry settings
 
 ## Required Variables
 
@@ -18,410 +16,192 @@ Environment variables provide a flexible way to configure the MCP server without
 
 **`OPENAI_API_KEY`** (Required)
 
-- **Description**: Your OpenAI API key for accessing OpenAI gpt-image-1 and GPT-4o Vision
+- **Description**: Your OpenAI API key for accessing gpt-image-1 model
+- **Type**: String
 - **Format**: `sk-...` (starts with "sk-")
-- **Example**: `sk-1234567890abcdef1234567890abcdef`
 
-```bash
-OPENAI_API_KEY=sk-your-actual-api-key-here
-```
+## Optional Variables
 
-## Image Generation Settings
+### OpenAI API Settings
 
-### Quality Settings
+**`OPENAI_MAX_RETRIES`** (Optional)
 
-**`DEFAULT_IMAGE_QUALITY`** (Optional)
+- **Description**: Maximum number of retry attempts for OpenAI API requests
+- **Type**: Integer
+- **Default**: `3`
+- **Impact**: Higher values increase reliability but may slow down error responses
 
-- **Description**: Default quality level for image generation
-- **Values**: `standard`, `hd`
-- **Default**: `standard`
+**`OPENAI_API_TIMEOUT`** (Optional)
 
-```bash
-DEFAULT_IMAGE_QUALITY=hd
-```
-
-**`DEFAULT_IMAGE_SIZE`** (Optional)
-
-- **Description**: Default aspect ratio for generated images
-- **Values**: `square`, `landscape`, `portrait`, `1:1`, `16:9`, `9:16`
-- **Default**: `square`
-
-```bash
-DEFAULT_IMAGE_SIZE=landscape
-```
-
-**`DEFAULT_STYLE`** (Optional)
-
-- **Description**: Default style for image generation
-- **Values**: `vivid`, `natural`
-- **Default**: `vivid`
-
-```bash
-DEFAULT_STYLE=natural
-```
+- **Description**: Timeout for OpenAI API requests in milliseconds
+- **Type**: Integer
+- **Default**: `120000` (2 minutes)
+- **Impact**: Higher values allow longer operations but may cause client timeouts
 
 ### File Management
 
-**`DEFAULT_OUTPUT_DIRECTORY`** (Optional)
+**`DEFAULT_OUTPUT_DIR`** (Optional)
 
 - **Description**: Default directory for saving generated images
-- **Format**: Relative or absolute path
+- **Type**: String (relative or absolute path)
 - **Default**: `./generated_images`
+- **Impact**: Changes where images are saved by default
 
-```bash
-DEFAULT_OUTPUT_DIRECTORY=/home/user/images
-```
+**`MAX_FILE_SIZE_MB`** (Optional)
 
-**`DEFAULT_NAMING_STRATEGY`** (Optional)
-
-- **Description**: Default filename generation strategy
-- **Values**: `timestamp`, `prompt`, `custom`, `hash`
-- **Default**: `timestamp`
-
-```bash
-DEFAULT_NAMING_STRATEGY=prompt
-```
-
-**`DEFAULT_ORGANIZE_BY`** (Optional)
-
-- **Description**: Default directory organization strategy
-- **Values**: `none`, `date`, `aspect_ratio`, `quality`
-- **Default**: `none`
-
-```bash
-DEFAULT_ORGANIZE_BY=date
-```
-
-**`AUTO_SAVE_IMAGES`** (Optional)
-
-- **Description**: Automatically save generated images to disk
-- **Values**: `true`, `false`
-- **Default**: `true`
-
-```bash
-AUTO_SAVE_IMAGES=false
-```
-
-## Translation Settings
-
-### Japanese Translation
-
-**`AUTO_TRANSLATE_JAPANESE`** (Optional)
-
-- **Description**: Automatically translate Japanese prompts to English
-- **Values**: `true`, `false`
-- **Default**: `true`
-
-```bash
-AUTO_TRANSLATE_JAPANESE=true
-```
-
-**`DEFAULT_TRANSLATION_CONTEXT`** (Optional)
-
-- **Description**: Default context for Japanese translation
-- **Values**: `general`, `artistic`, `photographic`, `technical`
-- **Default**: `general`
-
-```bash
-DEFAULT_TRANSLATION_CONTEXT=artistic
-```
-
-**`PRESERVE_TECHNICAL_TERMS`** (Optional)
-
-- **Description**: Preserve technical terms during translation
-- **Values**: `true`, `false`
-- **Default**: `true`
-
-```bash
-PRESERVE_TECHNICAL_TERMS=true
-```
-
-## Image Editing Settings
-
-**`DEFAULT_EDIT_STRENGTH`** (Optional)
-
-- **Description**: Default strength for image editing operations
-- **Values**: `0.0` to `1.0`
-- **Default**: `0.8`
-
-```bash
-DEFAULT_EDIT_STRENGTH=0.8
-```
-
-**`MAX_ANALYSIS_QUESTIONS`** (Optional)
-
-- **Description**: Maximum number of questions for image analysis
-- **Format**: Positive integer
-- **Default**: `10`
-
-```bash
-MAX_ANALYSIS_QUESTIONS=5
-```
-
-## Performance Settings
-
-### Rate Limiting
-
-**`RATE_LIMIT_REQUESTS_PER_MINUTE`** (Optional)
-
-- **Description**: Maximum requests per minute to OpenAI API
-- **Format**: Positive integer
+- **Description**: Maximum file size limit in megabytes
+- **Type**: Integer
 - **Default**: `50`
+- **Impact**: Larger values allow bigger images but consume more storage
 
-```bash
-RATE_LIMIT_REQUESTS_PER_MINUTE=30
+**`ENABLE_FILE_OUTPUT`** (Optional)
+
+- **Description**: Enable file output functionality
+- **Type**: Boolean (`"true"`, `"false"`)
+- **Default**: `"true"`
+- **Impact**: When `"false"`, images are only returned in responses, not saved to disk
+
+**`KEEP_FILES_DAYS`** (Optional)
+
+- **Description**: Number of days to keep generated files before auto-cleanup
+- **Type**: Integer
+- **Default**: `30`
+- **Impact**: Lower values save storage space but remove files sooner
+
+### Internal Variables
+
+**`PACKAGE_VERSION`** (Automatically set)
+
+- **Description**: Package version string (set automatically by build process)
+- **Type**: String
+- **Note**: Do not set manually
+
+## MCP Configuration Examples
+
+### Basic Setup
+
+```json
+{
+  "mcpServers": {
+    "gpt-image-1-mcp": {
+      "command": "npx",
+      "args": ["@napolab/gpt-image-1-mcp"],
+      "env": {
+        "OPENAI_API_KEY": "sk-your-api-key-here"
+      }
+    }
+  }
+}
 ```
-
-**`RATE_LIMIT_IMAGES_PER_HOUR`** (Optional)
-
-- **Description**: Maximum images generated per hour
-- **Format**: Positive integer
-- **Default**: `100`
-
-```bash
-RATE_LIMIT_IMAGES_PER_HOUR=50
-```
-
-### Caching
-
-**`ENABLE_RESULT_CACHING`** (Optional)
-
-- **Description**: Enable caching of API responses
-- **Values**: `true`, `false`
-- **Default**: `true`
-
-```bash
-ENABLE_RESULT_CACHING=true
-```
-
-**`CACHE_DURATION_HOURS`** (Optional)
-
-- **Description**: Cache duration in hours
-- **Format**: Positive integer
-- **Default**: `24`
-
-```bash
-CACHE_DURATION_HOURS=12
-```
-
-### Request Timeouts
-
-**`API_TIMEOUT_SECONDS`** (Optional)
-
-- **Description**: Timeout for OpenAI API requests in seconds
-- **Format**: Positive integer
-- **Default**: `60`
-
-```bash
-API_TIMEOUT_SECONDS=120
-```
-
-**`IMAGE_GENERATION_TIMEOUT_SECONDS`** (Optional)
-
-- **Description**: Specific timeout for image generation requests
-- **Format**: Positive integer
-- **Default**: `180`
-
-```bash
-IMAGE_GENERATION_TIMEOUT_SECONDS=300
-```
-
-## Advanced Settings
-
-### Experimental Features
-
-**`ENABLE_BACKGROUND_REMOVAL`** (Optional)
-
-- **Description**: Enable experimental background removal feature
-- **Values**: `true`, `false`
-- **Default**: `false`
-
-```bash
-ENABLE_BACKGROUND_REMOVAL=true
-```
-
-**`ENABLE_BATCH_PROCESSING`** (Optional)
-
-- **Description**: Enable batch processing of multiple requests
-- **Values**: `true`, `false`
-- **Default**: `true`
-
-```bash
-ENABLE_BATCH_PROCESSING=true
-```
-
-### Logging and Debugging
-
-**`LOG_LEVEL`** (Optional)
-
-- **Description**: Logging level for the MCP server
-- **Values**: `debug`, `info`, `warn`, `error`
-- **Default**: `info`
-
-```bash
-LOG_LEVEL=debug
-```
-
-**`ENABLE_REQUEST_LOGGING`** (Optional)
-
-- **Description**: Log all API requests for debugging
-- **Values**: `true`, `false`
-- **Default**: `false`
-
-```bash
-ENABLE_REQUEST_LOGGING=true
-```
-
-**`LOG_FILE_PATH`** (Optional)
-
-- **Description**: Path to log file (if not set, logs to console)
-- **Format**: File path
-- **Default**: None (console logging)
-
-```bash
-LOG_FILE_PATH=/var/log/mcp-server.log
-```
-
-## Configuration Examples
 
 ### Development Environment
 
-```bash
-# .env.development
-OPENAI_API_KEY=sk-your-development-key
-DEFAULT_IMAGE_QUALITY=standard
-DEFAULT_OUTPUT_DIRECTORY=./dev_images
-AUTO_TRANSLATE_JAPANESE=true
-ENABLE_REQUEST_LOGGING=true
-LOG_LEVEL=debug
-RATE_LIMIT_REQUESTS_PER_MINUTE=10
+```json
+{
+  "mcpServers": {
+    "gpt-image-1-mcp": {
+      "command": "npx",
+      "args": ["@napolab/gpt-image-1-mcp"],
+      "env": {
+        "OPENAI_API_KEY": "sk-your-development-key",
+        "DEFAULT_OUTPUT_DIR": "./dev_images",
+        "MAX_FILE_SIZE_MB": "25",
+        "KEEP_FILES_DAYS": "7"
+      }
+    }
+  }
+}
 ```
 
 ### Production Environment
 
-```bash
-# .env.production
-OPENAI_API_KEY=sk-your-production-key
-DEFAULT_IMAGE_QUALITY=hd
-DEFAULT_OUTPUT_DIRECTORY=/app/images
-AUTO_TRANSLATE_JAPANESE=true
-ENABLE_RESULT_CACHING=true
-LOG_LEVEL=warn
-RATE_LIMIT_REQUESTS_PER_MINUTE=50
-API_TIMEOUT_SECONDS=120
+```json
+{
+  "mcpServers": {
+    "gpt-image-1-mcp": {
+      "command": "npx",
+      "args": ["@napolab/gpt-image-1-mcp"],
+      "env": {
+        "OPENAI_API_KEY": "sk-your-production-key",
+        "DEFAULT_OUTPUT_DIR": "/app/images",
+        "MAX_FILE_SIZE_MB": "100",
+        "KEEP_FILES_DAYS": "30",
+        "OPENAI_MAX_RETRIES": "5",
+        "OPENAI_API_TIMEOUT": "180000"
+      }
+    }
+  }
+}
 ```
 
 ### High-Performance Setup
 
-```bash
-# .env.high-performance
-OPENAI_API_KEY=sk-your-key
-DEFAULT_IMAGE_QUALITY=standard
-ENABLE_RESULT_CACHING=true
-CACHE_DURATION_HOURS=6
-ENABLE_BATCH_PROCESSING=true
-RATE_LIMIT_REQUESTS_PER_MINUTE=100
-API_TIMEOUT_SECONDS=30
+```json
+{
+  "mcpServers": {
+    "gpt-image-1-mcp": {
+      "command": "npx",
+      "args": ["@napolab/gpt-image-1-mcp"],
+      "env": {
+        "OPENAI_API_KEY": "sk-your-key",
+        "DEFAULT_OUTPUT_DIR": "/fast-storage/images",
+        "MAX_FILE_SIZE_MB": "200",
+        "OPENAI_MAX_RETRIES": "2",
+        "OPENAI_API_TIMEOUT": "60000"
+      }
+    }
+  }
+}
 ```
 
-### Creative Workflow
+### Memory-Optimized Setup
 
-```bash
-# .env.creative
-OPENAI_API_KEY=sk-your-key
-DEFAULT_IMAGE_QUALITY=hd
-DEFAULT_STYLE=vivid
-DEFAULT_OUTPUT_DIRECTORY=./creative_projects
-DEFAULT_ORGANIZE_BY=date
-AUTO_TRANSLATE_JAPANESE=true
-DEFAULT_TRANSLATION_CONTEXT=artistic
-PRESERVE_TECHNICAL_TERMS=true
+```json
+{
+  "mcpServers": {
+    "gpt-image-1-mcp": {
+      "command": "npx",
+      "args": ["@napolab/gpt-image-1-mcp"],
+      "env": {
+        "OPENAI_API_KEY": "sk-your-key",
+        "ENABLE_FILE_OUTPUT": "false"
+      }
+    }
+  }
+}
 ```
 
-## Loading Environment Variables
+## Implementation Details
 
-### Using .env Files
+### How Environment Variables Are Used
 
-Create a `.env` file in your project root:
+The MCP server loads environment variables during initialization:
 
-```bash
-# Copy from example
-cp .env.example .env
+```typescript
+// OpenAI client configuration
+this.client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  maxRetries: parseInt(process.env.OPENAI_MAX_RETRIES ?? "3"),
+  timeout: parseInt(process.env.OPENAI_API_TIMEOUT ?? "120000"),
+});
 
-# Edit with your values
-nano .env
+// File manager configuration
+this.fileManager = new FileManager({
+  defaultOutputDir: process.env.DEFAULT_OUTPUT_DIR ?? "./generated_images",
+  maxFileSizeBytes: parseInt(process.env.MAX_FILE_SIZE_MB ?? "50") * 1024 * 1024,
+  enableFileOutput: process.env.ENABLE_FILE_OUTPUT !== "false",
+  autoCleanupDays: parseInt(process.env.KEEP_FILES_DAYS ?? "30"),
+});
 ```
 
-### System Environment Variables
-
-Set variables in your shell:
-
-```bash
-# Bash/Zsh
-export OPENAI_API_KEY=sk-your-key
-export DEFAULT_IMAGE_QUALITY=hd
-
-# Fish
-set -x OPENAI_API_KEY sk-your-key
-set -x DEFAULT_IMAGE_QUALITY hd
-```
-
-### Docker Environment
-
-```dockerfile
-# Dockerfile
-ENV OPENAI_API_KEY=sk-your-key
-ENV DEFAULT_IMAGE_QUALITY=hd
-```
-
-Or use docker-compose:
-
-```yaml
-# docker-compose.yml
-version: "3.8"
-services:
-  mcp-server:
-    build: .
-    environment:
-      - OPENAI_API_KEY=sk-your-key
-      - DEFAULT_IMAGE_QUALITY=hd
-    env_file:
-      - .env
-```
-
-## Validation and Error Handling
-
-### Required Variable Validation
+### Validation
 
 The server validates required variables on startup:
 
 ```typescript
-// Server startup validation
 if (!process.env.OPENAI_API_KEY) {
-  throw new Error("OPENAI_API_KEY is required");
+  throw new Error("OPENAI_API_KEY environment variable is required");
 }
-
-if (!process.env.OPENAI_API_KEY.startsWith("sk-")) {
-  throw new Error("Invalid OPENAI_API_KEY format");
-}
-```
-
-### Configuration Validation
-
-```typescript
-// Example validation checks
-const config = {
-  imageQuality: ["standard", "hd"].includes(process.env.DEFAULT_IMAGE_QUALITY),
-  aspectRatio: ["square", "landscape", "portrait"].includes(
-    process.env.DEFAULT_IMAGE_SIZE,
-  ),
-  translationContext: [
-    "general",
-    "artistic",
-    "photographic",
-    "technical",
-  ].includes(process.env.DEFAULT_TRANSLATION_CONTEXT),
-};
 ```
 
 ## Security Considerations
@@ -433,28 +213,26 @@ const config = {
 - **Rotate keys regularly**
 - **Restrict API key permissions**
 
-```bash
-# Good practices
-echo ".env" >> .gitignore
-chmod 600 .env
+### MCP Configuration Security
+
+```json
+{
+  "mcpServers": {
+    "gpt-image-1-mcp": {
+      "command": "npx",
+      "args": ["@napolab/gpt-image-1-mcp"],
+      "env": {
+        "OPENAI_API_KEY": "sk-your-key"
+      }
+    }
+  }
+}
 ```
 
-### File Permissions
+⚠️ **Important**: The MCP configuration file may contain sensitive information. Ensure proper file permissions:
 
 ```bash
-# Secure environment files
-chmod 600 .env
-chown app:app .env
-```
-
-### Container Security
-
-```dockerfile
-# Use non-root user
-USER app:app
-
-# Don't include .env in image
-.env
+chmod 600 config.json
 ```
 
 ## Troubleshooting
@@ -463,52 +241,47 @@ USER app:app
 
 #### API Key Not Found
 
-```bash
-Error: OPENAI_API_KEY is required
+```
+Error: OPENAI_API_KEY environment variable is required
 ```
 
-**Solution**: Set the `OPENAI_API_KEY` environment variable
+**Solution**: Add `OPENAI_API_KEY` to the `env` section of your MCP configuration
 
 #### Invalid API Key Format
 
-```bash
-Error: Invalid OPENAI_API_KEY format
+```
+Error: OpenAI API authentication failed
 ```
 
-**Solution**: Ensure the key starts with "sk-"
+**Solution**: Ensure the key starts with "sk-" and is valid
 
 #### Permission Denied
 
-```bash
+```
 Error: Cannot write to output directory
 ```
 
-**Solution**: Check directory permissions and `DEFAULT_OUTPUT_DIRECTORY`
+**Solution**: Check directory permissions and `DEFAULT_OUTPUT_DIR` setting
 
-#### Rate Limit Exceeded
+#### File Size Limit Exceeded
 
-```bash
-Error: Rate limit exceeded
+```
+Error: File size exceeds maximum limit
 ```
 
-**Solution**: Adjust `RATE_LIMIT_REQUESTS_PER_MINUTE` or upgrade API plan
+**Solution**: Increase `MAX_FILE_SIZE_MB` value in your MCP configuration
 
 ### Debugging Configuration
 
-```bash
-# Enable debug logging
-LOG_LEVEL=debug
+To verify your configuration is working:
 
-# Log all requests
-ENABLE_REQUEST_LOGGING=true
-
-# Check loaded configuration
-node -e "console.log(process.env)" | grep -E "(OPENAI|DEFAULT|ENABLE)"
-```
+1. Check MCP server logs for environment variable loading
+2. Test with a simple image generation request
+3. Verify file output directory is created (if `ENABLE_FILE_OUTPUT` is `"true"`)
 
 ## Next Steps
 
 - [Getting Started](/guide/getting-started.md) - Basic server setup
-- [MCP Configuration](/guide/mcp-configuration.md) - Client configuration
+- [MCP Configuration](/guide/mcp-configuration.md) - Complete client configuration
 - [API Reference](/api/tools.md) - Tool documentation
 - [Examples](/examples/basic-usage.md) - Usage examples

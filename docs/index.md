@@ -30,32 +30,17 @@ features:
 
 ## Quick Start
 
-```bash
-# Install globally (optional)
-npm install -g @napolab/gpt-image-1-mcp
+### Prerequisites
 
-# Or use directly with npx (recommended)
-npx @napolab/gpt-image-1-mcp
+1. **Get OpenAI API Key**
+   - Sign up at [OpenAI Platform](https://platform.openai.com/)
+   - Navigate to API Keys section
+   - Create a new API key
+   - Ensure you have credits available for gpt-image-1 model
 
-# Set up your OpenAI API key as environment variable
-export OPENAI_API_KEY="sk-your-api-key-here"
-```
+### Configuration
 
-## Why gpt-image-1 MCP?
-
-This MCP server bridges the gap between AI-powered image generation and modern development workflows. Whether you're building creative applications, analyzing visual content, or exploring AI capabilities, our server provides the tools you need.
-
-### Key Features
-
-- **gpt-image-1 Model**: Latest OpenAI model with superior instruction following and spatial reasoning
-- **Advanced Text Rendering**: Crisp, legible typography and logos in generated images
-- **Native Transparency**: Built-in transparent background support without post-processing
-- **Multi-modal Editing**: Text-to-image, image-to-image, inpainting, and outpainting in one endpoint
-- **Multiple Formats**: PNG, JPEG, and WebP output with optimized compression
-- **Flexible Dimensions**: Square (1024×1024), landscape (1536×1024), and portrait (1024×1536)
-- **Token-Optimized**: Efficient MCP responses with optional base64 data inclusion
-
-## Integration Example
+Add to your MCP client configuration (e.g., Claude Desktop's `config.json`):
 
 ```json
 {
@@ -70,5 +55,24 @@ This MCP server bridges the gap between AI-powered image generation and modern d
   }
 }
 ```
+
+### Usage
+
+- Use the `generate-image` tool in your MCP client
+- Try: "Create a vibrant sunset over mountains with 'Adventure Awaits' text"
+
+## Why gpt-image-1 MCP?
+
+This MCP server bridges the gap between AI-powered image generation and modern development workflows. Whether you're building creative applications, analyzing visual content, or exploring AI capabilities, our server provides the tools you need.
+
+### Key Features
+
+- **gpt-image-1 Model**: Latest OpenAI model with superior instruction following and spatial reasoning
+- **Advanced Text Rendering**: Crisp, legible typography and logos in generated images
+- **Native Transparency**: Built-in transparent background support without post-processing
+- **Multi-modal Editing**: Text-to-image, image-to-image, inpainting, and outpainting in one endpoint
+- **Multiple Formats**: PNG, JPEG, and WebP output with optimized compression
+- **Flexible Dimensions**: Square (1024×1024), landscape (1536×1024), and portrait (1024×1536)
+- **Token-Optimized**: Efficient MCP responses with optional base64 data inclusion
 
 Ready to start generating amazing images? [Get Started →](/guide/getting-started)
