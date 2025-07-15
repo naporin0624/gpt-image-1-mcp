@@ -1,0 +1,273 @@
+# Documentation Update Plan for GPT Image MCP Examples
+# Generated: 2025-01-15
+# Purpose: Transform docs/examples/ into visual showcase pages with prompts and generated images
+
+project:
+  name: GPT Image MCP Documentation Update
+  description: Create visual examples showcasing each MCP tool's capabilities with actual prompts and generated images
+  timeline: 2-3 days
+  priority: high
+
+objectives:
+  - Transform technical documentation into visual showcase
+  - Provide concrete examples with prompts and generated images
+  - Demonstrate all capabilities of each tool
+  - Create intuitive navigation for users
+
+structure:
+  current:
+    - docs/examples/basic-usage.md
+    - docs/examples/advanced-scenarios.md
+    - docs/examples/integration-patterns.md
+    - docs/examples/basic-config.json
+    - docs/examples/advanced-config.json
+
+  proposed:
+    - docs/examples/index.md                    # Landing page with overview
+    - docs/examples/generate-image-examples.md  # Image generation showcase
+    - docs/examples/edit-image-examples.md      # Image editing showcase
+    - docs/examples/batch-edit-examples.md      # Batch processing showcase
+    - docs/public/examples/                     # Generated image assets
+
+pages:
+  index:
+    title: "GPT Image MCP Examples"
+    description: "Visual showcase of GPT Image MCP capabilities"
+    sections:
+      - overview: Brief introduction to available tools
+      - navigation: Links to each tool's examples
+      - quick_start: Simple example to get started
+
+  generate_image:
+    title: "Image Generation Examples"
+    description: "Showcase of gpt-image-1 generation capabilities"
+    examples:
+      - text_rendering:
+          prompt: "A modern tech company logo with the text 'FUTURE AI' in sleek metallic letters"
+          params:
+            quality: "hd"
+            aspect_ratio: "landscape"
+          image: "/examples/generate/logo-example.png"
+      
+      - typography:
+          prompt: "Inspirational quote 'Dream Big, Code Bigger' in elegant typography on gradient background"
+          params:
+            quality: "standard"
+            aspect_ratio: "square"
+          image: "/examples/generate/typography-example.png"
+      
+      - transparent_bg:
+          prompt: "A 3D floating robot mascot with transparent background"
+          params:
+            quality: "hd"
+            aspect_ratio: "square"
+          image: "/examples/generate/transparent-mascot.png"
+      
+      - landscape_scene:
+          prompt: "Futuristic city skyline at sunset with flying vehicles"
+          params:
+            quality: "hd"
+            aspect_ratio: "landscape"
+          image: "/examples/generate/cityscape.png"
+      
+      - portrait_character:
+          prompt: "Cyberpunk character with neon accents, detailed portrait"
+          params:
+            quality: "hd"
+            aspect_ratio: "portrait"
+          image: "/examples/generate/character-portrait.png"
+
+  edit_image:
+    title: "Image Editing Examples"
+    description: "AI-powered image editing capabilities"
+    examples:
+      - inpaint:
+          description: "Remove unwanted objects"
+          source: "/examples/edit/source/room-with-box.png"
+          edit_prompt: "Remove the cardboard box from the floor"
+          result: "/examples/edit/inpaint-result.png"
+      
+      - outpaint:
+          description: "Extend image beyond borders"
+          source: "/examples/edit/source/partial-landscape.png"
+          edit_prompt: "Extend the mountain landscape to show more sky and peaks"
+          result: "/examples/edit/outpaint-result.png"
+      
+      - style_transfer:
+          description: "Apply artistic styles"
+          source: "/examples/edit/source/photo.png"
+          edit_prompt: "Transform into watercolor painting style"
+          result: "/examples/edit/style-transfer-result.png"
+      
+      - object_removal:
+          description: "Smart object removal"
+          source: "/examples/edit/source/street-photo.png"
+          edit_prompt: "Remove all people from the street"
+          result: "/examples/edit/object-removal-result.png"
+      
+      - background_change:
+          description: "Replace backgrounds"
+          source: "/examples/edit/source/product.png"
+          edit_prompt: "Replace background with modern office setting"
+          result: "/examples/edit/bg-change-result.png"
+
+  batch_edit:
+    title: "Batch Editing Examples"
+    description: "Process multiple images efficiently"
+    examples:
+      - unified_style:
+          description: "Apply consistent style to product photos"
+          sources:
+            - "/examples/batch/products/shoe1.png"
+            - "/examples/batch/products/shoe2.png"
+            - "/examples/batch/products/shoe3.png"
+          edit_prompt: "Apply minimalist white background with soft shadows"
+          results:
+            - "/examples/batch/results/shoe1-styled.png"
+            - "/examples/batch/results/shoe2-styled.png"
+            - "/examples/batch/results/shoe3-styled.png"
+      
+      - color_grading:
+          description: "Batch color correction"
+          edit_prompt: "Apply warm sunset color grading"
+          parallel_processing: true
+
+implementation_tasks:
+  phase1_content:
+    - task: "Create index.md landing page"
+      priority: high
+      estimated_time: "30 min"
+    
+    - task: "Generate example images for generate-image tool"
+      priority: high
+      estimated_time: "2 hours"
+      subtasks:
+        - "Logo with text rendering"
+        - "Typography examples"
+        - "Transparent background demos"
+        - "Different aspect ratios"
+    
+    - task: "Create source images for edit-image examples"
+      priority: high
+      estimated_time: "1 hour"
+    
+    - task: "Generate edited images for all edit types"
+      priority: high
+      estimated_time: "2 hours"
+
+  phase2_documentation:
+    - task: "Write generate-image-examples.md"
+      priority: high
+      dependencies: ["Generate example images"]
+      content:
+        - Introduction to gpt-image-1
+        - Each example with prompt, params, and result
+        - Code snippets for implementation
+        - Tips and best practices
+    
+    - task: "Write edit-image-examples.md"
+      priority: high
+      dependencies: ["Generate edited images"]
+      content:
+        - Overview of editing capabilities
+        - Before/after comparisons
+        - Detailed parameter explanations
+        - Use case scenarios
+    
+    - task: "Write batch-edit-examples.md"
+      priority: medium
+      content:
+        - Batch processing benefits
+        - Performance optimization tips
+        - Real-world use cases
+
+  phase3_integration:
+    - task: "Update VitePress navigation"
+      priority: medium
+      file: "docs/.vitepress/config.ts"
+      changes:
+        - Add new examples section
+        - Update sidebar structure
+        - Add image asset paths
+    
+    - task: "Migrate useful content from existing files"
+      priority: low
+      files:
+        - "basic-usage.md"
+        - "advanced-scenarios.md"
+        - "integration-patterns.md"
+
+assets:
+  directory: "docs/public/examples/"
+  structure:
+    - generate/     # Generated images
+    - edit/
+      - source/     # Original images for editing
+      - results/    # Edited results
+    - batch/
+      - sources/    # Multiple source images
+      - results/    # Batch processed results
+
+code_examples:
+  generate_image: |
+    // Example: Generate a logo with text
+    const result = await mcp.callTool('generate-image', {
+      prompt: "A modern tech company logo with the text 'FUTURE AI' in sleek metallic letters",
+      quality: "hd",
+      aspect_ratio: "landscape",
+      output_directory: "./logos"
+    });
+
+  edit_image: |
+    // Example: Remove object from image
+    const result = await mcp.callTool('edit-image', {
+      source_image: {
+        type: "local",
+        value: "./source/room-with-box.png"
+      },
+      edit_prompt: "Remove the cardboard box from the floor",
+      edit_type: "inpaint"
+    });
+
+  batch_edit: |
+    // Example: Apply style to multiple images
+    const results = await mcp.callTool('batch-edit', {
+      images: [
+        { type: "local", value: "./products/shoe1.png" },
+        { type: "local", value: "./products/shoe2.png" },
+        { type: "local", value: "./products/shoe3.png" }
+      ],
+      edit_prompt: "Apply minimalist white background with soft shadows",
+      edit_type: "background_change",
+      batch_settings: {
+        parallel_processing: true,
+        max_concurrent: 3
+      }
+    });
+
+navigation_update:
+  sidebar:
+    - text: "Examples"
+      link: "/examples/"
+      items:
+        - text: "Image Generation"
+          link: "/examples/generate-image-examples"
+        - text: "Image Editing" 
+          link: "/examples/edit-image-examples"
+        - text: "Batch Processing"
+          link: "/examples/batch-edit-examples"
+
+success_criteria:
+  - Visual examples for each tool capability
+  - Clear prompts and parameters for each example
+  - Actual generated images displayed
+  - Easy-to-copy code snippets
+  - Intuitive navigation
+  - Mobile-responsive image galleries
+
+notes:
+  - Prioritize visual impact over technical details
+  - Include diverse examples to show range of capabilities
+  - Ensure all images are optimized for web
+  - Add alt text for accessibility
+  - Consider adding interactive demos in future
