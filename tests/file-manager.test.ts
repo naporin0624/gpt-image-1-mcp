@@ -1,6 +1,17 @@
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  rmSync,
+  writeFileSync,
+  utimesSync,
+  createWriteStream,
+  statSync,
+  readdirSync,
+  unlinkSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { pipeline } from "node:stream/promises";
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
@@ -12,6 +23,24 @@ import type {
   FileNameGenerationOptions,
   DirectoryOptions,
 } from "../src/types/file.js";
+import type { WriteStream } from "node:fs";
+
+// Mock modules
+vi.mock("node:fs", async () => {
+  const actual = await vi.importActual("node:fs");
+
+  return {
+    ...actual,
+    createWriteStream: vi.fn(),
+    statSync: vi.fn(),
+    readdirSync: vi.fn(),
+    unlinkSync: vi.fn(),
+  };
+});
+
+vi.mock("node:stream/promises", () => ({
+  pipeline: vi.fn(),
+}));
 
 // Mock fetch for testing
 const mockFetch = vi.fn();
@@ -63,7 +92,7 @@ describe("FileManager", () => {
         statusText: "OK",
         headers: {
           get: vi.fn((name: string) => {
-            return mockHeaders.get(name.toLowerCase()) || null;
+            return mockHeaders.get(name.toLowerCase()) ?? null;
           }),
         },
         body: mockReadableStream,
@@ -76,9 +105,7 @@ describe("FileManager", () => {
         destroy: vi.fn(),
       };
 
-      vi.spyOn(require("node:fs"), "createWriteStream").mockReturnValue(
-        mockWriter,
-      );
+      vi.mocked(createWriteStream).mockReturnValue(mockWriter as WriteStream);
       mockWriter.on.mockImplementation((event, callback) => {
         if (event === "finish") {
           callback();
@@ -101,9 +128,7 @@ describe("FileManager", () => {
           return Promise.resolve();
         });
 
-      vi.doMock("node:stream/promises", () => ({
-        pipeline: mockPipeline,
-      }));
+      vi.mocked(pipeline).mockImplementation(mockPipeline);
 
       const result = await fileManager.downloadImage({
         url: "https://example.com/image.png",
@@ -158,7 +183,7 @@ describe("FileManager", () => {
         statusText: "OK",
         headers: {
           get: vi.fn((name: string) => {
-            return mockHeaders.get(name.toLowerCase()) || null;
+            return mockHeaders.get(name.toLowerCase()) ?? null;
           }),
         },
         body: mockReadableStream,
@@ -173,9 +198,7 @@ describe("FileManager", () => {
         destroy: vi.fn(),
       };
 
-      vi.spyOn(require("node:fs"), "createWriteStream").mockReturnValue(
-        mockWriter,
-      );
+      vi.mocked(createWriteStream).mockReturnValue(mockWriter as WriteStream);
       mockWriter.on.mockImplementation((event, callback) => {
         if (event === "finish") {
           callback();
@@ -183,9 +206,7 @@ describe("FileManager", () => {
       });
 
       // Mock pipeline
-      vi.doMock("node:stream/promises", () => ({
-        pipeline: vi.fn().mockResolvedValue(undefined),
-      }));
+      vi.mocked(pipeline).mockResolvedValue(undefined);
 
       const result = await fileManager.downloadImage({
         url: "https://example.com/image.png",
@@ -224,7 +245,7 @@ describe("FileManager", () => {
           callback();
         }
 
-        return 1 as unknown as NodeJS.Timeout;
+        return 1 as unknown as ReturnType<typeof setTimeout>;
       });
 
       await expect(
@@ -407,7 +428,7 @@ describe("FileManager", () => {
         statusText: "OK",
         headers: {
           get: vi.fn((name: string) => {
-            return mockHeaders.get(name.toLowerCase()) || null;
+            return mockHeaders.get(name.toLowerCase()) ?? null;
           }),
         },
         body: mockReadableStream,
@@ -420,9 +441,7 @@ describe("FileManager", () => {
         destroy: vi.fn(),
       };
 
-      vi.spyOn(require("node:fs"), "createWriteStream").mockReturnValue(
-        mockWriter,
-      );
+      vi.mocked(createWriteStream).mockReturnValue(mockWriter as WriteStream);
       mockWriter.on.mockImplementation((event, callback) => {
         if (event === "finish") {
           callback();
@@ -430,9 +449,7 @@ describe("FileManager", () => {
       });
 
       // Mock pipeline
-      vi.doMock("node:stream/promises", () => ({
-        pipeline: vi.fn().mockResolvedValue(undefined),
-      }));
+      vi.mocked(pipeline).mockResolvedValue(undefined);
 
       const options: FileOutputOptions = {
         save_to_file: true,
@@ -491,7 +508,7 @@ describe("FileManager", () => {
         statusText: "OK",
         headers: {
           get: vi.fn((name: string) => {
-            return mockHeaders.get(name.toLowerCase()) || null;
+            return mockHeaders.get(name.toLowerCase()) ?? null;
           }),
         },
         body: mockReadableStream,
@@ -504,9 +521,7 @@ describe("FileManager", () => {
         destroy: vi.fn(),
       };
 
-      vi.spyOn(require("node:fs"), "createWriteStream").mockReturnValue(
-        mockWriter,
-      );
+      vi.mocked(createWriteStream).mockReturnValue(mockWriter as WriteStream);
       mockWriter.on.mockImplementation((event, callback) => {
         if (event === "finish") {
           callback();
@@ -514,9 +529,7 @@ describe("FileManager", () => {
       });
 
       // Mock pipeline
-      vi.doMock("node:stream/promises", () => ({
-        pipeline: vi.fn().mockResolvedValue(undefined),
-      }));
+      vi.mocked(pipeline).mockResolvedValue(undefined);
 
       // Create a file that will conflict
       const conflictingFile = join(testDir, "existing-file.png");
@@ -564,7 +577,7 @@ describe("FileManager", () => {
         statusText: "OK",
         headers: {
           get: vi.fn((name: string) => {
-            return mockHeaders.get(name.toLowerCase()) || null;
+            return mockHeaders.get(name.toLowerCase()) ?? null;
           }),
         },
         body: null,
@@ -589,7 +602,6 @@ describe("FileManager", () => {
 
       // Change the mtime to make it appear old (using native fs)
       const oldTime = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
-      const { utimesSync } = require("node:fs");
       utimesSync(oldFile, oldTime, oldTime);
 
       // Verify the file exists before cleanup
@@ -606,9 +618,9 @@ describe("FileManager", () => {
       writeFileSync(recentFile, "recent content");
 
       // Mock file stats to make it appear recent
-      const mockStatSync = vi.spyOn(require("node:fs"), "statSync");
-      const mockReaddirSync = vi.spyOn(require("node:fs"), "readdirSync");
-      const mockUnlinkSync = vi.spyOn(require("node:fs"), "unlinkSync");
+      const mockStatSync = vi.mocked(statSync);
+      const mockReaddirSync = vi.mocked(readdirSync);
+      const mockUnlinkSync = vi.mocked(unlinkSync);
 
       mockReaddirSync.mockReturnValue(["recent-file.png"]);
       mockStatSync.mockReturnValue({
