@@ -307,8 +307,15 @@ describe("image-input utilities", () => {
 
   describe("convertBufferToBase64DataUrl", () => {
     test("should convert buffer to base64 data URL", () => {
-      const buffer = Buffer.from("test data").buffer;
-      const result = convertBufferToBase64DataUrl(buffer, "image/png");
+      const testData = "test data";
+      const buffer = Buffer.from(testData);
+      const result = convertBufferToBase64DataUrl(
+        buffer.buffer.slice(
+          buffer.byteOffset,
+          buffer.byteOffset + buffer.byteLength,
+        ),
+        "image/png",
+      );
 
       expect(result).toMatch(/^data:image\/png;base64,/);
       expect(result).toContain("dGVzdCBkYXRh");
