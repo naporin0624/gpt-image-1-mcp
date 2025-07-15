@@ -1,0 +1,105 @@
+:root {
+  --vp-c-brand: #5b21b6;
+  --vp-c-brand-light: #7c3aed;
+  --vp-c-brand-lighter: #8b5cf6;
+  --vp-c-brand-lightest: #a78bfa;
+  --vp-c-brand-dark: #4c1d95;
+  --vp-c-brand-darker: #3730a3;
+
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, #3b82f6 30%, #8b5cf6);
+
+  --vp-button-brand-bg: var(--vp-c-brand);
+  --vp-button-brand-hover-bg: var(--vp-c-brand-light);
+}
+
+.dark {
+  --vp-c-brand: #8b5cf6;
+  --vp-c-brand-light: #a78bfa;
+  --vp-c-brand-lighter: #c4b5fd;
+  --vp-c-brand-lightest: #ddd6fe;
+  --vp-c-brand-dark: #7c3aed;
+  --vp-c-brand-darker: #6d28d9;
+}
+
+.VPHero .name {
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.VPFeature {
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.VPFeature:hover {
+  border-color: var(--vp-c-brand-lighter);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+}
+
+.vp-doc a {
+  color: var(--vp-c-brand);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.vp-doc a:hover {
+  color: var(--vp-c-brand-light);
+  text-decoration: underline;
+}
+
+code {
+  background: linear-gradient(
+    to right,
+    rgba(59, 130, 246, 0.1),
+    rgba(139, 92, 246, 0.1)
+  );
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+.dark code {
+  background: linear-gradient(
+    to right,
+    rgba(59, 130, 246, 0.2),
+    rgba(139, 92, 246, 0.2)
+  );
+}
+
+.VPNavBarTitle .title {
+  font-weight: 600;
+  background: linear-gradient(120deg, #3b82f6 30%, #8b5cf6);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.VPImage {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.vp-doc img {
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.custom-block.tip {
+  border-color: var(--vp-c-brand);
+}
+
+.custom-block.tip .custom-block-title {
+  color: var(--vp-c-brand);
+}
+
+.VPHome .VPHomeHero .image-container {
+  transform: scale(1);
+  transition: transform 0.3s ease;
+}
+
+.VPHome .VPHomeHero .image-container:hover {
+  transform: scale(1.02);
+}
