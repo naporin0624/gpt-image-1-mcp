@@ -1,294 +1,277 @@
-# Japanese Translation
+# English-Only Input and Translation Guide
 
-GPT Image 1 MCP provides first-class support for Japanese language prompts through automatic translation to English, optimizing results for OpenAI gpt-image-1 image generation.
+GPT Image 1 MCP requires English-only text input for optimal performance with OpenAI's gpt-image-1 model. This guide explains the design rationale and provides best practices for non-English users.
 
 ## Overview
 
-OpenAI gpt-image-1 performs best with English prompts, but many users prefer to work in Japanese. Our translation feature bridges this gap by:
+This MCP server uses an **English-only input validation** architecture that:
 
-- **Automatic Detection**: Recognizes Japanese text automatically
-- **Context-Aware Translation**: Preserves artistic and technical terms
-- **Optimized for gpt-image-1**: Translates in a way that maximizes image generation quality
-- **Bidirectional Support**: Works with mixed Japanese-English prompts
+- **Validates all text inputs**: Prompts, descriptions, and style guidance must be in English
+- **Rejects non-English text**: Provides clear error messages with helpful guidance
+- **Leverages gpt-image-1's strengths**: Optimized for gpt-image-1's superior English language understanding
+- **Simplifies architecture**: No internal translation logic required
+- **Improves performance**: Direct English processing, faster responses
 
-## translate-prompt Tool
+## Why English-Only?
 
-The `translate-prompt` tool provides sophisticated Japanese to English translation specifically optimized for image generation.
+### gpt-image-1 Advantages
 
-### Basic Usage
+gpt-image-1 is built on GPT-4o's language engine, providing:
 
-```typescript
-await client.callTool("translate-prompt", {
-  japanese_prompt: "美しい桜の花が咲く日本庭園",
-});
+- **Superior instruction following** in English
+- **Advanced text rendering** capabilities 
+- **Better spatial reasoning** with English descriptions
+- **Consistent quality** across generations
+
+### Architectural Benefits
+
+- **Reduced complexity**: No internal translation API calls
+- **Better user control**: Users choose their preferred translation method
+- **Lower latency**: Direct processing without translation overhead
+- **Cost optimization**: No additional translation API costs
+- **Clearer responsibility**: LLMs handle translation, MCP handles image generation
+
+## Using Non-English Prompts
+
+### LLM-First Translation Workflow
+
+For Japanese users, follow this recommended workflow:
+
+```
+1. Write your prompt in Japanese
+2. Ask your LLM to translate to English
+3. Use the translated prompt with the MCP server
+4. Generate images with superior gpt-image-1 quality
 ```
 
-### Parameters
+#### Example Workflow
 
-| Parameter                  | Type    | Required | Description                             |
-| -------------------------- | ------- | -------- | --------------------------------------- |
-| `japanese_prompt`          | string  | Yes      | Japanese text to translate              |
-| `context`                  | string  | No       | Translation context for better accuracy |
-| `preserve_technical_terms` | boolean | No       | Keep technical terms unchanged          |
-
-### Context Types
-
-#### General Context
-
-For everyday prompts and general descriptions:
-
-```typescript
-{
-  japanese_prompt: '美しい風景写真',
-  context: 'general'
-}
+**Step 1: Japanese Prompt**
+```
+User: "桜の花が咲いている美しい日本庭園を描いて"
 ```
 
-#### Artistic Context
-
-For creative and artistic descriptions:
-
-```typescript
-{
-  japanese_prompt: '印象派スタイルの絵画',
-  context: 'artistic'
-}
+**Step 2: LLM Translation**
+```
+LLM: "A beautiful Japanese garden with cherry blossoms in bloom"
 ```
 
-#### Photographic Context
-
-For photography-related prompts:
-
+**Step 3: MCP Image Generation**
 ```typescript
-{
-  japanese_prompt: 'プロフェッショナルな商品写真',
-  context: 'photographic'
-}
-```
-
-#### Technical Context
-
-For technical or specialized terminology:
-
-```typescript
-{
-  japanese_prompt: '高解像度のデジタルアート',
-  context: 'technical'
-}
-```
-
-## Features
-
-### Automatic Translation Integration
-
-When using `generate-image` with Japanese text, translation happens automatically:
-
-```typescript
-// Japanese prompt is automatically translated
 await client.callTool("generate-image", {
-  prompt: "夕日に照らされた富士山の美しい風景",
+  prompt: "A beautiful Japanese garden with cherry blossoms in bloom",
   aspect_ratio: "landscape",
+  quality: "hd"
 });
 ```
 
-### Mixed Language Support
+### Translation Best Practices
 
-The system handles mixed Japanese-English prompts intelligently:
+#### Use Your LLM for Translation
 
-```typescript
-await client.callTool("generate-image", {
-  prompt: "A beautiful 日本庭園 with cherry blossoms in spring",
-  aspect_ratio: "square",
-});
+**Good:**
+```
+User: "この文章を英語に翻訳して、画像生成用に最適化してください: 印象派スタイルの油絵で描かれた夕暮れの風景"
+LLM: "A sunset landscape painted in impressionist oil painting style, with soft brushstrokes and warm lighting"
 ```
 
-### Technical Term Preservation
-
-Important technical terms are preserved during translation:
-
-```typescript
-await client.callTool("translate-prompt", {
-  japanese_prompt: "4K解像度のハイパーリアリスティックな写真",
-  preserve_technical_terms: true,
-});
+**Better:**
+```
+User: "Translate and optimize this for gpt-image-1: 印象派スタイルの油絵で描かれた夕暮れの風景"
+LLM: "An impressionist oil painting of a sunset landscape with visible brushstrokes, vibrant warm colors blending in the sky, and soft golden light illuminating the scene"
 ```
 
-## Response Format
+#### Preserve Cultural Context
 
-The translation tool returns detailed information:
+When translating cultural concepts:
+
+```
+Japanese: "侘寂の美学を表現した茶室"
+English: "A traditional Japanese tea room expressing wabi-sabi aesthetic philosophy with weathered wood, subtle imperfections, and serene simplicity"
+```
+
+## Validation Error Handling
+
+### Error Messages
+
+When non-English text is detected, you'll receive helpful errors:
 
 ```json
 {
-  "success": true,
-  "data": {
-    "original_prompt": "美しい桜の花が咲く日本庭園",
-    "english_prompt": "A beautiful Japanese garden with blooming cherry blossoms",
-    "confidence": 0.95,
-    "detected_language": "japanese",
-    "preserved_terms": ["桜", "日本庭園"],
-    "context_applied": "artistic",
-    "suggestions": [
-      "Consider adding style descriptors for better results",
-      "Add lighting information for enhanced realism"
-    ]
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Only English text is supported for optimal gpt-image-1 performance",
+    "details": {
+      "field": "prompt",
+      "detected_language": "japanese",
+      "suggestion": "Please translate your prompt to English using your LLM client first"
+    }
   }
 }
 ```
+
+### Common Error Scenarios
+
+#### Mixed Language Input
+
+```typescript
+// This will be rejected
+await client.callTool("generate-image", {
+  prompt: "A beautiful 日本庭園 with flowers"
+});
+
+// Error: Mixed language detected
+```
+
+#### Non-English Prompts
+
+```typescript
+// This will be rejected
+await client.callTool("generate-image", {
+  prompt: "美しい桜の花"
+});
+
+// Error: Japanese text detected
+```
+
+## Integration Patterns
+
+### Client-Side Translation
+
+```typescript
+class EnglishOptimizedImageGenerator {
+  constructor(private llmClient: LLMClient, private mcpClient: MCPClient) {}
+
+  async generateFromJapanese(japanesePrompt: string) {
+    // Step 1: Translate with your LLM
+    const translationRequest = `Translate this to English and optimize for image generation: ${japanesePrompt}`;
+    const englishPrompt = await this.llmClient.complete(translationRequest);
+
+    // Step 2: Generate with MCP
+    const result = await this.mcpClient.callTool("generate-image", {
+      prompt: englishPrompt,
+      quality: "hd"
+    });
+
+    return {
+      originalPrompt: japanesePrompt,
+      englishPrompt,
+      image: result.data
+    };
+  }
+}
+```
+
+### Batch Translation Workflow
+
+```typescript
+async function batchTranslateAndGenerate(japanesePrompts: string[]) {
+  const results = [];
+
+  for (const jpPrompt of japanesePrompts) {
+    // Translate each prompt
+    const englishPrompt = await translateWithLLM(jpPrompt);
+    
+    // Generate image
+    const image = await client.callTool("generate-image", {
+      prompt: englishPrompt
+    });
+
+    results.push({
+      original: jpPrompt,
+      translated: englishPrompt,
+      image: image.data
+    });
+
+    // Rate limiting
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+
+  return results;
+}
+
+async function translateWithLLM(japaneseText: string): Promise<string> {
+  // Use your preferred LLM for translation
+  // This could be Claude, GPT-4, or any other LLM
+  const translationPrompt = `Translate this Japanese text to English, optimizing for image generation with gpt-image-1: ${japaneseText}`;
+  
+  // Implementation depends on your LLM client
+  return await yourLLMClient.complete(translationPrompt);
+}
+```
+
+## Quality Optimization Tips
+
+### Translation for Image Generation
+
+When using LLMs for translation, include these instructions:
+
+**Basic Translation:**
+```
+"Translate to English: [Japanese text]"
+```
+
+**Optimized Translation:**
+```
+"Translate this Japanese text to English and optimize for gpt-image-1 image generation. Include specific visual details, lighting, composition, and artistic style: [Japanese text]"
+```
+
+**Cultural Preservation:**
+```
+"Translate to English while preserving cultural context and adding visual details that would help an AI understand the Japanese aesthetic: [Japanese text]"
+```
+
+### Examples of Optimized Translations
+
+| Japanese | Basic Translation | Optimized Translation |
+|----------|------------------|----------------------|
+| 桜の花 | Cherry blossoms | Delicate pink cherry blossoms on branches with soft petals falling |
+| 日本庭園 | Japanese garden | Traditional Japanese zen garden with carefully arranged stones, moss, and pruned trees |
+| 侘寂 | Wabi-sabi | Wabi-sabi aesthetic with weathered textures, subtle imperfections, and serene simplicity |
 
 ## Best Practices
 
-### Writing Effective Japanese Prompts
+### For Japanese Users
 
-1. **Be Descriptive**: Use rich adjectives and detailed descriptions
-2. **Specify Style**: Mention artistic styles, periods, or techniques
-3. **Include Context**: Add setting, mood, and atmosphere details
-4. **Use Proper Nouns**: Include specific names, places, or brands when relevant
+1. **Use LLM translation first**: Don't try to submit Japanese text directly
+2. **Be specific in translation requests**: Ask for image-generation-optimized translations
+3. **Preserve cultural context**: Ensure cultural concepts are explained in English
+4. **Review translations**: Check that the English captures your intended meaning
+5. **Iterate if needed**: Refine translations based on generated results
 
-### Examples of Good Japanese Prompts
+### For LLM Integration
 
+1. **Include context**: Tell your LLM you're translating for image generation
+2. **Request optimization**: Ask for visual details and artistic descriptions
+3. **Handle cultural concepts**: Ensure cultural terms are explained
+4. **Maintain prompt structure**: Keep the translated prompt well-organized
+
+## Alternative Translation Services
+
+If you prefer external translation services:
+
+### DeepL Integration
 ```typescript
-// Detailed artistic description
-await client.callTool("translate-prompt", {
-  japanese_prompt:
-    "印象派スタイルの油絵で描かれた、夕暮れ時の静かな湖畔の風景。柔らかな光と影のコントラストが美しい。",
-  context: "artistic",
-});
+import { DeepL } from 'deepl-api';
 
-// Technical photography prompt
-await client.callTool("translate-prompt", {
-  japanese_prompt:
-    "プロフェッショナルな商品写真。白背景にスタジオライティングで照らされたスマートフォン。",
-  context: "photographic",
-});
+const deepl = new DeepL(process.env.DEEPL_API_KEY);
 
-// Character and scene description
-await client.callTool("translate-prompt", {
-  japanese_prompt:
-    "和服を着た優雅な女性が、満開の桜の木の下で茶道をしている様子。",
-  context: "general",
-});
-```
-
-## Advanced Features
-
-### Batch Translation
-
-Translate multiple prompts efficiently:
-
-```typescript
-const japanesePrompts = [
-  "美しい山の風景",
-  "現代的なオフィス空間",
-  "伝統的な日本料理",
-];
-
-for (const prompt of japanesePrompts) {
-  const result = await client.callTool("translate-prompt", {
-    japanese_prompt: prompt,
-    context: "general",
-  });
-  console.log(`${prompt} -> ${result.data.english_prompt}`);
+async function translateWithDeepL(text: string) {
+  const result = await deepl.translate(text, 'JA', 'EN');
+  return result.text;
 }
 ```
 
-### Quality Enhancement
-
-The translation system provides suggestions for improving prompts:
-
+### Google Translate Integration
 ```typescript
-const result = await client.callTool("translate-prompt", {
-  japanese_prompt: "猫",
-  context: "general",
-});
+import { Translate } from '@google-cloud/translate';
 
-// Result includes suggestions:
-// "Consider adding descriptive details like breed, color, or setting"
-```
+const translate = new Translate();
 
-### Cultural Context Handling
-
-The system understands cultural concepts and translates them appropriately:
-
-```typescript
-// Japanese cultural concepts
-await client.callTool("translate-prompt", {
-  japanese_prompt: "侘寂の美学を表現した茶室",
-  context: "artistic",
-});
-// Result: "A tea room expressing the wabi-sabi aesthetic"
-```
-
-## Integration with Image Generation
-
-### Seamless Workflow
-
-```typescript
-// 1. Translate Japanese prompt
-const translation = await client.callTool("translate-prompt", {
-  japanese_prompt: "夕日に照らされた富士山",
-  context: "photographic",
-});
-
-// 2. Generate image with translated prompt
-const image = await client.callTool("generate-image", {
-  prompt: translation.data.english_prompt,
-  aspect_ratio: "landscape",
-  quality: "hd",
-});
-
-// 3. Analyze the result
-const analysis = await client.callTool("analyze-image", {
-  image_url: image.data.image_url,
-  questions: ["Does this capture the essence of the original Japanese prompt?"],
-});
-```
-
-### Prompt Optimization
-
-The translation service optimizes prompts for better OpenAI gpt-image-1 results:
-
-```typescript
-// Before optimization
-const basicTranslation = await client.callTool("translate-prompt", {
-  japanese_prompt: "綺麗な花",
-});
-// Result: "Beautiful flower"
-
-// After optimization
-const optimizedTranslation = await client.callTool("translate-prompt", {
-  japanese_prompt: "綺麗な花",
-  context: "artistic",
-});
-// Result: "A beautiful, vibrant flower with delicate petals in soft natural lighting"
-```
-
-## Error Handling
-
-### Common Issues
-
-#### Language Detection Errors
-
-```typescript
-try {
-  const result = await client.callTool("translate-prompt", {
-    japanese_prompt: "This is actually English text",
-  });
-} catch (error) {
-  if (error.code === "LANGUAGE_DETECTION_ERROR") {
-    console.log("Text appears to be in a different language");
-  }
-}
-```
-
-#### Translation Confidence
-
-```typescript
-const result = await client.callTool("translate-prompt", {
-  japanese_prompt: "複雑な専門用語を含む文章",
-});
-
-if (result.data.confidence < 0.8) {
-  console.log("Translation may need manual review");
+async function translateWithGoogle(text: string) {
+  const [translation] = await translate.translate(text, 'en');
+  return translation;
 }
 ```
 
@@ -296,70 +279,69 @@ if (result.data.confidence < 0.8) {
 
 ### Environment Variables
 
-Configure translation behavior through environment variables:
+```bash
+# Enable strict English validation (default: true)
+ENGLISH_ONLY_VALIDATION=true
+
+# Set validation strictness level
+VALIDATION_LEVEL=strict  # strict, moderate, relaxed
+```
+
+### Error Response Customization
+
+You can configure how validation errors are returned:
 
 ```bash
-# Enable automatic translation for generate-image
-AUTO_TRANSLATE_JAPANESE=true
+# Include helpful translation suggestions in errors
+INCLUDE_TRANSLATION_HELP=true
 
-# Set default translation context
-DEFAULT_TRANSLATION_CONTEXT=general
-
-# Enable technical term preservation
-PRESERVE_TECHNICAL_TERMS=true
+# Provide example prompts in error messages
+INCLUDE_EXAMPLE_PROMPTS=true
 ```
 
-### MCP Client Configuration
+## Migration from Translation Tool
 
-```json
-{
-  "mcpServers": {
-    "gpt-image-1-mcp": {
-      "env": {
-        "AUTO_TRANSLATE_JAPANESE": "true",
-        "DEFAULT_TRANSLATION_CONTEXT": "artistic"
-      }
-    }
-  }
-}
+If you were previously using the translate-prompt tool:
+
+### Before (deprecated)
+```typescript
+// Old workflow with translate-prompt
+const translation = await client.callTool("translate-prompt", {
+  japanese_prompt: "美しい風景"
+});
+
+const image = await client.callTool("generate-image", {
+  prompt: translation.data.english_prompt
+});
 ```
 
-## Use Cases
+### After (recommended)
+```typescript
+// New workflow with LLM translation
+const englishPrompt = await yourLLM.translate("美しい風景");
 
-### Creative Content Creation
+const image = await client.callTool("generate-image", {
+  prompt: englishPrompt
+});
+```
 
-- Translate artistic vision from Japanese to optimized English prompts
-- Preserve cultural nuances while maximizing OpenAI gpt-image-1 performance
-- Generate culturally appropriate imagery from Japanese descriptions
+## FAQ
 
-### Professional Photography
+**Q: Why doesn't the MCP server handle translation internally?**
+A: This design provides better separation of concerns, allows users to choose their preferred translation method, and optimizes for gpt-image-1's English language strengths.
 
-- Convert Japanese photography briefs to technical English specifications
-- Maintain professional terminology while ensuring accuracy
-- Generate reference images for Japanese client projects
+**Q: Can I use Google Translate or DeepL instead of an LLM?**
+A: Yes, but LLMs typically provide better context-aware translations for creative prompts.
 
-### Educational Materials
+**Q: What happens if I accidentally include Japanese characters?**
+A: The server will reject the request with a helpful error message explaining how to translate the text.
 
-- Create visual aids from Japanese educational content
-- Translate historical or cultural descriptions for image generation
-- Generate illustrations for Japanese language learning materials
-
-### Marketing and Branding
-
-- Convert Japanese brand concepts to visual prompts
-- Maintain brand voice while optimizing for image generation
-- Create culturally sensitive marketing imagery
-
-## Limitations
-
-- **Dialect Support**: Primarily supports standard Japanese (標準語)
-- **Context Sensitivity**: May require manual context specification for highly specialized terms
-- **Cultural Nuances**: Some cultural concepts may lose subtlety in translation
-- **Real-time Translation**: Processing time increases with prompt complexity
+**Q: Does this affect image quality?**
+A: No, it improves quality by ensuring gpt-image-1 receives optimal English prompts.
 
 ## Next Steps
 
 - [Getting Started](/guide/getting-started.md) - Set up the MCP server
-- [Image Generation](/guide/image-generation.md) - Generate images with translated prompts
-- [API Reference](/api/translate-prompt.md) - Detailed API documentation
+- [Image Generation](/guide/image-generation.md) - Learn image generation best practices
+- [API Reference](/api/generate-image.md) - Detailed API documentation
 - [Examples](/examples/basic-usage.md) - Practical usage examples
