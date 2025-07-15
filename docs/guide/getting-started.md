@@ -109,4 +109,4 @@ await client.callTool("generate-image", {
 - Check API key rate limits
 - Review detailed error messages
 
-For detailed troubleshooting, see [here](/guide/troubleshooting). Report issues at [GitHub Issues](https://github.com/naporin0624/gen-image-mcp/issues).
+Report issues at [GitHub Issues](https://github.com/naporin0624/gen-image-mcp/issues).
