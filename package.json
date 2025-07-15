@@ -1,5 +1,5 @@
 {
-  "name": "gpt-image-1-mcp",
+  "name": "@napolab/gpt-image-1-mcp",
   "version": "1.0.0",
   "description": "OpenAI gpt-image-1 MCP server with advanced image generation and editing capabilities",
   "main": "dist/index.js",
@@ -30,11 +30,23 @@
     "image-editing",
     "transparency"
   ],
+  "bin": {
+    "gpt-image-1-mcp": "./dist/index.js"
+  },
   "files": [
     "dist",
     "README.md",
+    "CHANGELOG.md",
     "package.json"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/naporin0624/gen-image-mcp.git"
+  },
+  "homepage": "https://github.com/naporin0624/gen-image-mcp",
+  "bugs": {
+    "url": "https://github.com/naporin0624/gen-image-mcp/issues"
+  },
   "author": "",
   "license": "MIT",
   "packageManager": "pnpm@10.7.1",

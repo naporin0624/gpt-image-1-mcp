@@ -1,0 +1,181 @@
+# Documentation Restructuring Plan for npm Publishing
+# Created: 2025-01-15 23:33:05
+# Reference: https://github.com/yoshiko-pg/o3-search-mcp
+
+overview:
+  purpose: "Transform VitePress-based documentation to npm package documentation"
+  target: "npm publish ready documentation structure"
+  reference_project: "o3-search-mcp"
+
+structural_changes:
+  remove_files:
+    - docs/404.md
+    - docs/public/images/*.png  # All image files
+    - docs/.vitepress/  # VitePress configuration directory if exists
+    
+  create_files:
+    - path: "README.md"
+      location: "root directory"
+      purpose: "Main documentation for npm package"
+      
+    - path: "CHANGELOG.md"
+      location: "root directory"
+      purpose: "Version history and release notes"
+      
+    - path: "docs/examples/basic-config.json"
+      purpose: "Basic MCP configuration example"
+      
+    - path: "docs/examples/advanced-config.json"
+      purpose: "Advanced configuration with all options"
+
+  consolidate_files:
+    - from:
+        - docs/index.md
+        - docs/guide/what-is-mcp.md
+        - docs/guide/getting-started.md
+        - docs/api/tools.md
+        - docs/guide/image-generation.md
+        - docs/guide/edit-image.md
+        - docs/guide/batch-edit.md
+      to: "README.md"
+      
+    - from:
+        - docs/guide/environment-variables.md
+      to: "README.md#configuration"
+      
+    - from:
+        - docs/guide/mcp-configuration.md
+      to: "README.md#installation"
+
+readme_structure:
+  sections:
+    - name: "Header"
+      content:
+        - package_name: "gpt-image-1 MCP"
+        - badges:
+            - npm_version
+            - license
+            - openai_status
+        - description: "MCP server for AI-powered image generation using OpenAI's gpt-image-1 model"
+        
+    - name: "Features"
+      content:
+        - "Advanced text rendering with gpt-image-1"
+        - "Native transparency support"
+        - "Multi-format output (PNG, JPEG, WebP)"
+        - "Flexible dimensions and aspect ratios"
+        - "Batch image editing capabilities"
+        - "Token-optimized MCP responses"
+        
+    - name: "Installation"
+      subsections:
+        - title: "Recommended: Using npx"
+          content: |
+            ```json
+            {
+              "mcpServers": {
+                "gpt-image-1-mcp": {
+                  "command": "npx",
+                  "args": ["gpt-image-1-mcp"],
+                  "env": {
+                    "OPENAI_API_KEY": "sk-your-api-key"
+                  }
+                }
+              }
+            }
+            ```
+            
+        - title: "Alternative: Local Installation"
+          content: |
+            ```bash
+            npm install -g gpt-image-1-mcp
+            ```
+            
+        - title: "Claude Desktop Configuration"
+          content: "Path to claude_desktop_config.json with example"
+          
+    - name: "Configuration"
+      subsections:
+        - title: "Environment Variables"
+          table_format:
+            headers: ["Variable", "Required", "Default", "Description"]
+            rows:
+              - ["OPENAI_API_KEY", "Yes", "-", "Your OpenAI API key"]
+              - ["DEFAULT_OUTPUT_DIR", "No", "./generated_images", "Default output directory"]
+              - ["DEFAULT_IMAGE_SIZE", "No", "1024x1024", "Default image dimensions"]
+              - ["DEFAULT_IMAGE_QUALITY", "No", "standard", "Default quality (standard/hd)"]
+              - ["DEFAULT_OUTPUT_FORMAT", "No", "png", "Default format (png/jpeg/webp)"]
+              
+    - name: "Available Tools"
+      subsections:
+        - title: "generate-image"
+          description: "Generate images using gpt-image-1"
+          parameters_table: true
+          example_code: true
+          
+        - title: "edit-image"
+          description: "Edit existing images with AI"
+          parameters_table: true
+          example_code: true
+          
+        - title: "batch-edit"
+          description: "Apply same edit to multiple images"
+          parameters_table: true
+          example_code: true
+          
+    - name: "Usage Examples"
+      subsections:
+        - title: "Basic Image Generation"
+          code_example: "Simple prompt-based generation"
+          
+        - title: "Advanced Options"
+          code_example: "Using all available parameters"
+          
+        - title: "Image Editing"
+          code_example: "Inpainting and style transfer examples"
+          
+    - name: "Development"
+      content:
+        - clone_instructions: false  # Not needed for npm package
+        - contribution_guidelines: true
+        - testing_instructions: true
+        - build_instructions: true
+        
+    - name: "License"
+      content: "MIT License with link to LICENSE file"
+
+migration_notes:
+  - "Remove all VitePress-specific frontmatter"
+  - "Convert internal links to anchor links"
+  - "Simplify code examples for quick understanding"
+  - "Focus on npx usage over local development"
+  - "Remove redundant explanations about MCP basics"
+  - "Integrate API documentation inline with usage examples"
+
+style_guidelines:
+  - "Concise, action-oriented writing"
+  - "Code examples immediately after explanations"
+  - "Tables for configuration options"
+  - "Clear section headers with emoji icons"
+  - "No marketing language - focus on technical details"
+
+npm_specific_additions:
+  package_json_updates:
+    - bin_field: "Add executable entry point"
+    - files_field: "Specify included files for npm"
+    - repository_field: "Ensure GitHub repository is linked"
+    - homepage_field: "Link to GitHub repository"
+    
+  npmignore:
+    - "docs/public/"
+    - "docs/.vitepress/"
+    - "*.md files except README and CHANGELOG"
+    - "test files and configurations"
+
+verification_checklist:
+  - "README.md is self-contained and complete"
+  - "All installation methods work with npm"
+  - "Examples are runnable without additional setup"
+  - "No broken links or references to removed files"
+  - "Configuration options are clearly documented"
+  - "API documentation includes all parameters"

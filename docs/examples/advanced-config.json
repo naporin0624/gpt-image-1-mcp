@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "gpt-image-1-mcp": {
+      "command": "npx",
+      "args": ["gpt-image-1-mcp"],
+      "env": {
+        "OPENAI_API_KEY": "sk-your-api-key-here",
+        "DEFAULT_IMAGE_QUALITY": "hd",
+        "DEFAULT_IMAGE_SIZE": "landscape",
+        "DEFAULT_STYLE": "vivid",
+        "DEFAULT_OUTPUT_DIRECTORY": "./generated_images",
+        "DEFAULT_NAMING_STRATEGY": "timestamp",
+        "DEFAULT_ORGANIZE_BY": "date",
+        "AUTO_SAVE_IMAGES": "true",
+        "DEFAULT_EDIT_STRENGTH": "0.8",
+        "RATE_LIMIT_REQUESTS_PER_MINUTE": "50",
+        "RATE_LIMIT_IMAGES_PER_HOUR": "100",
+        "ENABLE_RESULT_CACHING": "true",
+        "CACHE_DURATION_HOURS": "24",
+        "API_TIMEOUT_SECONDS": "60",
+        "IMAGE_GENERATION_TIMEOUT_SECONDS": "180",
+        "ENABLE_BATCH_PROCESSING": "true",
+        "LOG_LEVEL": "info",
+        "ENABLE_REQUEST_LOGGING": "false"
+      }
+    }
+  }
+}
