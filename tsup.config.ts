@@ -11,7 +11,7 @@ export default defineConfig({
   minify: true,
   splitting: false,
   bundle: true,
-  external: ["sharp", "fs-extra"],
+  external: ["fs-extra"],
   platform: "node",
   banner: {
     js: "#!/usr/bin/env node",

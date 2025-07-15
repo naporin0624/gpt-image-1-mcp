@@ -38,9 +38,6 @@ coverage/
 tmp/
 temp/
 
-# Claude settings
-.claude/
-
 # Project specific
 .mcp.json
 
