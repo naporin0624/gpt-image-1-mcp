@@ -73,20 +73,6 @@ export default defineConfig({
             { text: "Batch Processing", link: "/examples/batch-edit-examples" },
           ],
         },
-        {
-          text: "Usage Examples",
-          items: [
-            { text: "Basic Usage", link: "/examples/basic-usage" },
-            {
-              text: "Advanced Scenarios",
-              link: "/examples/advanced-scenarios",
-            },
-            {
-              text: "Integration Patterns",
-              link: "/examples/integration-patterns",
-            },
-          ],
-        },
       ],
     },
 
