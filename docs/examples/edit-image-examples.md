@@ -73,12 +73,12 @@ const result = await mcp.callTool("edit-image", {
 Apply various artistic styles to your images while preserving the original composition.
 
 **Original Image:**
-![Original Photo](/examples/edit/source/photo.png)
+![Original Landscape](/examples/edit/source/garden-landscape.png)
 
 **Edit Prompt:** "Transform into watercolor painting style"
 
 **Result:**
-![Style Transfer Result](/examples/edit/results/style-transfer-1752595627557.png)
+![Style Transfer Result](/examples/edit/results/style-transfer-1752624729519.png)
 
 **Code Example:**
 
@@ -86,7 +86,7 @@ Apply various artistic styles to your images while preserving the original compo
 const result = await mcp.callTool("edit-image", {
   source_image: {
     type: "local",
-    value: "./source/photo.png",
+    value: "./source/garden-landscape.png",
   },
   edit_prompt: "Transform into watercolor painting style",
   edit_type: "style_transfer",
@@ -97,15 +97,15 @@ const result = await mcp.callTool("edit-image", {
 
 ### Smart Object Removal
 
-Remove specific objects or people from images while maintaining natural backgrounds.
+Remove specific objects from images while maintaining natural backgrounds.
 
 **Original Image:**
-![Street Photo](/examples/edit/source/street-photo.png)
+![Street Scene](/examples/edit/source/street-scene.png)
 
-**Edit Prompt:** "Remove all people from the street"
+**Edit Prompt:** "Remove all parked vehicles from the street"
 
 **Result:**
-![Object Removal Result](/examples/edit/results/object-removal-1752595668554.png)
+![Object Removal Result](/examples/edit/results/object-removal-1752624775341.png)
 
 **Code Example:**
 
@@ -113,9 +113,9 @@ Remove specific objects or people from images while maintaining natural backgrou
 const result = await mcp.callTool("edit-image", {
   source_image: {
     type: "local",
-    value: "./source/street-photo.png",
+    value: "./source/street-scene.png",
   },
-  edit_prompt: "Remove all people from the street",
+  edit_prompt: "Remove all parked vehicles from the street",
   edit_type: "object_removal",
 });
 ```
