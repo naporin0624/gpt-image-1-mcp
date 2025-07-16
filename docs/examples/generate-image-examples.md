@@ -138,7 +138,8 @@ Generate detailed vertical composition images with complex styling.
 
 ```typescript
 const result = await mcp.callTool("generate-image", {
-  prompt: "Steampunk mechanical owl with brass gears and steam, detailed vertical composition",
+  prompt:
+    "Steampunk mechanical owl with brass gears and steam, detailed vertical composition",
   quality: "hd",
   aspect_ratio: "portrait",
   output_directory: "./portraits",
