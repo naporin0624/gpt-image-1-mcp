@@ -120,11 +120,11 @@ const result = await mcp.callTool("generate-image", {
 
 ## Portrait Examples
 
-### Character Portrait
+### Detailed Object Portrait
 
-Generate detailed character portraits with complex styling.
+Generate detailed vertical composition images with complex styling.
 
-**Prompt:** "Cyberpunk character with neon accents, detailed portrait"
+**Prompt:** "Steampunk mechanical owl with brass gears and steam, detailed vertical composition"
 
 **Parameters:**
 
@@ -132,13 +132,13 @@ Generate detailed character portraits with complex styling.
 - Aspect Ratio: `portrait` (1024x1536)
 - Format: `png`
 
-![Character Portrait](/examples/generate/character-portrait.png)
+![Mechanical Owl Portrait](/examples/generate/mechanical-owl-portrait.png)
 
 **Code Example:**
 
 ```typescript
 const result = await mcp.callTool("generate-image", {
-  prompt: "Cyberpunk character with neon accents, detailed portrait",
+  prompt: "Steampunk mechanical owl with brass gears and steam, detailed vertical composition",
   quality: "hd",
   aspect_ratio: "portrait",
   output_directory: "./portraits",
