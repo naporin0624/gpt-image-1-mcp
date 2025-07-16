@@ -661,4 +661,4 @@ class RateLimitDebugger {
 - [Error Handling](/api/error-handling.md) - Comprehensive error management
 - [API Overview](/api/tools.md) - Complete API reference
 - [Environment Variables](/guide/environment-variables.md) - Configuration options
-- [Examples](/examples/basic-usage.md) - Practical implementation examples
+- [Examples](/examples/) - Practical implementation examples

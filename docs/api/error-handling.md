@@ -738,4 +738,4 @@ ERROR_LOG_LEVEL=error
 - [Rate Limiting](/api/rate-limiting.md) - Detailed rate limiting strategies
 - [API Overview](/api/tools.md) - Complete API reference
 - [Environment Variables](/guide/environment-variables.md) - Configuration options
-- [Examples](/examples/basic-usage.md) - Practical implementation examples
+- [Examples](/examples/) - Practical implementation examples

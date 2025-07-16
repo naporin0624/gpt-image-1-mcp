@@ -466,4 +466,4 @@ async function qualityBatchEdit(imageUrls: string[]) {
 - [Image Editing](/guide/edit-image) - Single image editing capabilities
 - [Image Generation](/guide/image-generation) - Generate images from scratch
 - [Error Handling](/api/error-handling) - Comprehensive error management
-- [Examples](/examples/integration-patterns) - Integration workflow examples
+- [Examples](/examples/batch-edit-examples) - Integration workflow examples

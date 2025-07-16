@@ -550,4 +550,4 @@ C:/Users/username/projects/@napolab/gpt-image-1-mcp-mcp/dist/index.js
 - [Getting Started](/guide/getting-started.md) - Basic setup guide
 - [Environment Variables](/guide/environment-variables.md) - Detailed configuration options
 - [API Reference](/api/tools.md) - Available tools and methods
-- [Examples](/examples/basic-usage.md) - Usage examples
+- [Examples](/examples/) - Usage examples

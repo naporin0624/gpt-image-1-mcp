@@ -285,4 +285,4 @@ To verify your configuration is working:
 - [Getting Started](/guide/getting-started.md) - Basic server setup
 - [MCP Configuration](/guide/mcp-configuration.md) - Complete client configuration
 - [API Reference](/api/tools.md) - Tool documentation
-- [Examples](/examples/basic-usage.md) - Usage examples
+- [Examples](/examples/) - Usage examples

@@ -163,4 +163,4 @@ const result = await client.callTool("batch-edit", {
 - Learn about LLM translation patterns for multilingual support
 - Explore [Image Editing](/guide/edit-image) capabilities for post-processing
 - Try [Batch Editing](/guide/batch-edit) for processing multiple images
-- Check out [Examples](/examples/basic-usage) for more use cases
+- Check out [Examples](/examples/) for more use cases

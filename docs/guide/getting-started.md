@@ -88,7 +88,7 @@ await client.callTool("generate-image", {
 - Learn detailed features in the [Image Generation Guide](/guide/image-generation)
 - Check editing capabilities in the [Image Edit Guide](/guide/edit-image)
 - Understand batch processing in the [Batch Edit Guide](/guide/batch-edit)
-- Reference sample code in [Examples](/examples/basic-usage)
+- Reference sample code in [Examples](/examples/)
 
 ## Common Issues
 

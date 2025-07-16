@@ -399,4 +399,4 @@ for (const image of images) {
 - [Batch Editing](/guide/batch-edit) - Edit multiple images efficiently
 - [Image Generation](/guide/image-generation) - Generate images from scratch
 - [Error Handling](/api/error-handling) - Handle editing errors gracefully
-- [Examples](/examples/basic-usage) - See practical editing examples
+- [Examples](/examples/edit-image-examples) - See practical editing examples

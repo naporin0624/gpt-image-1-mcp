@@ -88,4 +88,4 @@ Common error codes:
 
 ## Usage Examples
 
-See the [Examples](/examples/basic-usage) section for detailed usage patterns.
+See the [Examples](/examples/) section for detailed usage patterns.

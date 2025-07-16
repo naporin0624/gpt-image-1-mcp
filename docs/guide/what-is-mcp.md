@@ -92,7 +92,7 @@ Ready to start generating images with gpt-image-1 MCP?
 
 1. [Set up the server](/guide/getting-started) - Install and configure the MCP server
 2. [Learn the basics](/guide/image-generation) - Understand image generation capabilities
-3. [Explore examples](/examples/basic-usage) - See practical usage patterns
+3. [Explore examples](/examples/) - See practical usage patterns
 4. [Configure your client](/guide/mcp-configuration) - Set up MCP integration
 
 ## Architecture Benefits
@@ -116,4 +116,4 @@ Ready to start generating images with gpt-image-1 MCP?
 - [Getting Started Guide](/guide/getting-started) - Set up your first image generation
 - [API Reference](/api/tools) - Explore all available tools
 - [Configuration Guide](/guide/mcp-configuration) - Configure MCP integration
-- [Examples](/examples/basic-usage) - Learn from practical examples
+- [Examples](/examples/) - Learn from practical examples
