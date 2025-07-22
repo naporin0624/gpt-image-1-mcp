@@ -286,7 +286,7 @@ describe("FileManager", () => {
         prompt: "A beautiful sunset",
       };
 
-      const filename = fileManager.generateFileName(options);
+      const filename = fileManager.generateFileName(options, ".png");
 
       expect(filename).toMatch(/^image_\d{8}_\d{6}_[\da-f]{6}\.png$/);
     });
@@ -298,7 +298,7 @@ describe("FileManager", () => {
         maxLength: 50,
       };
 
-      const filename = fileManager.generateFileName(options);
+      const filename = fileManager.generateFileName(options, ".png");
 
       expect(filename).toMatch(
         /^a_beautiful_sunset_landscape_\d{8}_\d{6}\.png$/,
@@ -311,7 +311,7 @@ describe("FileManager", () => {
         customPrefix: "my_image",
       };
 
-      const filename = fileManager.generateFileName(options);
+      const filename = fileManager.generateFileName(options, ".png");
 
       expect(filename).toMatch(/^my_image_\d{3}\.png$/);
     });
@@ -322,7 +322,7 @@ describe("FileManager", () => {
         prompt: "A beautiful sunset",
       };
 
-      const filename = fileManager.generateFileName(options);
+      const filename = fileManager.generateFileName(options, ".png");
 
       expect(filename).toMatch(/^[\da-f]{8}\.png$/);
     });
@@ -333,7 +333,7 @@ describe("FileManager", () => {
         prompt: "../../../etc/passwd",
       };
 
-      const filename = fileManager.generateFileName(options);
+      const filename = fileManager.generateFileName(options, ".png");
 
       expect(filename).not.toContain("../");
       expect(filename).not.toContain("/");
@@ -347,9 +347,25 @@ describe("FileManager", () => {
         maxLength: 30,
       };
 
-      const filename = fileManager.generateFileName(options);
+      const filename = fileManager.generateFileName(options, ".png");
 
       expect(filename.length).toBeLessThanOrEqual(50); // Including timestamp and extension
+    });
+
+    it("should support jpeg extension", () => {
+      const options: FileNameGenerationOptions = { strategy: "timestamp" };
+
+      const filename = fileManager.generateFileName(options, ".jpeg");
+
+      expect(filename.endsWith(".jpeg")).toBe(true);
+    });
+
+    it("should support webp extension", () => {
+      const options: FileNameGenerationOptions = { strategy: "hash", prompt: "sample" };
+
+      const filename = fileManager.generateFileName(options, ".webp");
+
+      expect(filename.endsWith(".webp")).toBe(true);
     });
   });
 
@@ -485,7 +501,12 @@ describe("FileManager", () => {
       const result = await fileManager.saveImage(
         "https://example.com/image.png",
         options,
-        { prompt: "Test prompt", aspectRatio: "square", quality: "medium" },
+        {
+          prompt: "Test prompt",
+          aspectRatio: "square",
+          quality: "medium",
+          format: "png",
+        },
       );
 
       expect(result).toBeDefined();
@@ -505,7 +526,7 @@ describe("FileManager", () => {
       const result = await fileManager.saveImage(
         "https://example.com/image.png",
         options,
-        { prompt: "Test prompt" },
+        { prompt: "Test prompt", format: "png" },
       );
 
       expect(result).toBeNull();
@@ -577,6 +598,68 @@ describe("FileManager", () => {
       expect(result).toBeDefined();
       expect(result!.filename).toMatch(/^existing-file_\d{3}_\d+\.png$/);
       expect(result!.local_path).not.toBe(conflictingFile);
+    });
+
+    it("should save image with webp format", async () => {
+      const mockImageData = Buffer.from("fake webp data");
+      const mockReadableStream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(mockImageData);
+          controller.close();
+        },
+      });
+
+      const mockHeaders = new Map([
+        ["content-type", "image/webp"],
+        ["content-length", "15"],
+      ]);
+
+      const mockResponse = {
+        ok: true,
+        status: 200,
+        statusText: "OK",
+        headers: {
+          get: vi.fn((name: string) => {
+            return mockHeaders.get(name.toLowerCase()) ?? null;
+          }),
+        },
+        body: mockReadableStream,
+      };
+
+      mockFetch.mockResolvedValue(mockResponse);
+
+      const mockWriter = {
+        on: vi.fn(),
+        destroy: vi.fn(),
+      };
+
+      vi.mocked(createWriteStream).mockReturnValue(
+        mockWriter as unknown as WriteStream,
+      );
+      mockWriter.on.mockImplementation((event, callback) => {
+        if (event === "finish") {
+          callback();
+        }
+      });
+
+      vi.mocked(pipeline).mockResolvedValue(undefined);
+
+      const options: FileOutputOptions = {
+        save_to_file: true,
+        output_directory: testDir,
+        filename: "image", // should add extension automatically
+        naming_strategy: "custom",
+        organize_by: "none",
+      };
+
+      const result = await fileManager.saveImage(
+        "https://example.com/image.webp",
+        options,
+        { prompt: "Test", format: "webp" },
+      );
+
+      expect(result).toBeDefined();
+      expect(result!.filename.endsWith(".webp")).toBe(true);
     });
   });
 

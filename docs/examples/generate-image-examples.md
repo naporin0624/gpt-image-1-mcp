@@ -91,6 +91,8 @@ const result = await mcp.callTool("generate-image", {
 });
 ```
 
+// Saved file will have a .png extension
+
 ## Landscape Scenes
 
 ### Futuristic Cityscape
