@@ -12,6 +12,7 @@ MCP server for AI-powered image generation using OpenAI's gpt-image-1 model with
 - **Advanced text rendering with gpt-image-1** - Crisp, legible typography and logos in generated images
 - **Native transparency support** - Built-in transparent background without post-processing
 - **Multi-format output (PNG, JPEG, WebP)** - Flexible format options with optimized compression
+- **Matching file extensions** - Saved images now use the requested output format
 - **Flexible dimensions and aspect ratios** - Square (1024×1024), landscape (1536×1024), and portrait (1024×1536)
 - **Batch image editing capabilities** - Process multiple images with parallel processing
 - **Token-optimized MCP responses** - Efficient response formats for MCP protocol limits
@@ -190,6 +191,8 @@ const result = await client.callTool("generate-image", {
   include_base64: true,
 });
 ```
+
+// Output file will be saved as smartphone_hero.png
 
 ### Image Editing
 

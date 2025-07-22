@@ -35,6 +35,7 @@ interface ImageMetadata {
   prompt?: string;
   aspectRatio?: string;
   quality?: string;
+  format?: string;
 }
 
 export class FileManager {
@@ -174,14 +175,16 @@ export class FileManager {
     );
   }
 
-  generateFileName(options: FileNameGenerationOptions): string {
+  generateFileName(
+    options: FileNameGenerationOptions,
+    extension = ".png",
+  ): string {
     const { strategy, prompt, customPrefix, maxLength = 100 } = options;
     const now = new Date();
     const timestamp =
       now.toISOString().slice(0, 10).replace(/-/g, "") +
       "_" +
       now.toISOString().slice(11, 19).replace(/:/g, "");
-    const extension = ".png"; // Default extension
 
     switch (strategy) {
       case "timestamp": {
@@ -316,20 +319,25 @@ export class FileManager {
     await this.ensureDirectory(outputDir);
 
     // Generate filename
+    const extension = `.${(metadata.format ?? "png").replace(/^\./, "")}`;
+
     const filename =
       options.filename != null
-        ? this.resolveCustomFilename(options.filename, outputDir)
-        : this.generateFileName({
-            strategy: options.naming_strategy,
-            ...(metadata.prompt != null &&
-              metadata.prompt.length > 0 && { prompt: metadata.prompt }),
-            ...(metadata.aspectRatio != null &&
-              metadata.aspectRatio.length > 0 && {
-                aspectRatio: metadata.aspectRatio,
-              }),
-            ...(metadata.quality != null &&
-              metadata.quality.length > 0 && { quality: metadata.quality }),
-          });
+        ? this.resolveCustomFilename(options.filename, outputDir, extension)
+        : this.generateFileName(
+            {
+              strategy: options.naming_strategy,
+              ...(metadata.prompt != null &&
+                metadata.prompt.length > 0 && { prompt: metadata.prompt }),
+              ...(metadata.aspectRatio != null &&
+                metadata.aspectRatio.length > 0 && {
+                  aspectRatio: metadata.aspectRatio,
+                }),
+              ...(metadata.quality != null &&
+                metadata.quality.length > 0 && { quality: metadata.quality }),
+            },
+            extension,
+          );
 
     const outputPath = join(outputDir, filename);
 
@@ -419,12 +427,16 @@ export class FileManager {
     }
   }
 
-  private resolveCustomFilename(filename: string, _directory: string): string {
+  private resolveCustomFilename(
+    filename: string,
+    _directory: string,
+    extension = ".png",
+  ): string {
     const sanitized = this.sanitizeFilename(filename);
-    const ext = extname(sanitized) || ".png";
+    const ext = extname(sanitized) || extension;
     const base = basename(sanitized, ext);
 
-    return `${base}${ext}`;
+    return `${base}${ext.startsWith(".") ? ext : `.${ext}`}`;
   }
 
   private sanitizeFilename(filename: string): string {

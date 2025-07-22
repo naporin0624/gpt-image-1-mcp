@@ -22,6 +22,16 @@ vi.mock("../src/utils/file-manager.js");
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
+// Polyfill File for Node 18
+class TestFile extends Blob {
+  name: string;
+  constructor(chunks: BlobPart[], name: string, options?: FilePropertyBag) {
+    super(chunks, options);
+    this.name = name;
+  }
+}
+(global as any).File = TestFile;
+
 describe("OpenAI Integration", () => {
   let mockOpenAI: Mocked<OpenAI>;
 
@@ -234,6 +244,7 @@ describe("OpenAI Integration", () => {
           prompt: "Make it colorful",
           aspectRatio: "square",
           quality: "medium",
+          format: "png",
         },
       );
 
@@ -249,6 +260,46 @@ describe("OpenAI Integration", () => {
         format: "png",
         saved_at: "2025-01-15T00:00:00Z",
       });
+    });
+
+    it("should respect webp output_format", async () => {
+      const mockFileResult = {
+        local_path: "/path/to/edited_image.webp",
+        filename: "edited_12345.webp",
+        directory: "/path/to",
+        size_bytes: 512,
+        format: "webp",
+        saved_at: "2025-01-15T00:00:00Z",
+      };
+
+      mockFileManager.saveImage.mockResolvedValue(mockFileResult);
+
+      const input: EditImageInput = {
+        source_image: { type: "url", value: "https://example.com/source.jpg" },
+        edit_prompt: "Make it colorful",
+        edit_type: "style_transfer",
+        model: "gpt-image-1",
+        background: "auto",
+        quality: "auto",
+        save_to_file: true,
+        output_directory: "/custom/output",
+        filename_prefix: "edited_",
+        naming_strategy: "timestamp",
+        organize_by: "date",
+        strength: 0.8,
+        preserve_composition: true,
+        output_format: "webp",
+      };
+
+      const result = await openAIService.editImage(input);
+
+      expect(mockFileManager.saveImage).toHaveBeenCalledWith(
+        expect.stringContaining("data:image/webp;base64,"),
+        expect.objectContaining({ save_to_file: true }),
+        expect.objectContaining({ format: "webp" }),
+      );
+
+      expect(result.edited_image?.format).toBe("webp");
     });
 
     it("should always save base64 data to file even when save_to_file is false", async () => {
@@ -415,6 +466,7 @@ describe("OpenAI Integration", () => {
           prompt: "Make it artistic",
           aspectRatio: "square",
           quality: "medium",
+          format: "png",
         },
       );
 

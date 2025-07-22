@@ -136,7 +136,9 @@ export class OpenAIService {
       // Always save to file to get metadata, but handle errors gracefully
       try {
         const dataUrl =
-          imageUrl != null ? imageUrl : `data:image/png;base64,${b64Data}`;
+          imageUrl != null
+            ? imageUrl
+            : `data:image/${input.output_format ?? "png"};base64,${b64Data}`;
         fileResult = await this.fileManager.saveImage(
           dataUrl,
           {
@@ -150,6 +152,7 @@ export class OpenAIService {
             prompt: input.prompt,
             aspectRatio: input.aspect_ratio,
             quality: input.quality ?? "medium",
+            format: input.output_format ?? "png",
           },
         );
       } catch (error) {
@@ -296,6 +299,7 @@ export class OpenAIService {
               prompt: input.edit_prompt,
               aspectRatio: "square", // Need to detect from source image
               quality: "medium",
+              format: input.output_format ?? "png",
             },
           );
         } catch (error) {
@@ -328,6 +332,7 @@ export class OpenAIService {
                 prompt: input.edit_prompt,
                 aspectRatio: "square", // Need to detect from source image
                 quality: "medium",
+                format: input.output_format ?? "png",
               },
             );
           } catch (error) {

@@ -39,6 +39,8 @@ await client.callTool("edit-image", {
 | `output_format`        | string  | `"png"`             | Output format (png, jpeg, webp)         |
 | `include_base64`       | boolean | `false`             | Include base64 data in response         |
 
+Saved filenames now automatically use the chosen `output_format` extension.
+
 ## Edit Types
 
 ### inpaint

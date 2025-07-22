@@ -42,6 +42,8 @@ await client.callTool("batch-edit", {
 | `naming_strategy`  | string  | `"timestamp"`      | Filename generation strategy          |
 | `organize_by`      | string  | `"none"`           | Subdirectory organization method      |
 
+Saved filenames use the requested `output_format` extension.
+
 ## Batch Settings
 
 Configure parallel processing and error handling:
