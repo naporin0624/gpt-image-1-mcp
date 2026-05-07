@@ -4,6 +4,7 @@ import {
   ListToolsRequestSchema,
   CallToolRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { zodToJsonSchema } from "zod-to-json-schema";
 
 import { EditImageInputSchema, BatchEditInputSchema } from "./types/edit";
 import {
@@ -13,8 +14,20 @@ import {
 } from "./types/image";
 
 import { normalizeImageInput } from "./utils/image-input";
+import { withOptionalModel } from "./utils/json-schema";
 import { OpenAIService } from "./utils/openai";
 import { validateText, formatValidationError } from "./utils/validation";
+
+const generateImageInputSchema = withOptionalModel(
+  zodToJsonSchema(GenerateImageInputSchema, {
+    target: "jsonSchema7",
+    $refStrategy: "none",
+  }) as Record<string, unknown>,
+) as {
+  type: "object";
+  properties?: Record<string, unknown>;
+  required?: string[];
+};
 
 // Type guards for runtime type checking
 function isStringArray(value: unknown): value is string[] {
@@ -65,83 +78,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "generate-image",
         description:
-          "Generate images using gpt-image-1 with advanced text rendering and instruction following",
-        inputSchema: {
-          type: "object",
-          properties: {
-            prompt: {
-              type: "string",
-              description: "Image description",
-            },
-            aspect_ratio: {
-              type: "string",
-              enum: ["square", "landscape", "portrait", "1:1", "16:9", "9:16"],
-              default: "square",
-              description:
-                "Aspect ratio (square=1024x1024, landscape=1792x1024, portrait=1024x1792)",
-            },
-            quality: {
-              type: "string",
-              enum: ["standard", "hd", "high", "medium", "low"],
-              description: "Image quality",
-            },
-            output_format: {
-              type: "string",
-              enum: ["png", "jpeg", "webp"],
-              default: "png",
-              description: "Output image format",
-            },
-            moderation: {
-              type: "string",
-              enum: ["auto", "low"],
-              default: "auto",
-              description: "Content moderation level",
-            },
-            analyze_after_generation: {
-              type: "boolean",
-              default: false,
-              description: "Analyze the generated image and return description",
-            },
-            remove_background: {
-              type: "boolean",
-              default: false,
-              description:
-                "Attempt to remove background (experimental, requires post-processing)",
-            },
-            include_base64: {
-              type: "boolean",
-              default: false,
-              description: "Include base64 in response if size permits",
-            },
-            save_to_file: {
-              type: "boolean",
-              default: true,
-              description: "Save the generated image to local file",
-            },
-            output_directory: {
-              type: "string",
-              description:
-                "Directory to save the image (defaults to ./generated_images)",
-            },
-            filename: {
-              type: "string",
-              description: "Custom filename (without extension)",
-            },
-            naming_strategy: {
-              type: "string",
-              enum: ["timestamp", "prompt", "custom", "hash"],
-              default: "timestamp",
-              description: "Strategy for generating filenames",
-            },
-            organize_by: {
-              type: "string",
-              enum: ["none", "date", "aspect_ratio", "quality"],
-              default: "none",
-              description: "Subdirectory organization strategy",
-            },
-          },
-          required: ["prompt"],
-        },
+          "Generate images using gpt-image-1 or gpt-image-2. Omit `model` to use gpt-image-2 (default). gpt-image-2 unlocks 2K presets (square_2k / landscape_2k / portrait_2k) and aspect_ratio: \"auto\".",
+        inputSchema: generateImageInputSchema,
       },
       {
         name: "edit-image",

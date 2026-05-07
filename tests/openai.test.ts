@@ -68,6 +68,7 @@ describe("OpenAI Integration", () => {
       mockOpenAI.images.generate = mockCreate;
 
       const input: GenerateImageInput = {
+        model: "gpt-image-1",
         prompt: "A beautiful mountain landscape",
         aspect_ratio: "landscape",
         quality: "high",
@@ -106,6 +107,136 @@ describe("OpenAI Integration", () => {
       expect(result).toEqual(mockResponse);
     });
 
+    describe("model branching", () => {
+      let openAIService: OpenAIService;
+      let mockGenerate: Mock;
+      let mockFileManager: { saveImage: Mock };
+
+      beforeEach(() => {
+        process.env.OPENAI_API_KEY = "test-api-key";
+
+        mockFileManager = {
+          saveImage: vi.fn().mockResolvedValue({
+            local_path: "/tmp/x.png",
+            filename: "x.png",
+            directory: "/tmp",
+            size_bytes: 100,
+            format: "png",
+            saved_at: "2026-05-07T00:00:00Z",
+          }),
+        };
+
+        mockGenerate = vi.fn().mockResolvedValue({
+          data: [{ b64_json: "AAAA" }],
+        });
+
+        openAIService = new OpenAIService();
+        (openAIService as unknown as OpenAIServiceTestAccess).client = {
+          images: { generate: mockGenerate },
+        } as unknown as OpenAI;
+        (openAIService as unknown as OpenAIServiceTestAccess).fileManager =
+          mockFileManager as unknown as FileManager;
+      });
+
+      it("calls API with model 'gpt-image-2' for gpt-image-2 input", async () => {
+        await openAIService.generateImage({
+          model: "gpt-image-2",
+          prompt: "x",
+          aspect_ratio: "square_2k",
+          background: "auto",
+          output_format: "png",
+          moderation: "auto",
+          save_to_file: true,
+          naming_strategy: "timestamp",
+          organize_by: "none",
+          analyze_after_generation: false,
+          remove_background: false,
+          include_base64: false,
+        });
+
+        expect(mockGenerate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            model: "gpt-image-2",
+            size: "2048x2048",
+          }),
+        );
+      });
+
+      it("calls API with model 'gpt-image-1' and 1024x1024 for gpt-image-1 square", async () => {
+        await openAIService.generateImage({
+          model: "gpt-image-1",
+          prompt: "x",
+          aspect_ratio: "square",
+          background: "auto",
+          output_format: "png",
+          moderation: "auto",
+          save_to_file: true,
+          naming_strategy: "timestamp",
+          organize_by: "none",
+          analyze_after_generation: false,
+          remove_background: false,
+          include_base64: false,
+        });
+
+        expect(mockGenerate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            model: "gpt-image-1",
+            size: "1024x1024",
+          }),
+        );
+      });
+
+      it("normalizes legacy quality 'standard' to 'medium' for gpt-image-1", async () => {
+        await openAIService.generateImage({
+          model: "gpt-image-1",
+          prompt: "x",
+          aspect_ratio: "square",
+          quality: "standard",
+          background: "auto",
+          output_format: "png",
+          moderation: "auto",
+          save_to_file: true,
+          naming_strategy: "timestamp",
+          organize_by: "none",
+          analyze_after_generation: false,
+          remove_background: false,
+          include_base64: false,
+        });
+
+        expect(mockGenerate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            model: "gpt-image-1",
+            quality: "medium",
+          }),
+        );
+      });
+
+      it("passes through quality 'auto' unchanged for gpt-image-2", async () => {
+        await openAIService.generateImage({
+          model: "gpt-image-2",
+          prompt: "x",
+          aspect_ratio: "square",
+          quality: "auto",
+          background: "auto",
+          output_format: "png",
+          moderation: "auto",
+          save_to_file: true,
+          naming_strategy: "timestamp",
+          organize_by: "none",
+          analyze_after_generation: false,
+          remove_background: false,
+          include_base64: false,
+        });
+
+        expect(mockGenerate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            model: "gpt-image-2",
+            quality: "auto",
+          }),
+        );
+      });
+    });
+
     it("should handle API errors gracefully", async () => {
       const mockError = new Error("API Error: Rate limit exceeded");
       const mockCreate = vi.fn().mockRejectedValue(mockError);
@@ -113,6 +244,7 @@ describe("OpenAI Integration", () => {
       mockOpenAI.images.generate = mockCreate;
 
       const input: GenerateImageInput = {
+        model: "gpt-image-1",
         prompt: "Test prompt",
         aspect_ratio: "square",
         background: "auto",

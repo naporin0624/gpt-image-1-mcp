@@ -5,7 +5,11 @@ import {
   MaskError,
   BatchProcessingError,
 } from "../types/edit.js";
-import { aspectRatioToSize } from "../types/image.js";
+import {
+  aspectRatioToSize,
+  aspectRatioToSizeGpt2,
+  mapLegacyQuality,
+} from "../types/image.js";
 
 import { FileManager } from "./file-manager.js";
 import { loadImageAsBuffer, normalizeImageInput } from "./image-input.js";
@@ -22,6 +26,8 @@ import type {
 } from "../types/edit.js";
 import type {
   GenerateImageInput,
+  GenerateImageGpt1Input,
+  GenerateImageGpt2Input,
   OptimizedGenerateImageResponse,
 } from "../types/image.js";
 
@@ -71,30 +77,62 @@ export class OpenAIService {
     return Math.ceil((metadataTokens + base64Tokens) * 1.2);
   }
 
+  private buildGenerateParams(input: GenerateImageInput): {
+    generateParams: OpenAI.ImageGenerateParams;
+    size: string;
+  } {
+    if (input.model === "gpt-image-1") {
+      return this.buildGenerateParamsGpt1(input);
+    }
+    return this.buildGenerateParamsGpt2(input);
+  }
+
+  private buildGenerateParamsGpt1(input: GenerateImageGpt1Input): {
+    generateParams: OpenAI.ImageGenerateParams;
+    size: string;
+  } {
+    const size = aspectRatioToSize(input.aspect_ratio);
+    const normalizedQuality =
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      input.quality !== undefined ? mapLegacyQuality(input.quality) : undefined;
+
+    const generateParams: OpenAI.ImageGenerateParams = {
+      model: "gpt-image-1",
+      prompt: input.prompt,
+      size,
+      n: 1,
+      ...(normalizedQuality && { quality: normalizedQuality }),
+      ...(input.output_format && { output_format: input.output_format }),
+      ...(input.moderation && { moderation: input.moderation }),
+    };
+    return { generateParams, size };
+  }
+
+  private buildGenerateParamsGpt2(input: GenerateImageGpt2Input): {
+    generateParams: OpenAI.ImageGenerateParams;
+    size: string;
+  } {
+    const size = aspectRatioToSizeGpt2(input.aspect_ratio);
+
+    // Cast through unknown: gpt-image-2 supports 2048x2048 / 2048x1152 / 1152x2048
+    // which are not yet listed in the OpenAI SDK type union.
+    const generateParams = {
+      model: "gpt-image-2",
+      prompt: input.prompt,
+      size,
+      n: 1,
+      ...(input.quality && { quality: input.quality }),
+      ...(input.output_format && { output_format: input.output_format }),
+      ...(input.moderation && { moderation: input.moderation }),
+    } as unknown as OpenAI.ImageGenerateParams;
+    return { generateParams, size };
+  }
+
   async generateImage(
     input: GenerateImageInput,
   ): Promise<OptimizedGenerateImageResponse> {
     try {
-      const size = aspectRatioToSize(input.aspect_ratio);
-
-      // Build parameters only with what gpt-image-1 supports
-      const generateParams: OpenAI.ImageGenerateParams = {
-        model: "gpt-image-1",
-        prompt: input.prompt,
-        size,
-        ...(input.quality && { quality: input.quality }),
-        n: 1,
-      };
-
-      // Add optional parameters only if provided and supported
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      if (input.output_format) {
-        generateParams.output_format = input.output_format;
-      }
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-      if (input.moderation) {
-        generateParams.moderation = input.moderation;
-      }
+      const { generateParams, size } = this.buildGenerateParams(input);
 
       const openaiResponse = await this.client.images.generate(generateParams);
 
@@ -162,18 +200,28 @@ export class OpenAIService {
         customResponse.file_path = fileResult.local_path;
       }
 
+      // Include warnings if needed
+      const warnings: string[] = [];
+
+      // Resolve dimensions: "auto" leaves dimensions unknown until image-size is added later
+      const [widthRaw, heightRaw] = size.split("x");
+      const width = parseInt(widthRaw ?? "0");
+      const height = parseInt(heightRaw ?? "0");
+      if (size === "auto") {
+        warnings.push(
+          "size=auto: width/height are unknown. Inspect the saved file for actual dimensions.",
+        );
+      }
+
       // Always include metadata
       customResponse.metadata = {
-        width: parseInt(size.split("x")[0] ?? "1024"),
-        height: parseInt(size.split("x")[1] ?? "1024"),
+        width: Number.isFinite(width) ? width : 0,
+        height: Number.isFinite(height) ? height : 0,
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         format: fileResult?.format ?? input.output_format ?? "png",
         size_bytes: fileResult?.size_bytes ?? 0,
         created_at: fileResult?.saved_at ?? new Date().toISOString(),
       };
-
-      // Include warnings if needed
-      const warnings: string[] = [];
 
       // Handle base64 inclusion based on include_base64 parameter
       if (input.include_base64) {
