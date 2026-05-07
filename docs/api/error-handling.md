@@ -1,10 +1,10 @@
 # Error Handling
 
-Comprehensive error handling strategies and best practices for GPT Image 1 MCP, including error codes, retry logic, and recovery mechanisms.
+Comprehensive error handling strategies and best practices for gpt-image MCP, including error codes, retry logic, and recovery mechanisms.
 
 ## Overview
 
-GPT Image 1 MCP provides robust error handling with detailed error information, automatic recovery mechanisms, and comprehensive logging. This guide covers:
+gpt-image MCP provides robust error handling with detailed error information, automatic recovery mechanisms, and comprehensive logging. This guide covers:
 
 - **Error Types**: Understanding different error categories
 - **Error Codes**: Complete reference of error codes and meanings
@@ -722,7 +722,7 @@ ERROR_LOG_LEVEL=error
 ```json
 {
   "mcpServers": {
-    "@napolab/gpt-image-1-mcp": {
+    "@napolab/gpt-image-mcp": {
       "env": {
         "ERROR_RETRY_ATTEMPTS": "3",
         "ERROR_RETRY_DELAY": "1000",

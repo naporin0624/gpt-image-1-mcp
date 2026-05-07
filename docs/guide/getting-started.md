@@ -1,6 +1,6 @@
 # Getting Started
 
-Add AI image generation and editing capabilities to your projects using the OpenAI gpt-image-1 MCP server.
+Add AI image generation and editing capabilities to your projects using the OpenAI gpt-image MCP server (supports gpt-image-1 and gpt-image-2).
 
 ## Overview
 
@@ -16,11 +16,11 @@ This MCP server provides the following capabilities:
 ### Recommended: Using Claude MCP Command
 
 ```bash
-$ claude mcp add gpt-image-1 -s user \
+$ claude mcp add gpt-image -s user \
     -e OPENAI_API_KEY=your-api-key-here \
     -e DEFAULT_IMAGE_SIZE=square \
     -e DEFAULT_IMAGE_QUALITY=hd \
-    -- npx @napolab/gpt-image-1-mcp
+    -- npx @napolab/gpt-image-mcp
 ```
 
 ### Manual Configuration
@@ -30,9 +30,9 @@ Add the following to your MCP client configuration:
 ```json
 {
   "mcpServers": {
-    "@napolab/gpt-image-1-mcp": {
+    "@napolab/gpt-image-mcp": {
       "command": "npx",
-      "args": ["@napolab/gpt-image-1-mcp"],
+      "args": ["@napolab/gpt-image-mcp"],
       "env": {
         "OPENAI_API_KEY": "sk-your-api-key-here",
         "DEFAULT_IMAGE_SIZE": "square",

@@ -31,6 +31,7 @@ describe("zodToJsonSchema for GenerateImageInputSchema", () => {
     const literals = branches.map((b) => {
       const props = b.properties as Record<string, Record<string, unknown>>;
       const modelField = props.model;
+
       return modelField?.const;
     });
     expect(literals).toEqual(

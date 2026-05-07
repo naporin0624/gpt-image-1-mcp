@@ -1,11 +1,11 @@
-# gpt-image-1 MCP
+# gpt-image MCP
 
-[![npm version](https://badge.fury.io/js/@napolab/gpt-image-1-mcp.svg)](https://badge.fury.io/js/@napolab/gpt-image-1-mcp)
+[![npm version](https://badge.fury.io/js/@napolab/gpt-image-mcp.svg)](https://badge.fury.io/js/@napolab/gpt-image-mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![OpenAI](https://img.shields.io/badge/OpenAI-gpt--image--1-blue.svg)](https://openai.com/)
-[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://naporin0624.github.io/gpt-image-1-mcp/)
+[![OpenAI](https://img.shields.io/badge/OpenAI-gpt--image-blue.svg)](https://openai.com/)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://naporin0624.github.io/gpt-image-mcp/)
 
-MCP server for AI-powered image generation using OpenAI's gpt-image-1 model with advanced text rendering and native transparency support.
+MCP server for AI-powered image generation using OpenAI's gpt-image-1 and gpt-image-2 models with advanced text rendering and native transparency support.
 
 ## Features
 
@@ -23,9 +23,9 @@ MCP server for AI-powered image generation using OpenAI's gpt-image-1 model with
 ```json
 {
   "mcpServers": {
-    "gpt-image-1-mcp": {
+    "gpt-image-mcp": {
       "command": "npx",
-      "args": ["@napolab/gpt-image-1-mcp"],
+      "args": ["@napolab/gpt-image-mcp"],
       "env": {
         "OPENAI_API_KEY": "sk-your-api-key"
       }
@@ -37,7 +37,7 @@ MCP server for AI-powered image generation using OpenAI's gpt-image-1 model with
 ### Alternative: Local Installation
 
 ```bash
-npm install -g @napolab/gpt-image-1-mcp
+npm install -g @napolab/gpt-image-mcp
 ```
 
 ### Claude Desktop Configuration
@@ -47,9 +47,9 @@ Configure in `~/Library/Application Support/Claude/claude_desktop_config.json` (
 ```json
 {
   "mcpServers": {
-    "gpt-image-1-mcp": {
+    "gpt-image-mcp": {
       "command": "npx",
-      "args": ["@napolab/gpt-image-1-mcp"],
+      "args": ["@napolab/gpt-image-mcp"],
       "env": {
         "OPENAI_API_KEY": "sk-your-api-key"
       }
@@ -273,7 +273,7 @@ MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Support
 
-- [Documentation](https://naporin0624.github.io/gpt-image-1-mcp/) - Full documentation and examples
-- [GitHub Issues](https://github.com/naporin0624/gen-image-mcp/issues)
+- [Documentation](https://naporin0624.github.io/gpt-image-mcp/) - Full documentation and examples
+- [GitHub Issues](https://github.com/naporin0624/gpt-image-mcp/issues)
 - [OpenAI API Documentation](https://platform.openai.com/docs)
 - [MCP Protocol Documentation](https://modelcontextprotocol.io/docs)

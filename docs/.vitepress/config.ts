@@ -1,14 +1,14 @@
 import { defineConfig } from "vitepress";
 
 export default defineConfig({
-  title: "gpt-image-1 MCP",
+  title: "gpt-image MCP",
   description:
-    "AI-powered image generation MCP server documentation using gpt-image-1",
-  base: "/gpt-image-1-mcp/",
-  head: [["link", { rel: "icon", href: "/gpt-image-1-mcp/images/logo.png" }]],
+    "AI-powered image generation MCP server documentation using gpt-image-1 and gpt-image-2",
+  base: "/gpt-image-mcp/",
+  head: [["link", { rel: "icon", href: "/gpt-image-mcp/images/logo.png" }]],
 
   themeConfig: {
-    logo: "/gpt-image-1-mcp/images/logo.png",
+    logo: "/gpt-image-mcp/images/logo.png",
 
     nav: [
       { text: "Home", link: "/" },
@@ -23,7 +23,7 @@ export default defineConfig({
           text: "Introduction",
           items: [
             {
-              text: "What is gpt-image-1 MCP?",
+              text: "What is gpt-image MCP?",
               link: "/guide/what-is-mcp",
             },
             { text: "Getting Started", link: "/guide/getting-started" },
@@ -79,7 +79,7 @@ export default defineConfig({
     socialLinks: [
       {
         icon: "github",
-        link: "https://github.com/naporin0624/gpt-image-1-mcp",
+        link: "https://github.com/naporin0624/gpt-image-mcp",
       },
     ],
 

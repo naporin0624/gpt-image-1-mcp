@@ -21,6 +21,7 @@ export const withOptionalModel = (
     if (!Array.isArray(required)) {
       return branch;
     }
+
     return {
       ...branch,
       required: required.filter((field) => field !== "model"),
@@ -28,5 +29,6 @@ export const withOptionalModel = (
   });
 
   const key = schema.anyOf !== undefined ? "anyOf" : "oneOf";
+
   return { ...schema, [key]: fixedBranches };
 };

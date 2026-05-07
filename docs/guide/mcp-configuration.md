@@ -1,10 +1,10 @@
 # MCP Configuration
 
-Configure gpt-image-1 MCP with various MCP-compatible clients including Claude Desktop, Cline, and other Model Context Protocol implementations.
+Configure gpt-image MCP with various MCP-compatible clients including Claude Desktop, Cline, and other Model Context Protocol implementations.
 
 ## Overview
 
-The Model Context Protocol (MCP) enables gpt-image-1 to integrate with various AI clients and applications. This guide covers:
+The Model Context Protocol (MCP) enables gpt-image-1 / gpt-image-2 to integrate with various AI clients and applications. This guide covers:
 
 - **Client Configuration**: Setting up different MCP clients
 - **Server Configuration**: Configuring the MCP server
@@ -20,9 +20,9 @@ Add the server to your MCP client configuration:
 ```json
 {
   "mcpServers": {
-    "@napolab/gpt-image-1-mcp": {
+    "@napolab/gpt-image-mcp": {
       "command": "node",
-      "args": ["/absolute/path/to/@napolab/gpt-image-1-mcp-mcp/dist/index.js"],
+      "args": ["/absolute/path/to/@napolab/gpt-image-mcp-mcp/dist/index.js"],
       "env": {
         "OPENAI_API_KEY": "sk-your-api-key-here"
       }
@@ -40,9 +40,9 @@ Configure in `~/Library/Application Support/Claude/claude_desktop_config.json` (
 ```json
 {
   "mcpServers": {
-    "@napolab/gpt-image-1-mcp": {
+    "@napolab/gpt-image-mcp": {
       "command": "node",
-      "args": ["/path/to/@napolab/gpt-image-1-mcp-mcp/dist/index.js"],
+      "args": ["/path/to/@napolab/gpt-image-mcp-mcp/dist/index.js"],
       "env": {
         "OPENAI_API_KEY": "sk-your-openai-api-key"
       }
@@ -58,9 +58,9 @@ Configure in VS Code settings or `.vscode/settings.json`:
 ```json
 {
   "cline.mcpServers": {
-    "@napolab/gpt-image-1-mcp": {
+    "@napolab/gpt-image-mcp": {
       "command": "node",
-      "args": ["/path/to/@napolab/gpt-image-1-mcp-mcp/dist/index.js"],
+      "args": ["/path/to/@napolab/gpt-image-mcp-mcp/dist/index.js"],
       "env": {
         "OPENAI_API_KEY": "sk-your-openai-api-key"
       }
@@ -77,13 +77,13 @@ For custom implementations, use the standard MCP protocol:
 import { MCPClient } from "@modelcontextprotocol/sdk";
 
 const client = new MCPClient({
-  name: "@napolab/gpt-image-1-mcp",
+  name: "@napolab/gpt-image-mcp",
   version: "1.0.0",
 });
 
 await client.connect({
   command: "node",
-  args: ["/path/to/@napolab/gpt-image-1-mcp-mcp/dist/index.js"],
+  args: ["/path/to/@napolab/gpt-image-mcp-mcp/dist/index.js"],
   env: {
     OPENAI_API_KEY: "sk-your-openai-api-key",
   },
@@ -99,7 +99,7 @@ await client.connect({
 ```json
 {
   "mcpServers": {
-    "@napolab/gpt-image-1-mcp": {
+    "@napolab/gpt-image-mcp": {
       "command": "node",
       "args": ["/absolute/path/to/dist/index.js"],
       "cwd": "/path/to/project/root"
@@ -113,10 +113,10 @@ await client.connect({
 ```json
 {
   "mcpServers": {
-    "@napolab/gpt-image-1-mcp": {
+    "@napolab/gpt-image-mcp": {
       "command": "npm",
       "args": ["run", "dev"],
-      "cwd": "/path/to/@napolab/gpt-image-1-mcp-mcp"
+      "cwd": "/path/to/@napolab/gpt-image-mcp-mcp"
     }
   }
 }
@@ -129,7 +129,7 @@ await client.connect({
 ```json
 {
   "mcpServers": {
-    "@napolab/gpt-image-1-mcp": {
+    "@napolab/gpt-image-mcp": {
       "command": "node",
       "args": ["/path/to/dist/index.js"],
       "env": {
@@ -145,7 +145,7 @@ await client.connect({
 ```json
 {
   "mcpServers": {
-    "@napolab/gpt-image-1-mcp": {
+    "@napolab/gpt-image-mcp": {
       "command": "node",
       "args": ["/path/to/dist/index.js"],
       "env": {
@@ -169,7 +169,7 @@ await client.connect({
 ```json
 {
   "mcpServers": {
-    "@napolab/gpt-image-1-mcp": {
+    "@napolab/gpt-image-mcp": {
       "command": "node",
       "args": ["--max-old-space-size=4096", "/path/to/dist/index.js"],
       "env": {
@@ -188,7 +188,7 @@ await client.connect({
 ```json
 {
   "mcpServers": {
-    "@napolab/gpt-image-1-mcp": {
+    "@napolab/gpt-image-mcp": {
       "command": "node",
       "args": ["--inspect=9229", "/path/to/dist/index.js"],
       "env": {
@@ -210,7 +210,7 @@ Run multiple instances with different settings:
 ```json
 {
   "mcpServers": {
-    "@napolab/gpt-image-1-mcp-hd": {
+    "@napolab/gpt-image-mcp-hd": {
       "command": "node",
       "args": ["/path/to/dist/index.js"],
       "env": {
@@ -219,7 +219,7 @@ Run multiple instances with different settings:
         "DEFAULT_OUTPUT_DIRECTORY": "/path/to/hd-images"
       }
     },
-    "@napolab/gpt-image-1-mcp-standard": {
+    "@napolab/gpt-image-mcp-standard": {
       "command": "node",
       "args": ["/path/to/dist/index.js"],
       "env": {
@@ -237,7 +237,7 @@ Run multiple instances with different settings:
 ```json
 {
   "mcpServers": {
-    "@napolab/gpt-image-1-mcp-dev": {
+    "@napolab/gpt-image-mcp-dev": {
       "command": "node",
       "args": ["/path/to/dist/index.js"],
       "env": {
@@ -246,7 +246,7 @@ Run multiple instances with different settings:
         "RATE_LIMIT_REQUESTS_PER_MINUTE": "10"
       }
     },
-    "@napolab/gpt-image-1-mcp-prod": {
+    "@napolab/gpt-image-mcp-prod": {
       "command": "node",
       "args": ["/path/to/dist/index.js"],
       "env": {
@@ -268,7 +268,7 @@ Run multiple instances with different settings:
 ```json
 {
   "mcpServers": {
-    "@napolab/gpt-image-1-mcp": {
+    "@napolab/gpt-image-mcp": {
       "command": "node",
       "args": ["/path/to/dist/index.js"],
       "env": {
@@ -299,7 +299,7 @@ chmod 600 ~/.config/mcp/config.json
 ```json
 {
   "mcpServers": {
-    "@napolab/gpt-image-1-mcp": {
+    "@napolab/gpt-image-mcp": {
       "command": "node",
       "args": ["/path/to/dist/index.js"],
       "env": {
@@ -334,7 +334,7 @@ services:
 ```json
 {
   "mcpServers": {
-    "@napolab/gpt-image-1-mcp": {
+    "@napolab/gpt-image-mcp": {
       "command": "docker",
       "args": [
         "run",
@@ -343,7 +343,7 @@ services:
         "OPENAI_API_KEY=sk-your-api-key",
         "-v",
         "/host/images:/app/images",
-        "@napolab/gpt-image-1-mcp-mcp"
+        "@napolab/gpt-image-mcp-mcp"
       ]
     }
   }
@@ -361,7 +361,7 @@ Test your configuration:
 node dist/index.js
 
 # Test with MCP client
-mcp-client test @napolab/gpt-image-1-mcp
+mcp-client test @napolab/gpt-image-mcp
 ```
 
 ### Health Check
@@ -438,7 +438,7 @@ chmod +x /path/to/dist/index.js
 ```json
 {
   "mcpServers": {
-    "@napolab/gpt-image-1-mcp": {
+    "@napolab/gpt-image-mcp": {
       "command": "node",
       "args": ["/path/to/dist/index.js"],
       "env": {
@@ -477,7 +477,7 @@ try {
 ```json
 {
   "mcpServers": {
-    "@napolab/gpt-image-1-mcp": {
+    "@napolab/gpt-image-mcp": {
       "command": "node",
       "args": [
         "--max-old-space-size=4096",
@@ -499,7 +499,7 @@ try {
 ```json
 {
   "mcpServers": {
-    "@napolab/gpt-image-1-mcp": {
+    "@napolab/gpt-image-mcp": {
       "command": "node",
       "args": ["/path/to/dist/index.js"],
       "env": {
@@ -522,7 +522,7 @@ try {
 ~/Library/Application Support/Claude/claude_desktop_config.json
 
 # Example path
-/Users/username/projects/@napolab/gpt-image-1-mcp-mcp/dist/index.js
+/Users/username/projects/@napolab/gpt-image-mcp-mcp/dist/index.js
 ```
 
 ### Windows
@@ -532,7 +532,7 @@ try {
 %APPDATA%\Claude\claude_desktop_config.json
 
 # Example path (use forward slashes)
-C:/Users/username/projects/@napolab/gpt-image-1-mcp-mcp/dist/index.js
+C:/Users/username/projects/@napolab/gpt-image-mcp-mcp/dist/index.js
 ```
 
 ### Linux
@@ -542,7 +542,7 @@ C:/Users/username/projects/@napolab/gpt-image-1-mcp-mcp/dist/index.js
 ~/.config/claude/claude_desktop_config.json
 
 # Example path
-/home/username/projects/@napolab/gpt-image-1-mcp-mcp/dist/index.js
+/home/username/projects/@napolab/gpt-image-mcp-mcp/dist/index.js
 ```
 
 ## Next Steps

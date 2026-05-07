@@ -4,7 +4,6 @@ import {
   ListToolsRequestSchema,
   CallToolRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import type { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
 import { EditImageInputSchema, BatchEditInputSchema } from "./types/edit";
@@ -17,6 +16,8 @@ import { normalizeImageInput } from "./utils/image-input";
 import { withOptionalModel } from "./utils/json-schema";
 import { OpenAIService } from "./utils/openai";
 import { validateText, formatValidationError } from "./utils/validation";
+
+import type { z } from "zod";
 
 type ToolInputSchema = {
   type: "object";
@@ -70,7 +71,7 @@ function hasSourceImage(obj: unknown): obj is { source_image: string } {
 const openaiService = new OpenAIService();
 export const server = new Server(
   {
-    name: "gpt-image-1-mcp",
+    name: "gpt-image-mcp",
     version: process.env.PACKAGE_VERSION,
   },
   {
@@ -85,7 +86,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "generate-image",
         description:
-          "Generate images using gpt-image-1 or gpt-image-2. Omit `model` to use gpt-image-2 (default). gpt-image-2 unlocks 2K presets (square_2k / landscape_2k / portrait_2k) and aspect_ratio: \"auto\".",
+          'Generate images using gpt-image-1 or gpt-image-2. Omit `model` to use gpt-image-2 (default). gpt-image-2 unlocks 2K presets (square_2k / landscape_2k / portrait_2k) and aspect_ratio: "auto".',
         inputSchema: generateImageInputSchema,
       },
       {

@@ -1,8 +1,8 @@
 {
   "mcpServers": {
-    "gpt-image-1-mcp": {
+    "gpt-image-mcp": {
       "command": "npx",
-      "args": ["gpt-image-1-mcp"],
+      "args": ["gpt-image-mcp"],
       "env": {
         "OPENAI_API_KEY": "sk-your-api-key-here",
         "DEFAULT_IMAGE_QUALITY": "hd",

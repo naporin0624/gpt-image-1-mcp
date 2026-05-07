@@ -1,7 +1,7 @@
 {
-  "name": "@napolab/gpt-image-1-mcp",
-  "version": "1.1.0",
-  "description": "OpenAI gpt-image-1 MCP server with advanced image generation and editing capabilities",
+  "name": "@napolab/gpt-image-mcp",
+  "version": "2.0.0",
+  "description": "OpenAI gpt-image (gpt-image-1 / gpt-image-2) MCP server with advanced image generation and editing capabilities",
   "type": "module",
   "scripts": {
     "build": "tsup",
@@ -24,13 +24,14 @@
     "mcp",
     "image-generation",
     "gpt-image-1",
+    "gpt-image-2",
     "openai",
     "vision",
     "image-editing",
     "transparency"
   ],
   "bin": {
-    "gpt-image-1-mcp": "./dist/index.js"
+    "gpt-image-mcp": "./dist/index.js"
   },
   "publishConfig": {
     "access": "public"

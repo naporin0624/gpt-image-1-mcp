@@ -85,6 +85,7 @@ export class OpenAIService {
     if (input.model === "gpt-image-1") {
       return this.buildGenerateParamsGpt1(input);
     }
+
     return this.buildGenerateParamsGpt2(input);
   }
 
@@ -94,7 +95,6 @@ export class OpenAIService {
   } {
     const size = aspectRatioToSize(input.aspect_ratio);
     const normalizedQuality =
-      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
       input.quality !== undefined ? mapLegacyQuality(input.quality) : undefined;
 
     const generateParams: OpenAI.ImageGenerateParams = {
@@ -106,6 +106,7 @@ export class OpenAIService {
       ...(input.output_format && { output_format: input.output_format }),
       ...(input.moderation && { moderation: input.moderation }),
     };
+
     return { generateParams, size };
   }
 
@@ -126,6 +127,7 @@ export class OpenAIService {
       ...(input.output_format && { output_format: input.output_format }),
       ...(input.moderation && { moderation: input.moderation }),
     } as unknown as OpenAI.ImageGenerateParams;
+
     return { generateParams, size };
   }
 
@@ -284,6 +286,7 @@ export class OpenAIService {
         sources.map(async (src, i) => {
           const normalized = normalizeImageInput(src);
           const buffer = await loadImageAsBuffer(normalized);
+
           return new File([new Uint8Array(buffer)], `source_${i}.png`, {
             type: "image/png",
           });
@@ -293,8 +296,7 @@ export class OpenAIService {
       // Always use 1024x1024 for consistency
       const size = "1024x1024";
 
-      const imageParam =
-        imageFiles.length === 1 ? imageFiles[0]! : imageFiles;
+      const imageParam = imageFiles.length === 1 ? imageFiles[0]! : imageFiles;
 
       const baseParams = {
         image: imageParam,
