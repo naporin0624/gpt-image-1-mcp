@@ -5,6 +5,13 @@ All notable changes to gpt-image MCP will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2026-05-07
+
+### Fixed
+
+- **MCP `tools/list` failure**: top-level `inputSchema.type` was missing for `generate-image` and `edit-image` because `zodToJsonSchema` emits a bare `{ anyOf: [...] }` for a `z.discriminatedUnion` root. MCP clients require `inputSchema.type === "object"` and rejected the tool list with a JSON Schema validation error. `withOptionalModel` now injects `type: "object"` when missing.
+- Add MCP `inputSchema` snapshot tests covering all three tools to catch this kind of regression.
+
 ## [2.0.0] - 2026-05-07
 
 ### Added

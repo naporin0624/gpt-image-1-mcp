@@ -1,0 +1,807 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`MCP inputSchema snapshots (regression guard for tool registration) > matches snapshot for batch-edit 1`] = `
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "batch_settings": {
+      "additionalProperties": false,
+      "properties": {
+        "error_handling": {
+          "default": "continue_on_error",
+          "enum": [
+            "fail_fast",
+            "continue_on_error",
+            "retry_failed",
+          ],
+          "type": "string",
+        },
+        "max_concurrent": {
+          "default": 3,
+          "maximum": 10,
+          "minimum": 1,
+          "type": "number",
+        },
+        "parallel_processing": {
+          "default": true,
+          "type": "boolean",
+        },
+        "progress_callback": {
+          "default": true,
+          "type": "boolean",
+        },
+      },
+      "type": "object",
+    },
+    "edit_prompt": {
+      "minLength": 1,
+      "type": "string",
+    },
+    "edit_type": {
+      "enum": [
+        "style_transfer",
+        "background_change",
+        "color_adjustment",
+        "enhancement",
+      ],
+      "type": "string",
+    },
+    "filename_prefix": {
+      "default": "batch_",
+      "type": "string",
+    },
+    "image_urls": {
+      "items": {
+        "format": "uri",
+        "type": "string",
+      },
+      "minItems": 1,
+      "type": "array",
+    },
+    "images": {
+      "items": {
+        "anyOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "const": "url",
+                "type": "string",
+              },
+              "value": {
+                "format": "uri",
+                "type": "string",
+              },
+            },
+            "required": [
+              "type",
+              "value",
+            ],
+            "type": "object",
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "const": "base64",
+                "type": "string",
+              },
+              "value": {
+                "minLength": 1,
+                "type": "string",
+              },
+            },
+            "required": [
+              "type",
+              "value",
+            ],
+            "type": "object",
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "const": "local",
+                "type": "string",
+              },
+              "value": {
+                "minLength": 1,
+                "type": "string",
+              },
+            },
+            "required": [
+              "type",
+              "value",
+            ],
+            "type": "object",
+          },
+        ],
+      },
+      "minItems": 1,
+      "type": "array",
+    },
+    "model": {
+      "default": "gpt-image-2",
+      "enum": [
+        "gpt-image-1",
+        "gpt-image-2",
+      ],
+      "type": "string",
+    },
+    "naming_strategy": {
+      "default": "timestamp",
+      "enum": [
+        "timestamp",
+        "prompt",
+        "custom",
+        "hash",
+      ],
+      "type": "string",
+    },
+    "organize_by": {
+      "default": "none",
+      "enum": [
+        "none",
+        "date",
+        "aspect_ratio",
+        "quality",
+      ],
+      "type": "string",
+    },
+    "output_directory": {
+      "type": "string",
+    },
+    "save_to_file": {
+      "default": true,
+      "type": "boolean",
+    },
+  },
+  "required": [
+    "images",
+    "edit_prompt",
+    "edit_type",
+  ],
+  "type": "object",
+}
+`;
+
+exports[`MCP inputSchema snapshots (regression guard for tool registration) > matches snapshot for edit-image 1`] = `
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "anyOf": [
+    {
+      "additionalProperties": false,
+      "properties": {
+        "background": {
+          "default": "auto",
+          "enum": [
+            "transparent",
+            "opaque",
+            "auto",
+          ],
+          "type": "string",
+        },
+        "edit_prompt": {
+          "minLength": 1,
+          "type": "string",
+        },
+        "edit_type": {
+          "enum": [
+            "inpaint",
+            "outpaint",
+            "variation",
+            "style_transfer",
+            "object_removal",
+            "background_change",
+          ],
+          "type": "string",
+        },
+        "filename_prefix": {
+          "default": "edited_",
+          "type": "string",
+        },
+        "mask_area": {
+          "type": "string",
+        },
+        "model": {
+          "const": "gpt-image-1",
+          "description": "Model to use. Omit to default to gpt-image-2.",
+          "type": "string",
+        },
+        "naming_strategy": {
+          "default": "timestamp",
+          "enum": [
+            "timestamp",
+            "prompt",
+            "custom",
+            "hash",
+          ],
+          "type": "string",
+        },
+        "organize_by": {
+          "default": "none",
+          "enum": [
+            "none",
+            "date",
+            "aspect_ratio",
+            "quality",
+          ],
+          "type": "string",
+        },
+        "output_directory": {
+          "type": "string",
+        },
+        "output_format": {
+          "default": "png",
+          "enum": [
+            "png",
+            "jpeg",
+            "webp",
+          ],
+          "type": "string",
+        },
+        "preserve_composition": {
+          "default": true,
+          "type": "boolean",
+        },
+        "quality": {
+          "default": "auto",
+          "enum": [
+            "auto",
+            "high",
+            "medium",
+            "low",
+          ],
+          "type": "string",
+        },
+        "save_to_file": {
+          "default": true,
+          "type": "boolean",
+        },
+        "source_image": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "type": {
+                  "const": "url",
+                  "type": "string",
+                },
+                "value": {
+                  "format": "uri",
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "value",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "type": {
+                  "const": "base64",
+                  "type": "string",
+                },
+                "value": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "value",
+              ],
+              "type": "object",
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "type": {
+                  "const": "local",
+                  "type": "string",
+                },
+                "value": {
+                  "minLength": 1,
+                  "type": "string",
+                },
+              },
+              "required": [
+                "type",
+                "value",
+              ],
+              "type": "object",
+            },
+          ],
+        },
+        "strength": {
+          "default": 0.8,
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number",
+        },
+      },
+      "required": [
+        "edit_prompt",
+        "edit_type",
+        "source_image",
+      ],
+      "type": "object",
+    },
+    {
+      "additionalProperties": false,
+      "properties": {
+        "background": {
+          "default": "auto",
+          "enum": [
+            "transparent",
+            "opaque",
+            "auto",
+          ],
+          "type": "string",
+        },
+        "edit_prompt": {
+          "minLength": 1,
+          "type": "string",
+        },
+        "edit_type": {
+          "enum": [
+            "inpaint",
+            "outpaint",
+            "variation",
+            "style_transfer",
+            "object_removal",
+            "background_change",
+          ],
+          "type": "string",
+        },
+        "filename_prefix": {
+          "default": "edited_",
+          "type": "string",
+        },
+        "mask_area": {
+          "type": "string",
+        },
+        "model": {
+          "const": "gpt-image-2",
+          "description": "Model to use. Omit to default to gpt-image-2.",
+          "type": "string",
+        },
+        "naming_strategy": {
+          "default": "timestamp",
+          "enum": [
+            "timestamp",
+            "prompt",
+            "custom",
+            "hash",
+          ],
+          "type": "string",
+        },
+        "organize_by": {
+          "default": "none",
+          "enum": [
+            "none",
+            "date",
+            "aspect_ratio",
+            "quality",
+          ],
+          "type": "string",
+        },
+        "output_directory": {
+          "type": "string",
+        },
+        "output_format": {
+          "default": "png",
+          "enum": [
+            "png",
+            "jpeg",
+            "webp",
+          ],
+          "type": "string",
+        },
+        "preserve_composition": {
+          "default": true,
+          "type": "boolean",
+        },
+        "quality": {
+          "default": "auto",
+          "enum": [
+            "auto",
+            "high",
+            "medium",
+            "low",
+          ],
+          "type": "string",
+        },
+        "save_to_file": {
+          "default": true,
+          "type": "boolean",
+        },
+        "source_image": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "type": {
+                      "const": "url",
+                      "type": "string",
+                    },
+                    "value": {
+                      "format": "uri",
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "type",
+                    "value",
+                  ],
+                  "type": "object",
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "type": {
+                      "const": "base64",
+                      "type": "string",
+                    },
+                    "value": {
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "type",
+                    "value",
+                  ],
+                  "type": "object",
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "type": {
+                      "const": "local",
+                      "type": "string",
+                    },
+                    "value": {
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "type",
+                    "value",
+                  ],
+                  "type": "object",
+                },
+              ],
+            },
+            {
+              "items": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "type": {
+                        "const": "url",
+                        "type": "string",
+                      },
+                      "value": {
+                        "format": "uri",
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "type",
+                      "value",
+                    ],
+                    "type": "object",
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "type": {
+                        "const": "base64",
+                        "type": "string",
+                      },
+                      "value": {
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "type",
+                      "value",
+                    ],
+                    "type": "object",
+                  },
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "type": {
+                        "const": "local",
+                        "type": "string",
+                      },
+                      "value": {
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "type",
+                      "value",
+                    ],
+                    "type": "object",
+                  },
+                ],
+              },
+              "maxItems": 10,
+              "minItems": 1,
+              "type": "array",
+            },
+          ],
+        },
+        "strength": {
+          "default": 0.8,
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number",
+        },
+      },
+      "required": [
+        "edit_prompt",
+        "edit_type",
+        "source_image",
+      ],
+      "type": "object",
+    },
+  ],
+  "type": "object",
+}
+`;
+
+exports[`MCP inputSchema snapshots (regression guard for tool registration) > matches snapshot for generate-image 1`] = `
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "anyOf": [
+    {
+      "additionalProperties": false,
+      "properties": {
+        "analyze_after_generation": {
+          "default": false,
+          "type": "boolean",
+        },
+        "aspect_ratio": {
+          "default": "square",
+          "enum": [
+            "square",
+            "landscape",
+            "portrait",
+            "1:1",
+            "16:9",
+            "9:16",
+          ],
+          "type": "string",
+        },
+        "background": {
+          "default": "auto",
+          "enum": [
+            "transparent",
+            "opaque",
+            "auto",
+          ],
+          "type": "string",
+        },
+        "filename": {
+          "type": "string",
+        },
+        "include_base64": {
+          "default": false,
+          "type": "boolean",
+        },
+        "model": {
+          "const": "gpt-image-1",
+          "description": "Model to use. Omit to default to gpt-image-2.",
+          "type": "string",
+        },
+        "moderation": {
+          "default": "auto",
+          "enum": [
+            "auto",
+            "low",
+          ],
+          "type": "string",
+        },
+        "naming_strategy": {
+          "default": "timestamp",
+          "enum": [
+            "timestamp",
+            "prompt",
+            "custom",
+            "hash",
+          ],
+          "type": "string",
+        },
+        "organize_by": {
+          "default": "none",
+          "enum": [
+            "none",
+            "date",
+            "aspect_ratio",
+            "quality",
+          ],
+          "type": "string",
+        },
+        "output_directory": {
+          "type": "string",
+        },
+        "output_format": {
+          "default": "png",
+          "enum": [
+            "png",
+            "jpeg",
+            "webp",
+          ],
+          "type": "string",
+        },
+        "prompt": {
+          "minLength": 1,
+          "type": "string",
+        },
+        "quality": {
+          "enum": [
+            "standard",
+            "hd",
+            "high",
+            "medium",
+            "low",
+          ],
+          "type": "string",
+        },
+        "remove_background": {
+          "default": false,
+          "type": "boolean",
+        },
+        "save_to_file": {
+          "default": true,
+          "type": "boolean",
+        },
+        "style": {
+          "enum": [
+            "vivid",
+            "natural",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [
+        "prompt",
+      ],
+      "type": "object",
+    },
+    {
+      "additionalProperties": false,
+      "properties": {
+        "analyze_after_generation": {
+          "default": false,
+          "type": "boolean",
+        },
+        "aspect_ratio": {
+          "default": "square",
+          "enum": [
+            "square",
+            "landscape",
+            "portrait",
+            "1:1",
+            "16:9",
+            "9:16",
+            "square_2k",
+            "landscape_2k",
+            "portrait_2k",
+            "auto",
+          ],
+          "type": "string",
+        },
+        "background": {
+          "default": "auto",
+          "enum": [
+            "transparent",
+            "opaque",
+            "auto",
+          ],
+          "type": "string",
+        },
+        "filename": {
+          "type": "string",
+        },
+        "include_base64": {
+          "default": false,
+          "type": "boolean",
+        },
+        "model": {
+          "const": "gpt-image-2",
+          "description": "Model to use. Omit to default to gpt-image-2.",
+          "type": "string",
+        },
+        "moderation": {
+          "default": "auto",
+          "enum": [
+            "auto",
+            "low",
+          ],
+          "type": "string",
+        },
+        "naming_strategy": {
+          "default": "timestamp",
+          "enum": [
+            "timestamp",
+            "prompt",
+            "custom",
+            "hash",
+          ],
+          "type": "string",
+        },
+        "organize_by": {
+          "default": "none",
+          "enum": [
+            "none",
+            "date",
+            "aspect_ratio",
+            "quality",
+          ],
+          "type": "string",
+        },
+        "output_directory": {
+          "type": "string",
+        },
+        "output_format": {
+          "default": "png",
+          "enum": [
+            "png",
+            "jpeg",
+            "webp",
+          ],
+          "type": "string",
+        },
+        "prompt": {
+          "minLength": 1,
+          "type": "string",
+        },
+        "quality": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "auto",
+          ],
+          "type": "string",
+        },
+        "remove_background": {
+          "default": false,
+          "type": "boolean",
+        },
+        "save_to_file": {
+          "default": true,
+          "type": "boolean",
+        },
+        "style": {
+          "enum": [
+            "vivid",
+            "natural",
+          ],
+          "type": "string",
+        },
+      },
+      "required": [
+        "prompt",
+      ],
+      "type": "object",
+    },
+  ],
+  "type": "object",
+}
+`;
