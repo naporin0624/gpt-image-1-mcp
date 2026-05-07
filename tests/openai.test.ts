@@ -211,6 +211,34 @@ describe("OpenAI Integration", () => {
         );
       });
 
+      it("does not crash on OpenAI errors with { error: undefined } shape", async () => {
+        // Repro for: "Cannot read properties of undefined (reading 'type')"
+        // Some OpenAI SDK error paths surface the shape `{ error: undefined, ... }`
+        // instead of `{ error: null }` or `{ error: { type, message } }`.
+        // The handler must not crash on this; it should surface a generic API error.
+        const sdkError = Object.assign(new Error("Network timeout"), {
+          error: undefined,
+        });
+        mockGenerate.mockRejectedValueOnce(sdkError);
+
+        await expect(
+          openAIService.generateImage({
+            model: "gpt-image-2",
+            prompt: "x",
+            aspect_ratio: "square",
+            background: "auto",
+            output_format: "png",
+            moderation: "auto",
+            save_to_file: true,
+            naming_strategy: "timestamp",
+            organize_by: "none",
+            analyze_after_generation: false,
+            remove_background: false,
+            include_base64: false,
+          }),
+        ).rejects.toThrow(/Network timeout|OpenAI API error/);
+      });
+
       it("passes through quality 'auto' unchanged for gpt-image-2", async () => {
         await openAIService.generateImage({
           model: "gpt-image-2",

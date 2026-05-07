@@ -664,38 +664,41 @@ export class OpenAIService {
 
   private handleOpenAIError(error: unknown): Error {
     if (error != null && typeof error === "object" && "error" in error) {
-      const openaiError = error as {
-        error: { type: string; message: string } | null;
-      };
+      const errorDetails = (error as { error?: unknown }).error;
 
-      if (openaiError.error === null) {
-        return new Error("OpenAI API error: Unknown error");
-      }
+      // Some OpenAI SDK error paths surface { error: undefined } (not null).
+      // Fall through to the generic Error branch instead of crashing on
+      // `errorDetails.type` for undefined.
+      if (
+        errorDetails != null &&
+        typeof errorDetails === "object" &&
+        "type" in errorDetails
+      ) {
+        const typed = errorDetails as { type: string; message?: string };
 
-      const errorDetails = openaiError.error;
+        if (typed.type === "insufficient_quota") {
+          return new Error(
+            "OpenAI API quota exceeded. Please check your billing.",
+          );
+        }
 
-      if (errorDetails.type === "insufficient_quota") {
-        return new Error(
-          "OpenAI API quota exceeded. Please check your billing.",
-        );
-      }
+        if (typed.type === "rate_limit_exceeded") {
+          return new Error(
+            "OpenAI API rate limit exceeded. Please try again later.",
+          );
+        }
 
-      if (errorDetails.type === "rate_limit_exceeded") {
-        return new Error(
-          "OpenAI API rate limit exceeded. Please try again later.",
-        );
-      }
+        if (typed.type === "invalid_request_error") {
+          return new Error(
+            `Invalid request: ${typed.message ?? "Unknown error"}`,
+          );
+        }
 
-      if (errorDetails.type === "invalid_request_error") {
-        return new Error(
-          `Invalid request: ${errorDetails.message || "Unknown error"}`,
-        );
-      }
-
-      if (errorDetails.type === "authentication_error") {
-        return new Error(
-          "OpenAI API authentication failed. Please check your API key.",
-        );
+        if (typed.type === "authentication_error") {
+          return new Error(
+            "OpenAI API authentication failed. Please check your API key.",
+          );
+        }
       }
     }
 

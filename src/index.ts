@@ -137,7 +137,7 @@ Prompt: "${input.prompt}"
 Size: ${result.metadata.width}x${result.metadata.height}
 Aspect ratio: ${input.aspect_ratio}
 Quality: ${input.quality || "medium"}
-Model: gpt-image-1
+Model: ${input.model}
 
 ${
   result.file_path != null && result.file_path.length > 0

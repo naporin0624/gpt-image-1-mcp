@@ -1,6 +1,6 @@
 {
   "name": "@napolab/gpt-image-mcp",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "OpenAI gpt-image (gpt-image-1 / gpt-image-2) MCP server with advanced image generation and editing capabilities",
   "type": "module",
   "scripts": {
