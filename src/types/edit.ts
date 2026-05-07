@@ -9,8 +9,31 @@ export const EditTypeSchema = z.enum([
   "background_change",
 ]);
 
-// gpt-image-1 only - DALL-E support removed
-export const EditModelSchema = z.enum(["gpt-image-1"]);
+export const BatchEditTypeSchema = z.enum([
+  "style_transfer",
+  "background_change",
+  "color_adjustment",
+  "enhancement",
+]);
+
+export type BatchEditType = z.infer<typeof BatchEditTypeSchema>;
+
+/**
+ * Maps batch-edit's narrower `edit_type` enum to edit-image's full enum.
+ * `color_adjustment` and `enhancement` map to `variation` because they are
+ * stylistic transformations rather than spatial inpainting/outpainting.
+ */
+export const BATCH_TO_EDIT_TYPE: Record<
+  BatchEditType,
+  z.infer<typeof EditTypeSchema>
+> = {
+  style_transfer: "style_transfer",
+  background_change: "background_change",
+  color_adjustment: "variation",
+  enhancement: "variation",
+};
+
+export const EditModelSchema = z.enum(["gpt-image-1", "gpt-image-2"]);
 
 export const EditStrengthSchema = z.number().min(0.0).max(1.0);
 
@@ -30,11 +53,9 @@ export const ImageInputSchema = z.discriminatedUnion("type", [
   }),
 ]);
 
-export const EditImageInputSchema = z.object({
-  source_image: ImageInputSchema,
+const EditImageBaseSchema = z.object({
   edit_prompt: z.string().min(1, "Edit prompt is required"),
   edit_type: EditTypeSchema,
-  model: EditModelSchema.optional().default("gpt-image-1"),
   mask_area: z.string().optional(),
   strength: EditStrengthSchema.optional().default(0.8),
   preserve_composition: z.boolean().optional().default(true),
@@ -48,7 +69,6 @@ export const EditImageInputSchema = z.object({
   save_to_file: z.boolean().optional().default(true),
   output_directory: z.string().optional(),
   filename_prefix: z.string().optional().default("edited_"),
-  // Inherit from FileOutputOptions
   naming_strategy: z
     .enum(["timestamp", "prompt", "custom", "hash"])
     .optional()
@@ -58,6 +78,34 @@ export const EditImageInputSchema = z.object({
     .optional()
     .default("none"),
 });
+
+export const EditImageGpt1Schema = EditImageBaseSchema.extend({
+  model: z
+    .literal("gpt-image-1")
+    .describe("Model to use. Omit to default to gpt-image-2."),
+  source_image: ImageInputSchema,
+});
+
+export const EditImageGpt2Schema = EditImageBaseSchema.extend({
+  model: z
+    .literal("gpt-image-2")
+    .describe("Model to use. Omit to default to gpt-image-2."),
+  source_image: z.union([
+    ImageInputSchema,
+    z
+      .array(ImageInputSchema)
+      .min(1, "Provide at least one source image")
+      .max(10, "At most 10 source images are supported"),
+  ]),
+});
+
+export const EditImageInputSchema = z.preprocess(
+  (val) =>
+    typeof val === "object" && val !== null && !("model" in val)
+      ? { ...(val as Record<string, unknown>), model: "gpt-image-2" }
+      : val,
+  z.discriminatedUnion("model", [EditImageGpt1Schema, EditImageGpt2Schema]),
+);
 
 export const EditImageResultSchema = z.object({
   original_image: z.object({
@@ -97,6 +145,7 @@ export const EditImageResultSchema = z.object({
 // REMOVED: VariationResultSchema - variations not supported by gpt-image-1
 
 export const BatchEditInputSchema = z.object({
+  model: EditModelSchema.optional().default("gpt-image-2"),
   images: z.array(ImageInputSchema).min(1, "At least one image is required"),
   // Deprecated: kept for backward compatibility
   image_urls: z
@@ -202,6 +251,8 @@ export type EditType = z.infer<typeof EditTypeSchema>;
 export type EditModel = z.infer<typeof EditModelSchema>;
 export type EditStrength = z.infer<typeof EditStrengthSchema>;
 export type ImageInput = z.infer<typeof ImageInputSchema>;
+export type EditImageGpt1Input = z.infer<typeof EditImageGpt1Schema>;
+export type EditImageGpt2Input = z.infer<typeof EditImageGpt2Schema>;
 export type EditImageInput = z.infer<typeof EditImageInputSchema>;
 export type EditImageResult = z.infer<typeof EditImageResultSchema>;
 // REMOVED: VariationInput, VariationResult - variations not supported by gpt-image-1

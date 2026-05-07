@@ -1,6 +1,6 @@
 # Rate Limiting
 
-Comprehensive guide to rate limiting strategies, quotas, and optimization techniques for GPT Image 1 MCP to ensure efficient API usage and prevent rate limit errors.
+Comprehensive guide to rate limiting strategies, quotas, and optimization techniques for gpt-image MCP to ensure efficient API usage and prevent rate limit errors.
 
 ## Overview
 
@@ -279,7 +279,7 @@ BATCH_DELAY_MS=100
 ```json
 {
   "mcpServers": {
-    "@napolab/gpt-image-1-mcp": {
+    "@napolab/gpt-image-mcp": {
       "env": {
         "RATE_LIMIT_REQUESTS_PER_MINUTE": "50",
         "RATE_LIMIT_IMAGES_PER_HOUR": "100",

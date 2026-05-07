@@ -1,9 +1,36 @@
 # Changelog
 
-All notable changes to gpt-image-1 MCP will be documented in this file.
+All notable changes to gpt-image MCP will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [2.0.0] - 2026-05-07
+
+### Added
+
+- **gpt-image-2 model support** alongside existing gpt-image-1
+  - 2K aspect ratio presets: `square_2k` (2048×2048), `landscape_2k` (2048×1152), `portrait_2k` (1152×2048)
+  - `aspect_ratio: "auto"` lets the API choose dimensions
+  - Multi-image input for `edit-image` (up to 10 sources for compositions)
+  - `quality: "auto"` enum value
+- **Discriminated union schemas** (`z.discriminatedUnion("model", ...)`) for `generate-image`, `edit-image`, and `batch-edit`
+  - `model` defaults to `gpt-image-2` when omitted (via `z.preprocess`)
+- **Auto-generated MCP `inputSchema`** from Zod via `zod-to-json-schema`
+  - `withOptionalModel` helper drops `model` from `required[]` so clients treat it as optional
+- `BATCH_TO_EDIT_TYPE` mapping table for batch-edit's narrower enum
+
+### Changed
+
+- **Package renamed** from `@napolab/gpt-image-1-mcp` to `@napolab/gpt-image-mcp`
+- **Bin entry renamed** from `gpt-image-1-mcp` to `gpt-image-mcp`
+- `mapLegacyQuality` is now applied inside `OpenAIService.generateGpt1` instead of the request handler
+
+### Migration
+
+- Existing tools that omit `model` continue to work and now use `gpt-image-2` by default
+- To pin to gpt-image-1, pass `"model": "gpt-image-1"` explicitly
+- Update MCP client config: replace `"@napolab/gpt-image-1-mcp"` with `"@napolab/gpt-image-mcp"`
 
 ## [1.0.0] - 2025-01-15
 

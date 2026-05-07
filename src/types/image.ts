@@ -8,7 +8,32 @@ export const AspectRatioSchema = z.enum([
   "16:9",
   "9:16",
 ]);
+export const AspectRatioGpt2Schema = z.enum([
+  "square",
+  "landscape",
+  "portrait",
+  "1:1",
+  "16:9",
+  "9:16",
+  "square_2k",
+  "landscape_2k",
+  "portrait_2k",
+  "auto",
+]);
 export const ImageQualitySchema = z.enum(["high", "medium", "low"]);
+export const GenerateQualityGpt1Schema = z.enum([
+  "standard",
+  "hd",
+  "high",
+  "medium",
+  "low",
+]);
+export const GenerateQualityGpt2Schema = z.enum([
+  "low",
+  "medium",
+  "high",
+  "auto",
+]);
 export const ImageStyleSchema = z.enum(["vivid", "natural"]);
 export const ImageSizeSchema = z.enum([
   "1024x1024",
@@ -20,10 +45,8 @@ export const BackgroundSchema = z.enum(["transparent", "opaque", "auto"]);
 export const OutputFormatSchema = z.enum(["png", "jpeg", "webp"]);
 export const ModerationSchema = z.enum(["auto", "low"]);
 
-export const GenerateImageInputSchema = z.object({
+const GenerateImageBaseSchema = z.object({
   prompt: z.string().min(1, "Prompt is required"),
-  aspect_ratio: AspectRatioSchema.optional().default("square"),
-  quality: ImageQualitySchema.optional(),
   style: ImageStyleSchema.optional(),
   background: BackgroundSchema.optional().default("auto"),
   output_format: OutputFormatSchema.optional().default("png"),
@@ -44,6 +67,33 @@ export const GenerateImageInputSchema = z.object({
     .optional()
     .default("none"),
 });
+
+export const GenerateImageGpt1Schema = GenerateImageBaseSchema.extend({
+  model: z
+    .literal("gpt-image-1")
+    .describe("Model to use. Omit to default to gpt-image-2."),
+  aspect_ratio: AspectRatioSchema.optional().default("square"),
+  quality: GenerateQualityGpt1Schema.optional(),
+});
+
+export const GenerateImageGpt2Schema = GenerateImageBaseSchema.extend({
+  model: z
+    .literal("gpt-image-2")
+    .describe("Model to use. Omit to default to gpt-image-2."),
+  aspect_ratio: AspectRatioGpt2Schema.optional().default("square"),
+  quality: GenerateQualityGpt2Schema.optional(),
+});
+
+export const GenerateImageInputSchema = z.preprocess(
+  (val) =>
+    typeof val === "object" && val !== null && !("model" in val)
+      ? { ...(val as Record<string, unknown>), model: "gpt-image-2" }
+      : val,
+  z.discriminatedUnion("model", [
+    GenerateImageGpt1Schema,
+    GenerateImageGpt2Schema,
+  ]),
+);
 
 export const ImageGenerationResultSchema = z.object({
   image: z.object({
@@ -77,6 +127,19 @@ export const ImageGenerationResultSchema = z.object({
 });
 
 export type AspectRatio = z.infer<typeof AspectRatioSchema>;
+export type AspectRatioGpt2 = z.infer<typeof AspectRatioGpt2Schema>;
+export type GenerateQualityGpt1 = z.infer<typeof GenerateQualityGpt1Schema>;
+export type GenerateQualityGpt2 = z.infer<typeof GenerateQualityGpt2Schema>;
+export type GenerateImageGpt1Input = z.infer<typeof GenerateImageGpt1Schema>;
+export type GenerateImageGpt2Input = z.infer<typeof GenerateImageGpt2Schema>;
+export type ImageSizeGpt2 =
+  | "1024x1024"
+  | "1536x1024"
+  | "1024x1536"
+  | "2048x2048"
+  | "2048x1152"
+  | "1152x2048"
+  | "auto";
 export type ImageQuality = z.infer<typeof ImageQualitySchema>;
 export type ImageStyle = z.infer<typeof ImageStyleSchema>;
 export type ImageSize = z.infer<typeof ImageSizeSchema>;
@@ -113,6 +176,30 @@ export const aspectRatioToSize = (aspectRatio: AspectRatio): ImageSize => {
       return "1024x1536"; // gpt-image-1 uses 1024x1536 instead of 1024x1792
     default:
       return "1024x1024";
+  }
+};
+
+export const aspectRatioToSizeGpt2 = (
+  aspectRatio: AspectRatioGpt2,
+): ImageSizeGpt2 => {
+  switch (aspectRatio) {
+    case "square":
+    case "1:1":
+      return "1024x1024";
+    case "landscape":
+    case "16:9":
+      return "1536x1024";
+    case "portrait":
+    case "9:16":
+      return "1024x1536";
+    case "square_2k":
+      return "2048x2048";
+    case "landscape_2k":
+      return "2048x1152";
+    case "portrait_2k":
+      return "1152x2048";
+    case "auto":
+      return "auto";
   }
 };
 

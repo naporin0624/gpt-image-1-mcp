@@ -1,6 +1,6 @@
-# What is gpt-image-1 MCP?
+# What is gpt-image MCP?
 
-gpt-image-1 MCP is a **Model Context Protocol (MCP) server** that provides AI-powered image generation capabilities using OpenAI's gpt-image-1 model. It serves as a bridge between OpenAI's advanced image generation technology and MCP-compatible applications.
+gpt-image MCP is a **Model Context Protocol (MCP) server** that provides AI-powered image generation capabilities using OpenAI's gpt-image-1 model. It serves as a bridge between OpenAI's advanced image generation technology and MCP-compatible applications.
 
 ## What is MCP?
 
@@ -38,7 +38,7 @@ The Model Context Protocol (MCP) is an open protocol that enables AI assistants 
 
 ## How It Works
 
-1. **Connect**: Your MCP client connects to the gpt-image-1 MCP server
+1. **Connect**: Your MCP client connects to the gpt-image MCP server
 2. **Generate**: Use the `generate-image` tool to create images with prompts in various languages
 3. **Edit**: Enhance images with the `edit-image` tool
 4. **Optimize**: Leverage MCP-optimized responses for efficient workflows
@@ -65,7 +65,7 @@ The Model Context Protocol (MCP) is an open protocol that enables AI assistants 
 
 ## Integration
 
-gpt-image-1 MCP integrates seamlessly with MCP-compatible applications:
+gpt-image MCP integrates seamlessly with MCP-compatible applications:
 
 - **Claude Desktop**: Direct integration through MCP configuration
 - **Custom Applications**: Use the MCP protocol to connect your apps
@@ -88,7 +88,7 @@ gpt-image-1 MCP integrates seamlessly with MCP-compatible applications:
 
 ## Getting Started
 
-Ready to start generating images with gpt-image-1 MCP?
+Ready to start generating images with gpt-image MCP?
 
 1. [Set up the server](/guide/getting-started) - Install and configure the MCP server
 2. [Learn the basics](/guide/image-generation) - Understand image generation capabilities

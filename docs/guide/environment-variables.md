@@ -1,6 +1,6 @@
 # Environment Variables
 
-Configure gpt-image-1 MCP server behavior through environment variables in your MCP client configuration.
+Configure gpt-image MCP server behavior through environment variables in your MCP client configuration.
 
 ## Overview
 
@@ -16,7 +16,7 @@ Environment variables are set in the MCP client configuration (e.g., Claude Desk
 
 **`OPENAI_API_KEY`** (Required)
 
-- **Description**: Your OpenAI API key for accessing gpt-image-1 model
+- **Description**: Your OpenAI API key for accessing gpt-image-1 / gpt-image-2 models
 - **Type**: String
 - **Format**: `sk-...` (starts with "sk-")
 
@@ -83,9 +83,9 @@ Environment variables are set in the MCP client configuration (e.g., Claude Desk
 ```json
 {
   "mcpServers": {
-    "gpt-image-1-mcp": {
+    "gpt-image-mcp": {
       "command": "npx",
-      "args": ["@napolab/gpt-image-1-mcp"],
+      "args": ["@napolab/gpt-image-mcp"],
       "env": {
         "OPENAI_API_KEY": "sk-your-api-key-here"
       }
@@ -99,9 +99,9 @@ Environment variables are set in the MCP client configuration (e.g., Claude Desk
 ```json
 {
   "mcpServers": {
-    "gpt-image-1-mcp": {
+    "gpt-image-mcp": {
       "command": "npx",
-      "args": ["@napolab/gpt-image-1-mcp"],
+      "args": ["@napolab/gpt-image-mcp"],
       "env": {
         "OPENAI_API_KEY": "sk-your-development-key",
         "DEFAULT_OUTPUT_DIR": "./dev_images",
@@ -118,9 +118,9 @@ Environment variables are set in the MCP client configuration (e.g., Claude Desk
 ```json
 {
   "mcpServers": {
-    "gpt-image-1-mcp": {
+    "gpt-image-mcp": {
       "command": "npx",
-      "args": ["@napolab/gpt-image-1-mcp"],
+      "args": ["@napolab/gpt-image-mcp"],
       "env": {
         "OPENAI_API_KEY": "sk-your-production-key",
         "DEFAULT_OUTPUT_DIR": "/app/images",
@@ -139,9 +139,9 @@ Environment variables are set in the MCP client configuration (e.g., Claude Desk
 ```json
 {
   "mcpServers": {
-    "gpt-image-1-mcp": {
+    "gpt-image-mcp": {
       "command": "npx",
-      "args": ["@napolab/gpt-image-1-mcp"],
+      "args": ["@napolab/gpt-image-mcp"],
       "env": {
         "OPENAI_API_KEY": "sk-your-key",
         "DEFAULT_OUTPUT_DIR": "/fast-storage/images",
@@ -159,9 +159,9 @@ Environment variables are set in the MCP client configuration (e.g., Claude Desk
 ```json
 {
   "mcpServers": {
-    "gpt-image-1-mcp": {
+    "gpt-image-mcp": {
       "command": "npx",
-      "args": ["@napolab/gpt-image-1-mcp"],
+      "args": ["@napolab/gpt-image-mcp"],
       "env": {
         "OPENAI_API_KEY": "sk-your-key",
         "ENABLE_FILE_OUTPUT": "false"
@@ -219,9 +219,9 @@ if (!process.env.OPENAI_API_KEY) {
 ```json
 {
   "mcpServers": {
-    "gpt-image-1-mcp": {
+    "gpt-image-mcp": {
       "command": "npx",
-      "args": ["@napolab/gpt-image-1-mcp"],
+      "args": ["@napolab/gpt-image-mcp"],
       "env": {
         "OPENAI_API_KEY": "sk-your-key"
       }

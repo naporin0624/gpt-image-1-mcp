@@ -1,6 +1,6 @@
 # MCP Tools Overview
 
-GPT Image 1 MCP provides three powerful tools for image generation and editing through the Model Context Protocol, powered by OpenAI's gpt-image-1 model.
+gpt-image MCP provides three powerful tools for image generation and editing through the Model Context Protocol, powered by OpenAI's gpt-image-1 and gpt-image-2 models.
 
 ## Available Tools
 

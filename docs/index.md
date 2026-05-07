@@ -2,9 +2,9 @@
 layout: home
 
 hero:
-  name: "gpt-image-1 MCP"
+  name: "gpt-image MCP"
   text: "AI-Powered Image Generation"
-  tagline: "Generate stunning images with OpenAI gpt-image-1 featuring advanced text rendering and native transparency through MCP"
+  tagline: "Generate stunning images with OpenAI gpt-image-1 and gpt-image-2 featuring advanced text rendering, 2K presets, and native transparency through MCP"
   image:
     src: /images/hero.png
     alt: AI Image Generation
@@ -18,8 +18,8 @@ hero:
 
 features:
   - icon: 🎨
-    title: gpt-image-1 Powered
-    details: Advanced text rendering, native transparency, and superior instruction following with GPT-4o language understanding
+    title: gpt-image-1 / gpt-image-2 Powered
+    details: Advanced text rendering, native transparency, 2K resolution presets (gpt-image-2), and superior instruction following
   - icon: 🖼️
     title: Multiple Formats
     details: Support for PNG, JPEG, WebP with native transparency. Square, landscape, and portrait aspect ratios
@@ -45,9 +45,9 @@ Add to your MCP client configuration (e.g., Claude Desktop's `config.json`):
 ```json
 {
   "mcpServers": {
-    "gpt-image-1-mcp": {
+    "gpt-image-mcp": {
       "command": "npx",
-      "args": ["@napolab/gpt-image-1-mcp"],
+      "args": ["@napolab/gpt-image-mcp"],
       "env": {
         "OPENAI_API_KEY": "sk-your-api-key-here"
       }
@@ -61,7 +61,7 @@ Add to your MCP client configuration (e.g., Claude Desktop's `config.json`):
 - Use the `generate-image` tool in your MCP client
 - Try: "Create a vibrant sunset over mountains with 'Adventure Awaits' text"
 
-## Why gpt-image-1 MCP?
+## Why gpt-image MCP?
 
 This MCP server bridges the gap between AI-powered image generation and modern development workflows. Whether you're building creative applications, analyzing visual content, or exploring AI capabilities, our server provides the tools you need.
 
