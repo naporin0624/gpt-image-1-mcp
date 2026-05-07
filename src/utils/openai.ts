@@ -4,6 +4,7 @@ import {
   ImageEditError,
   MaskError,
   BatchProcessingError,
+  BATCH_TO_EDIT_TYPE,
 } from "../types/edit.js";
 import {
   aspectRatioToSize,
@@ -268,17 +269,35 @@ export class OpenAIService {
     const startTime = Date.now();
 
     try {
-      // Load source image using new image input system
-      const normalizedInput = normalizeImageInput(input.source_image);
-      const imageBuffer = await loadImageAsBuffer(normalizedInput);
+      // Normalize source_image to an array (single or array union from gpt-image-2)
+      const sources = Array.isArray(input.source_image)
+        ? input.source_image
+        : [input.source_image];
+      const firstSource = sources[0];
+      if (firstSource === undefined) {
+        throw new Error("At least one source_image is required");
+      }
+      const normalizedFirst = normalizeImageInput(firstSource);
+
+      // Load all source images as Files
+      const imageFiles = await Promise.all(
+        sources.map(async (src, i) => {
+          const normalized = normalizeImageInput(src);
+          const buffer = await loadImageAsBuffer(normalized);
+          return new File([new Uint8Array(buffer)], `source_${i}.png`, {
+            type: "image/png",
+          });
+        }),
+      );
 
       // Always use 1024x1024 for consistency
       const size = "1024x1024";
 
+      const imageParam =
+        imageFiles.length === 1 ? imageFiles[0]! : imageFiles;
+
       const baseParams = {
-        image: new File([new Uint8Array(imageBuffer)], "source.png", {
-          type: "image/png",
-        }),
+        image: imageParam,
         prompt: input.edit_prompt,
         model: input.model,
         size: size as OpenAI.Images.ImageEditParams["size"],
@@ -408,9 +427,9 @@ export class OpenAIService {
       return {
         original_image: {
           url:
-            normalizedInput.type === "url"
-              ? normalizedInput.value
-              : `${normalizedInput.type}:${normalizedInput.value.substring(0, 50)}...`,
+            normalizedFirst.type === "url"
+              ? normalizedFirst.value
+              : `${normalizedFirst.type}:${normalizedFirst.value.substring(0, 50)}...`,
           format: "unknown",
           dimensions: { width: 1024, height: 1024 },
         },
@@ -459,25 +478,11 @@ export class OpenAIService {
     try {
       const processImage = async (imageInput: ImageInput, index: number) => {
         try {
-          // Map batch edit types to edit image types
-          const editTypeMap: Record<string, string> = {
-            style_transfer: "style_transfer",
-            background_change: "background_change",
-            color_adjustment: "variation",
-            enhancement: "variation",
-          };
-
           const editResult = await this.editImage({
             source_image: imageInput,
             edit_prompt: input.edit_prompt,
-            edit_type: editTypeMap[input.edit_type] as
-              | "inpaint"
-              | "outpaint"
-              | "variation"
-              | "style_transfer"
-              | "object_removal"
-              | "background_change",
-            model: "gpt-image-1",
+            edit_type: BATCH_TO_EDIT_TYPE[input.edit_type],
+            model: input.model,
             background: "auto",
             quality: "auto",
             save_to_file: input.save_to_file,
@@ -566,7 +571,7 @@ export class OpenAIService {
         metadata: {
           total_time_ms: totalTime,
           average_time_per_image_ms: totalTime / imageInputs.length,
-          model_used: "gpt-image-1",
+          model_used: input.model,
           parallel_processing: settings.parallel_processing || false,
         },
       };

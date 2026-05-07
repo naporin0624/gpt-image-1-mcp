@@ -4,11 +4,11 @@ import {
   ListToolsRequestSchema,
   CallToolRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import type { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
 import { EditImageInputSchema, BatchEditInputSchema } from "./types/edit";
 import {
-  mapLegacyQuality,
   GenerateImageInputSchema,
   type OptimizedGenerateImageResponse,
 } from "./types/image";
@@ -18,16 +18,23 @@ import { withOptionalModel } from "./utils/json-schema";
 import { OpenAIService } from "./utils/openai";
 import { validateText, formatValidationError } from "./utils/validation";
 
-const generateImageInputSchema = withOptionalModel(
-  zodToJsonSchema(GenerateImageInputSchema, {
-    target: "jsonSchema7",
-    $refStrategy: "none",
-  }) as Record<string, unknown>,
-) as {
+type ToolInputSchema = {
   type: "object";
   properties?: Record<string, unknown>;
   required?: string[];
 };
+
+const buildInputSchema = <T extends z.ZodTypeAny>(schema: T): ToolInputSchema =>
+  withOptionalModel(
+    zodToJsonSchema(schema, {
+      target: "jsonSchema7",
+      $refStrategy: "none",
+    }) as Record<string, unknown>,
+  ) as ToolInputSchema;
+
+const generateImageInputSchema = buildInputSchema(GenerateImageInputSchema);
+const editImageInputSchema = buildInputSchema(EditImageInputSchema);
+const batchEditInputSchema = buildInputSchema(BatchEditInputSchema);
 
 // Type guards for runtime type checking
 function isStringArray(value: unknown): value is string[] {
@@ -84,203 +91,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "edit-image",
         description:
-          "Edit existing images with gpt-image-1 powered modifications including inpainting, outpainting, and style transfer",
-        inputSchema: {
-          type: "object",
-          properties: {
-            source_image: {
-              type: "object",
-              properties: {
-                type: {
-                  type: "string",
-                  enum: ["url", "base64", "local"],
-                  description: "Type of image input",
-                },
-                value: {
-                  type: "string",
-                  description: "Image URL, base64 data, or local file path",
-                },
-              },
-              required: ["type", "value"],
-              description:
-                "Image input as discriminated union (URL, base64, or local file)",
-            },
-            edit_prompt: {
-              type: "string",
-              description: "Description of desired changes",
-            },
-            edit_type: {
-              type: "string",
-              enum: [
-                "inpaint",
-                "outpaint",
-                "variation",
-                "style_transfer",
-                "object_removal",
-                "background_change",
-              ],
-              description: "Type of edit to perform",
-            },
-            mask_area: {
-              type: "string",
-              description: "Mask specification for targeted editing (optional)",
-            },
-            strength: {
-              type: "number",
-              minimum: 0.0,
-              maximum: 1.0,
-              default: 0.8,
-              description: "Edit strength (0.0 = minimal, 1.0 = maximum)",
-            },
-            preserve_composition: {
-              type: "boolean",
-              default: true,
-              description: "Maintain original image composition",
-            },
-            output_format: {
-              type: "string",
-              enum: ["png", "jpeg", "webp"],
-              default: "png",
-              description: "Output image format",
-            },
-            save_to_file: {
-              type: "boolean",
-              default: true,
-              description: "Save the edited image to local file",
-            },
-            output_directory: {
-              type: "string",
-              description: "Directory to save edited image",
-            },
-            filename_prefix: {
-              type: "string",
-              default: "edited_",
-              description: "Prefix for edited image filename",
-            },
-            naming_strategy: {
-              type: "string",
-              enum: ["timestamp", "prompt", "custom", "hash"],
-              default: "timestamp",
-              description: "Strategy for generating filenames",
-            },
-            organize_by: {
-              type: "string",
-              enum: ["none", "date", "aspect_ratio", "quality"],
-              default: "none",
-              description: "Subdirectory organization strategy",
-            },
-          },
-          required: ["source_image", "edit_prompt", "edit_type"],
-        },
+          "Edit existing images with gpt-image-1 or gpt-image-2 (default: gpt-image-2). Inpaint, outpaint, style transfer, and other transformations. With gpt-image-2, source_image accepts an array (1-10 images) for compositions.",
+        inputSchema: editImageInputSchema,
       },
-      // REMOVED: create-variation tool - variations not supported by gpt-image-1
-      // Use edit-image with edit_type: "variation" instead
       {
         name: "batch-edit",
-        description: "Apply same edit to multiple images",
-        inputSchema: {
-          type: "object",
-          properties: {
-            images: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  type: {
-                    type: "string",
-                    enum: ["url", "base64", "local"],
-                    description: "Type of image input",
-                  },
-                  value: {
-                    type: "string",
-                    description: "Image URL, base64 data, or local file path",
-                  },
-                },
-                required: ["type", "value"],
-              },
-              description:
-                "Array of image inputs as discriminated union (URL, base64, or local file)",
-            },
-            // Deprecated: kept for backward compatibility
-            image_urls: {
-              type: "array",
-              items: {
-                type: "string",
-              },
-              description:
-                "[DEPRECATED] Array of image URLs to edit - use 'images' instead",
-            },
-            edit_prompt: {
-              type: "string",
-              description: "Edit description to apply to all images",
-            },
-            edit_type: {
-              type: "string",
-              enum: [
-                "style_transfer",
-                "background_change",
-                "color_adjustment",
-                "enhancement",
-              ],
-              description: "Type of edit to apply",
-            },
-            batch_settings: {
-              type: "object",
-              properties: {
-                parallel_processing: {
-                  type: "boolean",
-                  default: true,
-                  description: "Process images in parallel",
-                },
-                progress_callback: {
-                  type: "boolean",
-                  default: true,
-                  description: "Enable progress tracking",
-                },
-                error_handling: {
-                  type: "string",
-                  enum: ["fail_fast", "continue_on_error", "retry_failed"],
-                  default: "continue_on_error",
-                  description: "How to handle errors during batch processing",
-                },
-                max_concurrent: {
-                  type: "number",
-                  minimum: 1,
-                  maximum: 10,
-                  default: 3,
-                  description: "Maximum concurrent operations",
-                },
-              },
-            },
-            save_to_file: {
-              type: "boolean",
-              default: true,
-              description: "Save the edited images to local files",
-            },
-            output_directory: {
-              type: "string",
-              description: "Directory to save edited images",
-            },
-            filename_prefix: {
-              type: "string",
-              default: "batch_",
-              description: "Prefix for edited image filenames",
-            },
-            naming_strategy: {
-              type: "string",
-              enum: ["timestamp", "prompt", "custom", "hash"],
-              default: "timestamp",
-              description: "Strategy for generating filenames",
-            },
-            organize_by: {
-              type: "string",
-              enum: ["none", "date", "aspect_ratio", "quality"],
-              default: "none",
-              description: "Subdirectory organization strategy",
-            },
-          },
-          required: ["edit_prompt", "edit_type"],
-        },
+        description:
+          "Apply the same edit to multiple images using gpt-image-1 or gpt-image-2 (default: gpt-image-2).",
+        inputSchema: batchEditInputSchema,
       },
     ],
   };
@@ -291,16 +109,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   switch (name) {
     case "generate-image":
       try {
-        // Apply quality mapping before Zod validation
-        const safeArgs = args || {};
-        const mappedArgs = {
-          ...safeArgs,
-          ...(safeArgs.quality != null && typeof safeArgs.quality === "string"
-            ? { quality: mapLegacyQuality(safeArgs.quality) }
-            : {}),
-        };
-
-        const input = GenerateImageInputSchema.parse(mappedArgs);
+        const input = GenerateImageInputSchema.parse(args ?? {});
 
         // Validate input
         validateText(input.prompt, "prompt");

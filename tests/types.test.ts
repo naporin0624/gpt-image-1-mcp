@@ -1,6 +1,12 @@
 import { describe, it, expect } from "vitest";
 
 import {
+  BatchEditInputSchema,
+  EditImageInputSchema,
+  EditImageGpt1Schema,
+  EditImageGpt2Schema,
+} from "../src/types/edit.js";
+import {
   AspectRatioSchema,
   GenerateImageInputSchema,
   GenerateImageGpt1Schema,
@@ -196,6 +202,130 @@ describe("Image Types", () => {
           model: "gpt-image-1",
           prompt: "x",
         }),
+      ).toThrow();
+    });
+  });
+
+  describe("EditImageInputSchema (discriminated union)", () => {
+    const singleImage = { type: "url", value: "https://example.com/a.png" };
+    const baseInput = {
+      source_image: singleImage,
+      edit_prompt: "x",
+      edit_type: "style_transfer",
+    };
+
+    it("defaults model to gpt-image-2 when omitted", () => {
+      const result = EditImageInputSchema.parse(baseInput);
+      expect(result.model).toBe("gpt-image-2");
+    });
+
+    it("accepts a single source_image on the gpt-image-1 branch", () => {
+      expect(() =>
+        EditImageInputSchema.parse({ ...baseInput, model: "gpt-image-1" }),
+      ).not.toThrow();
+    });
+
+    it("rejects an array source_image on the gpt-image-1 branch", () => {
+      expect(() =>
+        EditImageInputSchema.parse({
+          ...baseInput,
+          model: "gpt-image-1",
+          source_image: [singleImage, singleImage],
+        }),
+      ).toThrow();
+    });
+
+    it("accepts an array of 1-10 source_images on the gpt-image-2 branch", () => {
+      const tenImages = Array.from({ length: 10 }, () => singleImage);
+      expect(() =>
+        EditImageInputSchema.parse({
+          ...baseInput,
+          model: "gpt-image-2",
+          source_image: tenImages,
+        }),
+      ).not.toThrow();
+    });
+
+    it("rejects more than 10 source_images on the gpt-image-2 branch", () => {
+      const elevenImages = Array.from({ length: 11 }, () => singleImage);
+      expect(() =>
+        EditImageInputSchema.parse({
+          ...baseInput,
+          model: "gpt-image-2",
+          source_image: elevenImages,
+        }),
+      ).toThrow();
+    });
+
+    it("rejects an empty array source_image on the gpt-image-2 branch", () => {
+      expect(() =>
+        EditImageInputSchema.parse({
+          ...baseInput,
+          model: "gpt-image-2",
+          source_image: [],
+        }),
+      ).toThrow();
+    });
+
+    it("accepts a single source_image on the gpt-image-2 branch", () => {
+      expect(() =>
+        EditImageGpt2Schema.parse({ ...baseInput, model: "gpt-image-2" }),
+      ).not.toThrow();
+    });
+
+    it("rejects mismatched model literal in gpt1 branch", () => {
+      expect(() =>
+        EditImageGpt1Schema.parse({ ...baseInput, model: "gpt-image-2" }),
+      ).toThrow();
+    });
+  });
+
+  describe("BATCH_TO_EDIT_TYPE", () => {
+    it("maps every BatchEdit edit_type to a valid EditImage edit_type", async () => {
+      const { BATCH_TO_EDIT_TYPE } = await import("../src/types/edit.js");
+      const batchTypes = [
+        "style_transfer",
+        "background_change",
+        "color_adjustment",
+        "enhancement",
+      ] as const;
+      const validEditTypes = new Set([
+        "inpaint",
+        "outpaint",
+        "variation",
+        "style_transfer",
+        "object_removal",
+        "background_change",
+      ]);
+      for (const t of batchTypes) {
+        expect(validEditTypes.has(BATCH_TO_EDIT_TYPE[t])).toBe(true);
+      }
+    });
+  });
+
+  describe("BatchEditInputSchema", () => {
+    const baseInput = {
+      images: [{ type: "url", value: "https://example.com/a.png" }],
+      edit_prompt: "x",
+      edit_type: "style_transfer",
+    };
+
+    it("defaults model to gpt-image-2 when omitted", () => {
+      const result = BatchEditInputSchema.parse(baseInput);
+      expect(result.model).toBe("gpt-image-2");
+    });
+
+    it("accepts model: gpt-image-1", () => {
+      const result = BatchEditInputSchema.parse({
+        ...baseInput,
+        model: "gpt-image-1",
+      });
+      expect(result.model).toBe("gpt-image-1");
+    });
+
+    it("rejects an unknown model literal", () => {
+      expect(() =>
+        BatchEditInputSchema.parse({ ...baseInput, model: "gpt-image-3" }),
       ).toThrow();
     });
   });
