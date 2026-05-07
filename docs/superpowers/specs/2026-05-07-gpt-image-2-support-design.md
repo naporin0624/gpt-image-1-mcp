@@ -72,17 +72,34 @@ src/
 
 ### `quality` のモデル別 enum
 
-| モデル | 受け入れる値 |
-|---|---|
-| gpt-image-1 | `standard / hd / high / medium / low`（既存、`mapLegacyQuality` で legacy → low/medium/high に正規化） |
-| gpt-image-2 | `low / medium / high / auto` |
+**generate-image:**
 
-### `background`（edit のみ）
+| モデル | Zod が受け入れる値 | 実 API へ送る値 |
+|---|---|---|
+| gpt-image-1 | `standard / hd / high / medium / low`（既存後方互換） | `low / medium / high`（`mapLegacyQuality` で正規化） |
+| gpt-image-2 | `low / medium / high / auto` | そのまま |
 
-| モデル | 受け入れる値 |
-|---|---|
-| gpt-image-1 | `auto`（既存維持） |
-| gpt-image-2 | `opaque / automatic / auto` |
+**edit-image:**
+
+| モデル | Zod が受け入れる値 | 実 API へ送る値 |
+|---|---|---|
+| gpt-image-1 | `auto / high / medium / low`（既存維持、`standard / hd` は元々非対応） | そのまま |
+| gpt-image-2 | `auto / high / medium / low` | そのまま |
+
+`mapLegacyQuality` の適用タイミング: **Zod parse の後、`OpenAIService.generateGpt1` 内**で行う（generate-image のみ。edit-image では現行 schema が既に `auto/high/medium/low` のため不要）。現行 `index.ts` で parse 前に手動適用しているロジックは削除し、責務を service 層に集約する。gpt-image-2 ブランチでは `mapLegacyQuality` を呼ばない（`standard / hd` は schema 段階で弾かれる）。
+
+### `background`（generate と edit の両方）
+
+現行コードでは `generate` にも `background: BackgroundSchema = transparent / opaque / auto` が存在する（`src/types/image.ts`）。これを引き継ぐ形で **両モデル共通で `generate` / `edit` のどちらにも `background` を持たせる**。
+
+| モデル | 受け入れる値 | 備考 |
+|---|---|---|
+| gpt-image-1 | `transparent / opaque / auto` | デフォルト `auto`（既存維持） |
+| gpt-image-2 | `transparent / opaque / auto` | デフォルト `auto`。OpenAI ドキュメントの `automatic` 表記は `auto` の別名と推定（Phase 0 で確認） |
+
+### `style`（generate のみ、後方互換）
+
+現行 `GenerateImageInputSchema` には `style: vivid / natural`（DALL-E 3 由来の vestigial フィールド）がある。gpt-image-1 / gpt-image-2 のいずれの API にも該当パラメータはないため、**両モデルブランチで受理するが API には送信しない**形で維持（後方互換のため schema を壊さない）。将来削除する場合は別 PR とする。
 
 ### `source_image`（edit のみ）
 
@@ -107,6 +124,8 @@ const GenerateBase = z.object({
   prompt: z.string(),
   output_format: z.enum(["png", "jpeg", "webp"]).default("png"),
   moderation: z.enum(["auto", "low"]).default("auto"),
+  background: z.enum(["transparent", "opaque", "auto"]).default("auto"),
+  style: z.enum(["vivid", "natural"]).optional(),  // 後方互換、API には送信しない
   include_base64: z.boolean().default(false),
   save_to_file: z.boolean().default(true),
   output_directory: z.string().optional(),
@@ -117,13 +136,17 @@ const GenerateBase = z.object({
 });
 
 const GenerateGpt1 = GenerateBase.extend({
-  model: z.literal("gpt-image-1"),
+  model: z.literal("gpt-image-1").describe(
+    "Model to use. Omit to default to gpt-image-2."
+  ),
   aspect_ratio: z.enum(["square","landscape","portrait","1:1","16:9","9:16"]).default("square"),
   quality: z.enum(["standard","hd","high","medium","low"]).optional(),
 });
 
 const GenerateGpt2 = GenerateBase.extend({
-  model: z.literal("gpt-image-2"),
+  model: z.literal("gpt-image-2").describe(
+    "Model to use. Omit to default to gpt-image-2."
+  ),
   aspect_ratio: z.enum([
     "square","landscape","portrait","1:1","16:9","9:16",
     "square_2k","landscape_2k","portrait_2k","auto",
@@ -140,7 +163,38 @@ export const GenerateImageInputSchema = z.preprocess(
 );
 ```
 
-`edit.ts` も同パターン。`EditBase + EditGpt1 + EditGpt2 + preprocess + discriminatedUnion`。
+`z.preprocess` のラップにより `z.infer<typeof GenerateImageInputSchema>` は内側 union 型（`GenerateGpt1 | GenerateGpt2`）となり、TypeScript の型上は `model` が required になる。これは仕様として許容する：呼び出し側 service 層では union を受け取って switch で分岐するため、required 表現の方がむしろ安全。
+
+`edit.ts` も同じパターンで構成する：
+
+```ts
+const EditBase = z.object({
+  edit_prompt: z.string(),
+  edit_type: z.enum([
+    "inpaint", "outpaint", "variation",
+    "style_transfer", "object_removal", "background_change",
+  ]),
+  background: z.enum(["transparent", "opaque", "auto"]).default("auto"),
+  output_format: z.enum(["png","jpeg","webp"]).default("png"),
+  strength: z.number().min(0).max(1).default(0.8),
+  preserve_composition: z.boolean().default(true),
+  // ファイル保存系（save_to_file, output_directory, filename_prefix, naming_strategy, organize_by）
+  // mask_area もここ
+});
+
+const EditGpt1 = EditBase.extend({
+  model: z.literal("gpt-image-1"),
+  source_image: ImageInput,
+  // 現行 EditImageInputSchema の quality は既に auto/high/medium/low なので両モデル同一でよい
+  quality: z.enum(["auto","high","medium","low"]).optional().default("auto"),
+});
+
+const EditGpt2 = EditBase.extend({
+  model: z.literal("gpt-image-2"),
+  source_image: z.union([ImageInput, z.array(ImageInput).min(1).max(10)]),
+  quality: z.enum(["auto","high","medium","low"]).optional().default("auto"),
+});
+```
 
 ## MCP ツール公開仕様
 
@@ -153,7 +207,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
       name: "generate-image",
-      description: "Generate images using gpt-image-1 or gpt-image-2 (default: gpt-image-2). Advanced text rendering and instruction following.",
+      description:
+        "Generate images using gpt-image-1 or gpt-image-2. " +
+        "If `model` is omitted, gpt-image-2 is used by default.",
       inputSchema: zodToJsonSchema(GenerateImageInputSchema, {
         target: "jsonSchema7",
         $refStrategy: "none",
@@ -166,7 +222,30 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 
 `z.discriminatedUnion` は `oneOf` に変換され、`model` の各 literal は `const` に展開される。`$refStrategy: "none"` で参照を展開し、MCP クライアントの `$ref` 解決ばらつきを回避する。
 
-`z.preprocess` の挙動：`zod-to-json-schema` は preprocess の内側 schema を出力するため、公開 inputSchema の `model` は各分岐で required となる。これは LLM クライアントへの明示性を高めるため許容する（実行時には Zod 側 preprocess がデフォルト値を注入する）。
+### `z.preprocess` と JSON Schema の不整合への対策
+
+`zod-to-json-schema` は `z.preprocess` の変換関数を JSON Schema に表現できないため、出力 JSON Schema 上は `model` フィールドが各分岐で required となる。MCP クライアント側 schema validation で `model` 未指定リクエストが弾かれるリスクがあるため、**以下の対策を実装する**：
+
+1. **`z.literal(...).describe(...)` で明示**: 各 `model` リテラルに `"Model to use. Omit to default to gpt-image-2."` の description を付け、JSON Schema に含める（LLM が省略可能と理解できる手がかりになる）
+2. **ツール description 自体に明記**: `description` 文字列に「`model` を省略した場合 gpt-image-2 が使われる」と記載
+3. **post-process で `model` を required から外す**: `zodToJsonSchema` 出力の `oneOf[].required` から `model` を除去するヘルパー関数 `withOptionalModel(jsonSchema)` を実装する
+
+```ts
+function withOptionalModel(schema: ReturnType<typeof zodToJsonSchema>): typeof schema {
+  // schema.oneOf[i].required から "model" を取り除いた schema を返す
+  // model フィールド自体（properties.model）は残す
+}
+```
+
+これにより、JSON Schema 上は `model` が optional に見え、Zod 側 preprocess が実行時に `gpt-image-2` を注入する挙動と一致する。
+
+### `source_image` の二重ネスト `oneOf` への対策
+
+`EditGpt2` の `source_image: z.union([ImageInput, z.array(ImageInput)])` は、外側 discriminated union `oneOf` の中にさらに `oneOf` または `anyOf` が入るネスト構造になる。一部 MCP クライアントでこのネストが解釈できない可能性があるため：
+
+- **snapshot test で構造を固定**: `tests/mcp-schema.test.ts` で edit-image inputSchema の `oneOf` ネスト深さを検証
+- **Claude Desktop / Claude Code で smoke test**: 実クライアントで `source_image` 単一 / 配列両方の呼び出しを確認（Phase 0 / Phase 8）
+- **構造が壊れる場合のフォールバック**: `source_image` を常に配列で受ける形（単一でも `[image]` を要求）に変更する案も用意しておく
 
 ## OpenAIService の分岐ロジック
 
@@ -180,6 +259,25 @@ async generateImage(input: GenerateImageInput): Promise<OptimizedGenerateImageRe
   return this.generateGpt2(input);
 }
 
+private async generateGpt1(input: GenerateImageGpt1Input) {
+  const size = aspectRatioToSizeGpt1(input.aspect_ratio);
+  const normalizedQuality = input.quality
+    ? mapLegacyQuality(input.quality)  // "standard" -> "medium", "hd" -> "high"
+    : undefined;
+  const params: OpenAI.ImageGenerateParams = {
+    model: "gpt-image-1",
+    prompt: input.prompt,
+    size,
+    n: 1,
+    ...(normalizedQuality && { quality: normalizedQuality }),
+    ...(input.output_format && { output_format: input.output_format }),
+    ...(input.moderation && { moderation: input.moderation }),
+    ...(input.background !== "auto" && { background: input.background }),
+  };
+  // style, remove_background は API には送信しない（service 内のフラグとして扱う or 無視）
+  // 以下、共通: レスポンス処理、file save、metadata、warnings
+}
+
 private async generateGpt2(input: GenerateImageGpt2Input) {
   const size = aspectRatioToSizeGpt2(input.aspect_ratio); // "1024x1024" | ... | "2048x2048" | "auto"
   const params: OpenAI.ImageGenerateParams = {
@@ -190,40 +288,52 @@ private async generateGpt2(input: GenerateImageGpt2Input) {
     ...(input.quality && { quality: input.quality }),
     ...(input.output_format && { output_format: input.output_format }),
     ...(input.moderation && { moderation: input.moderation }),
+    ...(input.background !== "auto" && { background: input.background }),
   };
   // 既存と共通: レスポンス処理、file save、metadata、warnings
 }
 ```
 
+**`mapLegacyQuality` の責務分離**: 現行 `index.ts` の handler 内で行っている `mapLegacyQuality` 適用ロジックは削除し、`generateGpt1` 内に集約する（gpt-image-2 ブランチでは適用不要、schema 段階で `standard/hd` は弾かれる）。
+
 `size: "auto"` の場合、`metadata.width / metadata.height` は 0 とし、warnings に「実サイズはファイルから確認してください」を追加。後続フェーズで `image-size` パッケージなどでファイルから実寸を取る改善余地を残す。
 
 ### `editImage`
 
-gpt-image-2 ブランチで `source_image` が配列の場合、`File[]` に変換して `images.edit` に渡す：
-
 ```ts
-const sources = Array.isArray(input.source_image)
-  ? input.source_image
-  : [input.source_image];
+async editImage(input: EditImageInput): Promise<EditImageResult> {
+  if (input.model === "gpt-image-1") {
+    return this.editImageGpt1(input);
+  }
+  return this.editImageGpt2(input);
+}
 
-const imageFiles = await Promise.all(
-  sources.map(async (s, i) => {
-    const buf = await loadImageAsBuffer(normalizeImageInput(s));
-    return new File([new Uint8Array(buf)], `source_${i}.png`, { type: "image/png" });
-  }),
-);
+private async editImageGpt2(input: EditImageGpt2Input) {
+  const sources = Array.isArray(input.source_image)
+    ? input.source_image
+    : [input.source_image];
 
-const response = await this.client.images.edit({
-  model: "gpt-image-2",
-  image: imageFiles.length === 1 ? imageFiles[0] : imageFiles,
-  prompt: input.edit_prompt,
-  size: aspectRatioToSizeGpt2(/* ... */),
-  ...(input.quality && { quality: input.quality }),
-  ...(input.background && { background: input.background }),
-});
+  const imageFiles = await Promise.all(
+    sources.map(async (s, i) => {
+      const buf = await loadImageAsBuffer(normalizeImageInput(s));
+      return new File([new Uint8Array(buf)], `source_${i}.png`, { type: "image/png" });
+    }),
+  );
+
+  const response = await this.client.images.edit({
+    model: "gpt-image-2",
+    image: imageFiles.length === 1 ? imageFiles[0] : imageFiles,
+    prompt: input.edit_prompt,
+    size: "1024x1024",  // edit ではアスペクト比をソース画像から推定するため固定
+    n: 1,
+    ...(input.quality && { quality: input.quality }),
+    ...(input.background !== "auto" && { background: input.background }),
+  });
+  // 以下、共通: レスポンス処理、file save、metadata
+}
 ```
 
-gpt-image-1 ブランチは現状ロジックを維持（単一画像のみ）。
+gpt-image-1 ブランチ (`editImageGpt1`) は現状ロジックを維持（単一画像のみ、`mapLegacyQuality` は edit には不要 ※ edit の `quality` は元々 schema 上 `low/medium/high/auto` のため）。
 
 ### `batchEdit`
 
@@ -236,7 +346,22 @@ const BatchEditInputSchema = z.object({
 });
 ```
 
-batch-edit は既に `edit_type` を独自 enum で制限しており、aspect_ratio や source_image 形状もシンプルな単一画像配列に限定するため、モデル別の能力差を schema に反映する必要はない。内部の `editImage` 呼び出し時に、各 image を gpt-image-2 ブランチの単一 `source_image` として渡す（配列入力でのコンポジションは batch-edit では行わない）。
+batch-edit は既に `edit_type` を独自 enum（`style_transfer / background_change / color_adjustment / enhancement`）で制限しており、aspect_ratio や source_image 形状もシンプルな単一画像配列に限定するため、モデル別の能力差を schema に反映する必要はない。
+
+**`edit_type` の不整合対応（重要）**: 現行 `BatchEditInputSchema.edit_type` は 4 値で、`EditImageInputSchema.edit_type` は 6 値（`inpaint / outpaint / variation / style_transfer / object_removal / background_change`）。内部で `editImage` を呼ぶ際、`color_adjustment / enhancement` を `editImage` の値にマッピングする必要がある。現行コードの `editTypeMap` を維持し、明示的にマッピングテーブルを定義：
+
+```ts
+const BATCH_TO_EDIT_TYPE: Record<BatchEditType, EditType> = {
+  style_transfer: "style_transfer",
+  background_change: "background_change",
+  color_adjustment: "variation",
+  enhancement: "variation",
+};
+```
+
+このマッピングはユニットテストで保護する。
+
+内部の `editImage` 呼び出し時、各 image を gpt-image-2 ブランチの単一 `source_image` として渡す（配列入力でのコンポジションは batch-edit では行わない）。
 
 ## エラーハンドリング
 
@@ -255,16 +380,27 @@ batch-edit は既に `edit_type` を独自 enum で制限しており、aspect_r
 | `types/image.ts` | `model: "gpt-image-1"` + `aspect_ratio: "square_2k"` → ZodError |
 | `types/image.ts` | `model: "gpt-image-2"` + `aspect_ratio: "auto"` → OK |
 | `types/image.ts` | `model: "gpt-image-1"` + `quality: "auto"` → ZodError |
-| `types/image.ts` | `aspectRatioToSizeGpt2("square_2k")` → `"2048x2048"` |
+| `types/image.ts` | `model: "gpt-image-2"` + `quality: "standard"` → ZodError |
+| `types/image.ts` | `aspectRatioToSizeGpt2("square_2k")` → `"2048x2048"`（Phase 0 の確定値に合わせる） |
 | `types/image.ts` | `aspectRatioToSizeGpt2("auto")` → `"auto"` |
-| `types/edit.ts` | gpt-image-2 ブランチで `source_image` が単一 / 配列どちらも parse できる |
+| `types/image.ts` | 両モデルブランチで `style: "vivid"` parse 通過、`background: "transparent"` parse 通過 |
+| `types/edit.ts` | gpt-image-2 ブランチで `source_image` が単一 / 配列（1〜10枚）どちらも parse できる |
+| `types/edit.ts` | gpt-image-2 ブランチで `source_image` 11枚配列 → ZodError |
 | `types/edit.ts` | gpt-image-1 ブランチで `source_image` が配列 → ZodError |
-| `types/edit.ts` | gpt-image-2 ブランチで `background: "opaque"` → OK |
-| `types/edit.ts` | gpt-image-1 ブランチで `background: "opaque"` → ZodError |
+| `types/edit.ts` | 両モデルブランチで `background: "transparent" / "opaque" / "auto"` parse 通過 |
 | `utils/openai.ts` | `generateImage` が `model` で正しい branch / params を組み立てる（OpenAI client モック） |
-| `utils/openai.ts` | gpt-image-2 edit に画像配列を渡したとき `images.edit` に配列が渡る |
+| `utils/openai.ts` | `generateGpt1` 内で `quality: "standard"` が `"medium"` に変換されて API に渡る |
+| `utils/openai.ts` | `generateGpt1` 内で `quality: "hd"` が `"high"` に変換されて API に渡る |
+| `utils/openai.ts` | `generateGpt2` で `quality: "auto"` がそのまま API に渡る |
+| `utils/openai.ts` | `generateGpt2` で `style` フィールドは API パラメータに含まれない |
+| `utils/openai.ts` | gpt-image-2 edit に画像配列を渡したとき `images.edit` の `image` に File 配列が渡る |
+| `utils/openai.ts` | gpt-image-2 edit に単一画像を渡したとき `image` に単一 File が渡る |
 | `utils/openai.ts` | `size: "auto"` の場合の metadata フォールバック（width=height=0、warning 付与） |
+| `utils/openai.ts` | `BATCH_TO_EDIT_TYPE` マッピングが全 batch edit_type を網羅 |
+| `utils/openai.ts` | batch-edit が `model: "gpt-image-1"` 指定で gpt-image-1 ブランチを呼ぶ |
 | `index.ts` | `zodToJsonSchema` の出力に `oneOf` で2分岐が含まれる（snapshot test） |
+| `index.ts` | `withOptionalModel` 適用後、各 `oneOf` 分岐の `required` から `model` が除外される |
+| `index.ts` | edit-image inputSchema の `source_image` ネスト構造が想定通り（snapshot） |
 
 ### 既存テストの追従
 
@@ -273,35 +409,135 @@ batch-edit は既に `edit_type` を独自 enum で制限しており、aspect_r
 
 ## パッケージ rename
 
+「プロジェクト名」と「モデル名」を分離する：プロジェクト名 (`gpt-image-1-mcp` / `@napolab/gpt-image-1-mcp`) は `gpt-image-mcp` / `@napolab/gpt-image-mcp` に変更、モデル名としての `gpt-image-1` の文章上の言及は残す。
+
+### 必須変更ファイル一覧
+
 | ファイル | 変更内容 |
 |---|---|
-| `package.json` | `name: "@napolab/gpt-image-mcp"`, `bin: { "gpt-image-mcp": "./dist/index.js" }` |
+| `package.json` | `name: "@napolab/gpt-image-mcp"`, `bin: { "gpt-image-mcp": "./dist/index.js" }`, `keywords` に `"gpt-image-2"` を追加（`"gpt-image-1"` は残す） |
 | `src/index.ts` | `Server({ name: "gpt-image-mcp", ... })` |
-| `README.md` | 全 `gpt-image-1-mcp` 言及をプロジェクト名として `gpt-image-mcp` に更新（モデル名としての `gpt-image-1` は残す） |
-| `CHANGELOG.md` | 次バージョン（2.0.0 想定）のエントリー追加 |
-| `docs/` | VitePress 設定とコンテンツの参照名を更新 |
-| `tsup.config.ts` | 出力ファイル名は `dist/index.js` のまま |
+| `README.md` | プロジェクト名としての全言及を更新、インストールコマンド例を `npx @napolab/gpt-image-mcp` に |
+| `CHANGELOG.md` | 次バージョン（2.0.0 想定）のエントリー追加（破壊的変更の明記） |
+| `tsup.config.ts` | 出力ファイル名は `dist/index.js` のまま（変更不要） |
+| `docs/.vitepress/config.ts` | `title: "gpt-image MCP"`, `base: "/gpt-image-mcp/"`, `head` の icon href, `themeConfig.logo`, ナビ・サイドバー上の文字列、socialLinks の GitHub link |
+| `docs/index.md` | hero `name`, tagline, features の `gpt-image-1 Powered`、設定例 JSON のキー名と args、本文中の "gpt-image-1 MCP" 表記 |
+| `docs/guide/getting-started.md` | `claude mcp add gpt-image-1` → `gpt-image-mcp`、`npx @napolab/gpt-image-1-mcp` → `@napolab/gpt-image-mcp`、JSON 設定キー |
+| `docs/guide/what-is-mcp.md` | プロジェクト名としての言及を全更新 |
+| `docs/guide/environment-variables.md` | 全 JSON 設定例（6箇所程度）の MCP server キー名と args |
+| `docs/guide/mcp-configuration.md` | 全 JSON 設定例（20行以上） |
+| `docs/guide/edit-image.md`, `docs/guide/batch-edit.md`, `docs/guide/image-generation.md` | プロジェクト名と設定例の参照 |
+| `docs/api/*.md`（`tools.md` / `error-handling.md` / `rate-limiting.md` 等） | `gpt-image-1-mcp` への言及を更新 |
+| `docs/examples/*.json`（存在する場合）| MCP サーバーキー `"gpt-image-1-mcp"` と args |
+| `.github/workflows/deploy-docs.yml` | GitHub Pages の base path や artifact 名に `gpt-image-1-mcp` がハードコードされている場合は更新 |
+| `.github/workflows/ci.yml` | プロジェクト名のハードコード参照があれば更新 |
 
-旧パッケージ `@napolab/gpt-image-1-mcp` のメタデータ操作は本 PR の範囲外。
+### 範囲外として扱う項目
 
-## リスクと未確定事項
+- 旧パッケージ `@napolab/gpt-image-1-mcp` の npm 上での deprecated 化 → 別アクション
+- `features/*.yml`（過去の planning 文書）→ 履歴として保存、本 PR では更新しない
+- GitHub リポジトリの Pages 設定（base URL 変更後の Pages 設定）→ 手動操作が必要、PR メッセージで案内する
 
-1. **OpenAI SDK のバージョン**: `images.edit` の `image` パラメータが配列を受けるかは SDK 4.x では未確認。`v4.x` で動かなければ SDK を最新（v5+）にアップグレードが必要。実装フェーズ 1 の依存追加と同時に確認し、アップグレードが必要なら本 PR に含める
-2. **`size: "auto"` の metadata**: 最小実装では `width = height = 0` + warning。将来 `image-size` 等で改善
-3. **`zod-to-json-schema` 出力と MCP クライアント互換性**: 一部クライアントが `oneOf` を解釈しない可能性 → snapshot テストと Claude Desktop / Claude Code での smoke test で検証
-4. **`mapLegacyQuality` の扱い**: gpt-image-1 ブランチでのみ適用。gpt-image-2 では `standard/hd` を受け付けない
-5. **dated snapshot**: 今回は `gpt-image-2` のみ exposing。`gpt-image-2-2026-04-21` は将来 literal を増やす形で対応
+### 検出漏れ防止
+
+実装フェーズで `rg "gpt-image-1-mcp"` と `rg "@napolab/gpt-image-1-mcp"` をリポジトリ全体に対して実行し、上表に含まれない参照がないか確認する。`features/` 配下のヒットは過去文書として除外。
+
+## UNVERIFIED 項目（Phase 0 で検証）
+
+以下は OpenAI 公式ドキュメント / 実 API での検証が必要な項目。Phase 0（API 検証ゲート）で確認し、結果に応じて schema や実装を調整する：
+
+| 項目 | 想定 | 検証方法 |
+|---|---|---|
+| `gpt-image-2` で `size: "auto"` を受け付けるか | 受け付ける | API ドキュメント参照 + 実 API 呼び出し |
+| `landscape_2k` の正確な物理サイズ | `2048x1152` | API ドキュメント参照（他に推奨値があればそちらに合わせる） |
+| `portrait_2k` の正確な物理サイズ | `1152x2048` | 同上 |
+| `background: "transparent"` を gpt-image-2 が受け付けるか | 受け付ける | 実 API 呼び出し |
+| `background: "automatic"` の正式有無 | `auto` の別名と推定 | ドキュメント上で `automatic` が独立した値として定義されているか確認。独立値なら enum に追加 |
+| `moderation: "auto" / "low"` を gpt-image-2 が受け付けるか | 受け付ける | API ドキュメント参照 |
+| `images.edit` の `image` に File 配列を渡せるか（OpenAI SDK 4.x） | SDK アップグレードが必要な可能性あり | `node_modules/openai/resources/images.ts` の型定義確認 + 実 API 呼び出し |
+| `gpt-image-2` で `output_compression` パラメータが必要か | 今回は exposing しない | 必要なら別チケット |
+
+Phase 0 で問題が発覚した場合：
+- `size: "auto"` がサポートされない → `aspect_ratio: "auto"` を schema から除外
+- 2K サイズ値が異なる → `aspectRatioToSizeGpt2` の数値を更新
+- File 配列が SDK 4.x で動かない → SDK アップグレード（v5+）を本 PR に含める
+
+## その他のリスク
+
+1. **`size: "auto"` 時の metadata**: 最小実装では `width = height = 0` + warning。将来 `image-size` パッケージ等でファイルから実寸取得する改善余地あり
+2. **`zod-to-json-schema` 出力と MCP クライアント互換性**: snapshot テストと Claude Desktop / Claude Code での smoke test（Phase 8）で検証
+3. **`mapLegacyQuality` の扱い**: gpt-image-1 ブランチの service 層内でのみ適用。gpt-image-2 では `standard/hd` を schema 段階で弾く
+4. **dated snapshot**: 今回は `gpt-image-2` のみ exposing。`gpt-image-2-2026-04-21` は将来 literal を増やす形で対応
+5. **既存 `mcp-schema.test.ts`**: 現在は手動 inputSchema を前提にしているため、Phase 3 で zodToJsonSchema 出力に合わせて更新（snapshot 形式に変更）
 
 ## 実装順（フェーズ）
 
-1. **依存追加とスキャフォールド**: `pnpm add zod-to-json-schema`、`src/types/common.ts` 切り出し、OpenAI SDK バージョン確認 / 必要ならアップグレード
-2. **types/image.ts リファクタ**: base + gpt1 + gpt2 + union に分割、`aspectRatioToSizeGpt1/Gpt2` 実装、テスト追加
-3. **types/edit.ts リファクタ**: 同パターンで分割、`source_image` の単一 / 配列 union 追加、`background` 拡張、テスト追加
-4. **OpenAIService 分岐**: `generateImage` / `editImage` を model で分岐、新 params 組み立て、テスト追加
-5. **MCP entry の自動 schema 化**: `zodToJsonSchema` で `inputSchema` 生成、tool description / server name 更新、snapshot テスト
-6. **batch-edit に model 追加**: `BatchEditInputSchema` に `model` フィールド、内部 editImage 呼び出しに伝搬
-7. **パッケージ rename**: `package.json`, `Server` name, README, CHANGELOG
-8. **動作確認**: `pnpm typecheck && pnpm lint && pnpm test`、可能なら実 API での smoke test
+### Phase 0: API 仕様検証ゲート（実装着手前）
+
+UNVERIFIED 項目セクションの全項目を検証し、結果に応じて schema 値（特に 2K サイズ、`background` enum、`size: "auto"` 採否）を確定する。SDK アップグレード要否もここで判断。判断結果は本 spec の該当箇所をインライン更新してから Phase 1 に進む。
+
+### Phase 1: 依存追加とスキャフォールド
+
+- `pnpm add zod-to-json-schema`
+- `src/types/common.ts` 切り出し（`ImageInput`, naming 系 enum 等）
+- OpenAI SDK アップグレード（Phase 0 で必要と判断された場合）
+- 新規 / 更新後のテストが Vitest で起動できることを確認
+
+### Phase 2: types/image.ts リファクタ
+
+- `GenerateBase` / `GenerateGpt1` / `GenerateGpt2` / `GenerateImageInputSchema` を実装
+- `aspectRatioToSizeGpt1` / `aspectRatioToSizeGpt2` 実装
+- types ユニットテスト追加
+
+### Phase 3: MCP inputSchema 自動化（前倒し）
+
+`zod-to-json-schema` で `inputSchema` を生成する基盤を Phase 2 直後に導入。手動 inputSchema との二重管理期間を最小化する：
+
+- `withOptionalModel` ヘルパー実装
+- `index.ts` の generate-image inputSchema を `zodToJsonSchema` ベースに置換
+- `tests/mcp-schema.test.ts` を snapshot ベースに更新（手動 JSON 検証ロジックは削除）
+
+この時点では `edit-image` / `batch-edit` は旧 schema 維持。後続 Phase で順次置換。
+
+### Phase 4: types/edit.ts リファクタ
+
+- `EditBase` / `EditGpt1` / `EditGpt2` / `EditImageInputSchema` を実装
+- `source_image` の単一 / 配列 union、`background` 拡張、`mask_area` 維持
+- types ユニットテスト追加
+- `index.ts` の edit-image inputSchema も `zodToJsonSchema` ベースに切り替え
+
+### Phase 5: OpenAIService 分岐
+
+- `generateImage` を model で分岐（`generateGpt1` 内で `mapLegacyQuality` 適用）
+- `editImage` を model で分岐、gpt-image-2 で File 配列入力対応
+- `size: "auto"` のフォールバック挙動（metadata 0 + warning）
+- service 層テスト（OpenAI client モック）追加
+
+### Phase 6: batch-edit に model 追加
+
+- `BatchEditInputSchema` に `model` フィールド（デフォルト `gpt-image-2`）
+- `BATCH_TO_EDIT_TYPE` マッピング定義
+- 内部 `editImage` 呼び出しに `model` を伝搬
+- `index.ts` の batch-edit inputSchema も `zodToJsonSchema` ベースに切り替え
+
+### Phase 7: パッケージ rename
+
+実装ロジックと独立しているため、Phase 7 を独立したコミットとして切り出し（レビュー容易性のため）：
+
+- `package.json` の name / bin / keywords
+- `src/index.ts` の `Server({ name })`
+- README, CHANGELOG, docs/ 全般、.github/workflows
+- `rg "gpt-image-1-mcp"` で検出漏れチェック
+
+### Phase 8: 動作確認
+
+- `pnpm typecheck && pnpm lint && pnpm test` 全通過
+- Claude Desktop または Claude Code を MCP クライアントとして実 API smoke test：
+  - `model` 省略で gpt-image-2 が呼ばれる
+  - `model: "gpt-image-1"` で gpt-image-1 が呼ばれる
+  - `aspect_ratio: "square_2k"` の出力が 2048x2048
+  - `edit-image` で `source_image` 配列入力 → コンポジション生成
+  - `batch-edit` の動作
 
 ## 参考
 
