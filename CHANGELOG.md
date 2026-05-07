@@ -5,6 +5,14 @@ All notable changes to gpt-image MCP will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.2] - 2026-05-07
+
+### Fixed
+
+- **Anthropic tool input_schema rejection**: `tools/list` failed with `input_schema does not support oneOf, allOf, or anyOf at the top level` when Claude (and any other Anthropic-API-backed MCP client) loaded the server. Anthropic's tool definition disallows top-level union/intersection schemas, but `zodToJsonSchema` always emits `anyOf` for a `z.discriminatedUnion`.
+- Introduce dedicated **flat MCP schemas** (`GenerateImageMcpInputSchema`, `EditImageMcpInputSchema`) that expose the union of all valid values across both models with `description` text explaining the model-specific constraints. The runtime validators (`GenerateImageInputSchema` / `EditImageInputSchema`) still enforce the discriminated union, so invalid combinations are rejected at parse time as before.
+- Add regression tests asserting no top-level `oneOf` / `anyOf` / `allOf` on any of the three tool inputSchemas.
+
 ## [2.0.1] - 2026-05-07
 
 ### Fixed

@@ -95,6 +95,48 @@ export const GenerateImageInputSchema = z.preprocess(
   ]),
 );
 
+/**
+ * Flat schema used to advertise generate-image to MCP clients.
+ *
+ * Anthropic's tool input_schema rejects top-level oneOf/anyOf/allOf, so we
+ * cannot expose the discriminated union directly. This schema exposes the
+ * UNION of valid values across both models with descriptions explaining the
+ * model-specific constraints. The runtime validator (GenerateImageInputSchema)
+ * still enforces the discriminated union.
+ */
+export const GenerateImageMcpInputSchema = GenerateImageBaseSchema.extend({
+  model: z
+    .enum(["gpt-image-1", "gpt-image-2"])
+    .optional()
+    .describe(
+      "Image model. Omit to default to gpt-image-2. gpt-image-1 supports legacy aspect ratios and quality values; gpt-image-2 adds 2K presets, aspect_ratio: 'auto', and quality: 'auto'.",
+    ),
+  aspect_ratio: z
+    .enum([
+      "square",
+      "landscape",
+      "portrait",
+      "1:1",
+      "16:9",
+      "9:16",
+      "square_2k",
+      "landscape_2k",
+      "portrait_2k",
+      "auto",
+    ])
+    .optional()
+    .default("square")
+    .describe(
+      "Aspect ratio. 'square_2k' (2048x2048), 'landscape_2k' (2048x1152), 'portrait_2k' (1152x2048), and 'auto' require model: 'gpt-image-2'.",
+    ),
+  quality: z
+    .enum(["standard", "hd", "high", "medium", "low", "auto"])
+    .optional()
+    .describe(
+      "Image quality. 'standard'/'hd' are gpt-image-1 legacy aliases (mapped to medium/high server-side). 'auto' requires gpt-image-2.",
+    ),
+});
+
 export const ImageGenerationResultSchema = z.object({
   image: z.object({
     url: z.string().url(),

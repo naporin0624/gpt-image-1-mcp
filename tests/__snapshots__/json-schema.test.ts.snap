@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`MCP inputSchema snapshots (regression guard for tool registration) > matches snapshot for batch-edit 1`] = `
+exports[`MCP inputSchema (regression guard for tool registration) > batch-edit inputSchema matches snapshot 1`] = `
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "additionalProperties": false,
@@ -166,100 +166,103 @@ exports[`MCP inputSchema snapshots (regression guard for tool registration) > ma
 }
 `;
 
-exports[`MCP inputSchema snapshots (regression guard for tool registration) > matches snapshot for edit-image 1`] = `
+exports[`MCP inputSchema (regression guard for tool registration) > edit-image inputSchema matches snapshot 1`] = `
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "anyOf": [
-    {
-      "additionalProperties": false,
-      "properties": {
-        "background": {
-          "default": "auto",
-          "enum": [
-            "transparent",
-            "opaque",
-            "auto",
-          ],
-          "type": "string",
-        },
-        "edit_prompt": {
-          "minLength": 1,
-          "type": "string",
-        },
-        "edit_type": {
-          "enum": [
-            "inpaint",
-            "outpaint",
-            "variation",
-            "style_transfer",
-            "object_removal",
-            "background_change",
-          ],
-          "type": "string",
-        },
-        "filename_prefix": {
-          "default": "edited_",
-          "type": "string",
-        },
-        "mask_area": {
-          "type": "string",
-        },
-        "model": {
-          "const": "gpt-image-1",
-          "description": "Model to use. Omit to default to gpt-image-2.",
-          "type": "string",
-        },
-        "naming_strategy": {
-          "default": "timestamp",
-          "enum": [
-            "timestamp",
-            "prompt",
-            "custom",
-            "hash",
-          ],
-          "type": "string",
-        },
-        "organize_by": {
-          "default": "none",
-          "enum": [
-            "none",
-            "date",
-            "aspect_ratio",
-            "quality",
-          ],
-          "type": "string",
-        },
-        "output_directory": {
-          "type": "string",
-        },
-        "output_format": {
-          "default": "png",
-          "enum": [
-            "png",
-            "jpeg",
-            "webp",
-          ],
-          "type": "string",
-        },
-        "preserve_composition": {
-          "default": true,
-          "type": "boolean",
-        },
-        "quality": {
-          "default": "auto",
-          "enum": [
-            "auto",
-            "high",
-            "medium",
-            "low",
-          ],
-          "type": "string",
-        },
-        "save_to_file": {
-          "default": true,
-          "type": "boolean",
-        },
-        "source_image": {
+  "additionalProperties": false,
+  "properties": {
+    "background": {
+      "default": "auto",
+      "enum": [
+        "transparent",
+        "opaque",
+        "auto",
+      ],
+      "type": "string",
+    },
+    "edit_prompt": {
+      "minLength": 1,
+      "type": "string",
+    },
+    "edit_type": {
+      "enum": [
+        "inpaint",
+        "outpaint",
+        "variation",
+        "style_transfer",
+        "object_removal",
+        "background_change",
+      ],
+      "type": "string",
+    },
+    "filename_prefix": {
+      "default": "edited_",
+      "type": "string",
+    },
+    "mask_area": {
+      "type": "string",
+    },
+    "model": {
+      "description": "Image model. Omit to default to gpt-image-2. gpt-image-2 additionally accepts an array of up to 10 source_images for compositions.",
+      "enum": [
+        "gpt-image-1",
+        "gpt-image-2",
+      ],
+      "type": "string",
+    },
+    "naming_strategy": {
+      "default": "timestamp",
+      "enum": [
+        "timestamp",
+        "prompt",
+        "custom",
+        "hash",
+      ],
+      "type": "string",
+    },
+    "organize_by": {
+      "default": "none",
+      "enum": [
+        "none",
+        "date",
+        "aspect_ratio",
+        "quality",
+      ],
+      "type": "string",
+    },
+    "output_directory": {
+      "type": "string",
+    },
+    "output_format": {
+      "default": "png",
+      "enum": [
+        "png",
+        "jpeg",
+        "webp",
+      ],
+      "type": "string",
+    },
+    "preserve_composition": {
+      "default": true,
+      "type": "boolean",
+    },
+    "quality": {
+      "default": "auto",
+      "enum": [
+        "auto",
+        "high",
+        "medium",
+        "low",
+      ],
+      "type": "string",
+    },
+    "save_to_file": {
+      "default": true,
+      "type": "boolean",
+    },
+    "source_image": {
+      "anyOf": [
+        {
           "anyOf": [
             {
               "additionalProperties": false,
@@ -317,490 +320,212 @@ exports[`MCP inputSchema snapshots (regression guard for tool registration) > ma
             },
           ],
         },
-        "strength": {
-          "default": 0.8,
-          "maximum": 1,
-          "minimum": 0,
-          "type": "number",
-        },
-      },
-      "required": [
-        "edit_prompt",
-        "edit_type",
-        "source_image",
-      ],
-      "type": "object",
-    },
-    {
-      "additionalProperties": false,
-      "properties": {
-        "background": {
-          "default": "auto",
-          "enum": [
-            "transparent",
-            "opaque",
-            "auto",
-          ],
-          "type": "string",
-        },
-        "edit_prompt": {
-          "minLength": 1,
-          "type": "string",
-        },
-        "edit_type": {
-          "enum": [
-            "inpaint",
-            "outpaint",
-            "variation",
-            "style_transfer",
-            "object_removal",
-            "background_change",
-          ],
-          "type": "string",
-        },
-        "filename_prefix": {
-          "default": "edited_",
-          "type": "string",
-        },
-        "mask_area": {
-          "type": "string",
-        },
-        "model": {
-          "const": "gpt-image-2",
-          "description": "Model to use. Omit to default to gpt-image-2.",
-          "type": "string",
-        },
-        "naming_strategy": {
-          "default": "timestamp",
-          "enum": [
-            "timestamp",
-            "prompt",
-            "custom",
-            "hash",
-          ],
-          "type": "string",
-        },
-        "organize_by": {
-          "default": "none",
-          "enum": [
-            "none",
-            "date",
-            "aspect_ratio",
-            "quality",
-          ],
-          "type": "string",
-        },
-        "output_directory": {
-          "type": "string",
-        },
-        "output_format": {
-          "default": "png",
-          "enum": [
-            "png",
-            "jpeg",
-            "webp",
-          ],
-          "type": "string",
-        },
-        "preserve_composition": {
-          "default": true,
-          "type": "boolean",
-        },
-        "quality": {
-          "default": "auto",
-          "enum": [
-            "auto",
-            "high",
-            "medium",
-            "low",
-          ],
-          "type": "string",
-        },
-        "save_to_file": {
-          "default": true,
-          "type": "boolean",
-        },
-        "source_image": {
-          "anyOf": [
-            {
-              "anyOf": [
-                {
-                  "additionalProperties": false,
-                  "properties": {
-                    "type": {
-                      "const": "url",
-                      "type": "string",
-                    },
-                    "value": {
-                      "format": "uri",
-                      "type": "string",
-                    },
+        {
+          "items": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "url",
+                    "type": "string",
                   },
-                  "required": [
-                    "type",
-                    "value",
-                  ],
-                  "type": "object",
+                  "value": {
+                    "format": "uri",
+                    "type": "string",
+                  },
                 },
-                {
-                  "additionalProperties": false,
-                  "properties": {
-                    "type": {
-                      "const": "base64",
-                      "type": "string",
-                    },
-                    "value": {
-                      "minLength": 1,
-                      "type": "string",
-                    },
-                  },
-                  "required": [
-                    "type",
-                    "value",
-                  ],
-                  "type": "object",
-                },
-                {
-                  "additionalProperties": false,
-                  "properties": {
-                    "type": {
-                      "const": "local",
-                      "type": "string",
-                    },
-                    "value": {
-                      "minLength": 1,
-                      "type": "string",
-                    },
-                  },
-                  "required": [
-                    "type",
-                    "value",
-                  ],
-                  "type": "object",
-                },
-              ],
-            },
-            {
-              "items": {
-                "anyOf": [
-                  {
-                    "additionalProperties": false,
-                    "properties": {
-                      "type": {
-                        "const": "url",
-                        "type": "string",
-                      },
-                      "value": {
-                        "format": "uri",
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "type",
-                      "value",
-                    ],
-                    "type": "object",
-                  },
-                  {
-                    "additionalProperties": false,
-                    "properties": {
-                      "type": {
-                        "const": "base64",
-                        "type": "string",
-                      },
-                      "value": {
-                        "minLength": 1,
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "type",
-                      "value",
-                    ],
-                    "type": "object",
-                  },
-                  {
-                    "additionalProperties": false,
-                    "properties": {
-                      "type": {
-                        "const": "local",
-                        "type": "string",
-                      },
-                      "value": {
-                        "minLength": 1,
-                        "type": "string",
-                      },
-                    },
-                    "required": [
-                      "type",
-                      "value",
-                    ],
-                    "type": "object",
-                  },
+                "required": [
+                  "type",
+                  "value",
                 ],
+                "type": "object",
               },
-              "maxItems": 10,
-              "minItems": 1,
-              "type": "array",
-            },
-          ],
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "base64",
+                    "type": "string",
+                  },
+                  "value": {
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "type",
+                  "value",
+                ],
+                "type": "object",
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "const": "local",
+                    "type": "string",
+                  },
+                  "value": {
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "required": [
+                  "type",
+                  "value",
+                ],
+                "type": "object",
+              },
+            ],
+          },
+          "maxItems": 10,
+          "minItems": 1,
+          "type": "array",
         },
-        "strength": {
-          "default": 0.8,
-          "maximum": 1,
-          "minimum": 0,
-          "type": "number",
-        },
-      },
-      "required": [
-        "edit_prompt",
-        "edit_type",
-        "source_image",
       ],
-      "type": "object",
+      "description": "Source image(s). For gpt-image-1, only a single image input is allowed. For gpt-image-2, you may pass an array of 1-10 images for composition.",
     },
+    "strength": {
+      "default": 0.8,
+      "maximum": 1,
+      "minimum": 0,
+      "type": "number",
+    },
+  },
+  "required": [
+    "edit_prompt",
+    "edit_type",
+    "source_image",
   ],
   "type": "object",
 }
 `;
 
-exports[`MCP inputSchema snapshots (regression guard for tool registration) > matches snapshot for generate-image 1`] = `
+exports[`MCP inputSchema (regression guard for tool registration) > generate-image inputSchema matches snapshot 1`] = `
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "anyOf": [
-    {
-      "additionalProperties": false,
-      "properties": {
-        "analyze_after_generation": {
-          "default": false,
-          "type": "boolean",
-        },
-        "aspect_ratio": {
-          "default": "square",
-          "enum": [
-            "square",
-            "landscape",
-            "portrait",
-            "1:1",
-            "16:9",
-            "9:16",
-          ],
-          "type": "string",
-        },
-        "background": {
-          "default": "auto",
-          "enum": [
-            "transparent",
-            "opaque",
-            "auto",
-          ],
-          "type": "string",
-        },
-        "filename": {
-          "type": "string",
-        },
-        "include_base64": {
-          "default": false,
-          "type": "boolean",
-        },
-        "model": {
-          "const": "gpt-image-1",
-          "description": "Model to use. Omit to default to gpt-image-2.",
-          "type": "string",
-        },
-        "moderation": {
-          "default": "auto",
-          "enum": [
-            "auto",
-            "low",
-          ],
-          "type": "string",
-        },
-        "naming_strategy": {
-          "default": "timestamp",
-          "enum": [
-            "timestamp",
-            "prompt",
-            "custom",
-            "hash",
-          ],
-          "type": "string",
-        },
-        "organize_by": {
-          "default": "none",
-          "enum": [
-            "none",
-            "date",
-            "aspect_ratio",
-            "quality",
-          ],
-          "type": "string",
-        },
-        "output_directory": {
-          "type": "string",
-        },
-        "output_format": {
-          "default": "png",
-          "enum": [
-            "png",
-            "jpeg",
-            "webp",
-          ],
-          "type": "string",
-        },
-        "prompt": {
-          "minLength": 1,
-          "type": "string",
-        },
-        "quality": {
-          "enum": [
-            "standard",
-            "hd",
-            "high",
-            "medium",
-            "low",
-          ],
-          "type": "string",
-        },
-        "remove_background": {
-          "default": false,
-          "type": "boolean",
-        },
-        "save_to_file": {
-          "default": true,
-          "type": "boolean",
-        },
-        "style": {
-          "enum": [
-            "vivid",
-            "natural",
-          ],
-          "type": "string",
-        },
-      },
-      "required": [
-        "prompt",
-      ],
-      "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "analyze_after_generation": {
+      "default": false,
+      "type": "boolean",
     },
-    {
-      "additionalProperties": false,
-      "properties": {
-        "analyze_after_generation": {
-          "default": false,
-          "type": "boolean",
-        },
-        "aspect_ratio": {
-          "default": "square",
-          "enum": [
-            "square",
-            "landscape",
-            "portrait",
-            "1:1",
-            "16:9",
-            "9:16",
-            "square_2k",
-            "landscape_2k",
-            "portrait_2k",
-            "auto",
-          ],
-          "type": "string",
-        },
-        "background": {
-          "default": "auto",
-          "enum": [
-            "transparent",
-            "opaque",
-            "auto",
-          ],
-          "type": "string",
-        },
-        "filename": {
-          "type": "string",
-        },
-        "include_base64": {
-          "default": false,
-          "type": "boolean",
-        },
-        "model": {
-          "const": "gpt-image-2",
-          "description": "Model to use. Omit to default to gpt-image-2.",
-          "type": "string",
-        },
-        "moderation": {
-          "default": "auto",
-          "enum": [
-            "auto",
-            "low",
-          ],
-          "type": "string",
-        },
-        "naming_strategy": {
-          "default": "timestamp",
-          "enum": [
-            "timestamp",
-            "prompt",
-            "custom",
-            "hash",
-          ],
-          "type": "string",
-        },
-        "organize_by": {
-          "default": "none",
-          "enum": [
-            "none",
-            "date",
-            "aspect_ratio",
-            "quality",
-          ],
-          "type": "string",
-        },
-        "output_directory": {
-          "type": "string",
-        },
-        "output_format": {
-          "default": "png",
-          "enum": [
-            "png",
-            "jpeg",
-            "webp",
-          ],
-          "type": "string",
-        },
-        "prompt": {
-          "minLength": 1,
-          "type": "string",
-        },
-        "quality": {
-          "enum": [
-            "low",
-            "medium",
-            "high",
-            "auto",
-          ],
-          "type": "string",
-        },
-        "remove_background": {
-          "default": false,
-          "type": "boolean",
-        },
-        "save_to_file": {
-          "default": true,
-          "type": "boolean",
-        },
-        "style": {
-          "enum": [
-            "vivid",
-            "natural",
-          ],
-          "type": "string",
-        },
-      },
-      "required": [
-        "prompt",
+    "aspect_ratio": {
+      "default": "square",
+      "description": "Aspect ratio. 'square_2k' (2048x2048), 'landscape_2k' (2048x1152), 'portrait_2k' (1152x2048), and 'auto' require model: 'gpt-image-2'.",
+      "enum": [
+        "square",
+        "landscape",
+        "portrait",
+        "1:1",
+        "16:9",
+        "9:16",
+        "square_2k",
+        "landscape_2k",
+        "portrait_2k",
+        "auto",
       ],
-      "type": "object",
+      "type": "string",
     },
+    "background": {
+      "default": "auto",
+      "enum": [
+        "transparent",
+        "opaque",
+        "auto",
+      ],
+      "type": "string",
+    },
+    "filename": {
+      "type": "string",
+    },
+    "include_base64": {
+      "default": false,
+      "type": "boolean",
+    },
+    "model": {
+      "description": "Image model. Omit to default to gpt-image-2. gpt-image-1 supports legacy aspect ratios and quality values; gpt-image-2 adds 2K presets, aspect_ratio: 'auto', and quality: 'auto'.",
+      "enum": [
+        "gpt-image-1",
+        "gpt-image-2",
+      ],
+      "type": "string",
+    },
+    "moderation": {
+      "default": "auto",
+      "enum": [
+        "auto",
+        "low",
+      ],
+      "type": "string",
+    },
+    "naming_strategy": {
+      "default": "timestamp",
+      "enum": [
+        "timestamp",
+        "prompt",
+        "custom",
+        "hash",
+      ],
+      "type": "string",
+    },
+    "organize_by": {
+      "default": "none",
+      "enum": [
+        "none",
+        "date",
+        "aspect_ratio",
+        "quality",
+      ],
+      "type": "string",
+    },
+    "output_directory": {
+      "type": "string",
+    },
+    "output_format": {
+      "default": "png",
+      "enum": [
+        "png",
+        "jpeg",
+        "webp",
+      ],
+      "type": "string",
+    },
+    "prompt": {
+      "minLength": 1,
+      "type": "string",
+    },
+    "quality": {
+      "description": "Image quality. 'standard'/'hd' are gpt-image-1 legacy aliases (mapped to medium/high server-side). 'auto' requires gpt-image-2.",
+      "enum": [
+        "standard",
+        "hd",
+        "high",
+        "medium",
+        "low",
+        "auto",
+      ],
+      "type": "string",
+    },
+    "remove_background": {
+      "default": false,
+      "type": "boolean",
+    },
+    "save_to_file": {
+      "default": true,
+      "type": "boolean",
+    },
+    "style": {
+      "enum": [
+        "vivid",
+        "natural",
+      ],
+      "type": "string",
+    },
+  },
+  "required": [
+    "prompt",
   ],
   "type": "object",
 }

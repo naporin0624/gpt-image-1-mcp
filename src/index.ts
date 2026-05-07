@@ -6,9 +6,14 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
-import { EditImageInputSchema, BatchEditInputSchema } from "./types/edit";
+import {
+  BatchEditInputSchema,
+  EditImageInputSchema,
+  EditImageMcpInputSchema,
+} from "./types/edit";
 import {
   GenerateImageInputSchema,
+  GenerateImageMcpInputSchema,
   type OptimizedGenerateImageResponse,
 } from "./types/image";
 
@@ -33,8 +38,12 @@ const buildInputSchema = <T extends z.ZodTypeAny>(schema: T): ToolInputSchema =>
     }) as Record<string, unknown>,
   ) as ToolInputSchema;
 
-const generateImageInputSchema = buildInputSchema(GenerateImageInputSchema);
-const editImageInputSchema = buildInputSchema(EditImageInputSchema);
+// Use flat MCP-facing schemas (no top-level anyOf). Anthropic's tool
+// input_schema rejects oneOf/anyOf/allOf at the top level, so the
+// discriminated unions (GenerateImageInputSchema / EditImageInputSchema) are
+// only used for runtime validation in CallToolRequestSchema below.
+const generateImageInputSchema = buildInputSchema(GenerateImageMcpInputSchema);
+const editImageInputSchema = buildInputSchema(EditImageMcpInputSchema);
 const batchEditInputSchema = buildInputSchema(BatchEditInputSchema);
 
 // Type guards for runtime type checking

@@ -107,6 +107,33 @@ export const EditImageInputSchema = z.preprocess(
   z.discriminatedUnion("model", [EditImageGpt1Schema, EditImageGpt2Schema]),
 );
 
+/**
+ * Flat schema used to advertise edit-image to MCP clients.
+ *
+ * Anthropic's tool input_schema rejects top-level oneOf/anyOf/allOf, so we
+ * cannot expose the discriminated union directly. The runtime validator
+ * (EditImageInputSchema) still enforces model-specific constraints.
+ */
+export const EditImageMcpInputSchema = EditImageBaseSchema.extend({
+  model: z
+    .enum(["gpt-image-1", "gpt-image-2"])
+    .optional()
+    .describe(
+      "Image model. Omit to default to gpt-image-2. gpt-image-2 additionally accepts an array of up to 10 source_images for compositions.",
+    ),
+  source_image: z
+    .union([
+      ImageInputSchema,
+      z
+        .array(ImageInputSchema)
+        .min(1, "Provide at least one source image")
+        .max(10, "At most 10 source images are supported"),
+    ])
+    .describe(
+      "Source image(s). For gpt-image-1, only a single image input is allowed. For gpt-image-2, you may pass an array of 1-10 images for composition.",
+    ),
+});
+
 export const EditImageResultSchema = z.object({
   original_image: z.object({
     url: z.string(),

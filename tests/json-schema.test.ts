@@ -1,8 +1,14 @@
 import { describe, it, expect } from "vitest";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
-import { BatchEditInputSchema, EditImageInputSchema } from "../src/types/edit";
-import { GenerateImageInputSchema } from "../src/types/image";
+import {
+  BatchEditInputSchema,
+  EditImageMcpInputSchema,
+} from "../src/types/edit";
+import {
+  GenerateImageInputSchema,
+  GenerateImageMcpInputSchema,
+} from "../src/types/image";
 import { withOptionalModel } from "../src/utils/json-schema";
 
 describe("zodToJsonSchema for GenerateImageInputSchema", () => {
@@ -99,10 +105,11 @@ describe("withOptionalModel", () => {
   });
 });
 
-describe("MCP inputSchema snapshots (regression guard for tool registration)", () => {
-  // The three inputSchemas wired in src/index.ts. If a snapshot drifts, MCP
-  // clients may reject `tools/list` with a JSON Schema validation error
-  // (notably: top-level type must be "object").
+describe("MCP inputSchema (regression guard for tool registration)", () => {
+  // src/index.ts uses dedicated "MCP" flat schemas (no discriminated union at root)
+  // so Anthropic API's tool input_schema constraint is satisfied:
+  //   "input_schema does not support oneOf, allOf, or anyOf at the top level".
+  // Runtime parsing still uses the discriminated unions for strict validation.
   const buildInputSchema = (
     schema: Parameters<typeof zodToJsonSchema>[0],
   ): Record<string, unknown> =>
@@ -113,30 +120,31 @@ describe("MCP inputSchema snapshots (regression guard for tool registration)", (
       }) as Record<string, unknown>,
     );
 
-  it("generate-image inputSchema has top-level type: 'object'", () => {
-    const schema = buildInputSchema(GenerateImageInputSchema);
-    expect(schema.type).toBe("object");
-  });
+  const inputSchemas = [
+    ["generate-image", GenerateImageMcpInputSchema],
+    ["edit-image", EditImageMcpInputSchema],
+    ["batch-edit", BatchEditInputSchema],
+  ] as const;
 
-  it("edit-image inputSchema has top-level type: 'object'", () => {
-    const schema = buildInputSchema(EditImageInputSchema);
-    expect(schema.type).toBe("object");
-  });
+  it.each(inputSchemas)(
+    "%s inputSchema has top-level type: 'object'",
+    (_label, schema) => {
+      const result = buildInputSchema(schema);
+      expect(result.type).toBe("object");
+    },
+  );
 
-  it("batch-edit inputSchema has top-level type: 'object'", () => {
-    const schema = buildInputSchema(BatchEditInputSchema);
-    expect(schema.type).toBe("object");
-  });
+  it.each(inputSchemas)(
+    "%s inputSchema has no top-level oneOf/anyOf/allOf (Anthropic tool constraint)",
+    (_label, schema) => {
+      const result = buildInputSchema(schema);
+      expect(result.oneOf).toBeUndefined();
+      expect(result.anyOf).toBeUndefined();
+      expect(result.allOf).toBeUndefined();
+    },
+  );
 
-  it("matches snapshot for generate-image", () => {
-    expect(buildInputSchema(GenerateImageInputSchema)).toMatchSnapshot();
-  });
-
-  it("matches snapshot for edit-image", () => {
-    expect(buildInputSchema(EditImageInputSchema)).toMatchSnapshot();
-  });
-
-  it("matches snapshot for batch-edit", () => {
-    expect(buildInputSchema(BatchEditInputSchema)).toMatchSnapshot();
+  it.each(inputSchemas)("%s inputSchema matches snapshot", (_label, schema) => {
+    expect(buildInputSchema(schema)).toMatchSnapshot();
   });
 });
