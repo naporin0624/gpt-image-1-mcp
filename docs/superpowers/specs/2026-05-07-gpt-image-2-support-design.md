@@ -6,7 +6,7 @@
 
 ## 背景
 
-OpenAI が `gpt-image-2`（および dated snapshot `gpt-image-2-2026-04-21`）をリリースした。本 MCP サーバーは現在 `gpt-image-1` のみをハードコーディングして使用しており、新モデルの能力（任意サイズ、`auto` size、複数画像入力によるコンポジション、`background: opaque/automatic`）を活用できない。
+OpenAI が `gpt-image-2`（および dated snapshot `gpt-image-2-2026-04-21`）をリリースした。本 MCP サーバーは現在 `gpt-image-1` のみをハードコーディングして使用しており、新モデルの能力（任意サイズ、`auto` size、複数画像入力によるコンポジション、`background: transparent/opaque/auto`）を活用できない。
 
 本設計では、`gpt-image-1` と `gpt-image-2` の両モデルを **Zod の `z.discriminatedUnion`** によって安全に切り替えられる API に拡張し、新モデルの新機能を段階的に公開する。
 
@@ -92,10 +92,10 @@ src/
 
 現行コードでは `generate` にも `background: BackgroundSchema = transparent / opaque / auto` が存在する（`src/types/image.ts`）。これを引き継ぐ形で **両モデル共通で `generate` / `edit` のどちらにも `background` を持たせる**。
 
-| モデル      | 受け入れる値                  | 備考                                                                                              |
-| ----------- | ----------------------------- | ------------------------------------------------------------------------------------------------- |
-| gpt-image-1 | `transparent / opaque / auto` | デフォルト `auto`（既存維持）                                                                     |
-| gpt-image-2 | `transparent / opaque / auto` | デフォルト `auto`。OpenAI ドキュメントの `automatic` 表記は `auto` の別名と推定（Phase 0 で確認） |
+| モデル      | 受け入れる値                  | 備考                                                                                                                      |
+| ----------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| gpt-image-1 | `transparent / opaque / auto` | デフォルト `auto`（既存維持）                                                                                             |
+| gpt-image-2 | `transparent / opaque / auto` | デフォルト `auto`。**Phase 0 検証済**：実 API が受理するのは 3 値のみ。`automatic` は 400 で拒否（`auto` の別名でもない） |
 
 ### `style`（generate のみ、後方互換）
 
@@ -468,22 +468,18 @@ const BATCH_TO_EDIT_TYPE: Record<BatchEditType, EditType> = {
 
 以下は OpenAI 公式ドキュメント / 実 API での検証が必要な項目。Phase 0（API 検証ゲート）で確認し、結果に応じて schema や実装を調整する：
 
-| 項目                                                              | 想定                                 | 検証方法                                                                                    |
-| ----------------------------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `gpt-image-2` で `size: "auto"` を受け付けるか                    | 受け付ける                           | API ドキュメント参照 + 実 API 呼び出し                                                      |
-| `landscape_2k` の正確な物理サイズ                                 | `2048x1152`                          | API ドキュメント参照（他に推奨値があればそちらに合わせる）                                  |
-| `portrait_2k` の正確な物理サイズ                                  | `1152x2048`                          | 同上                                                                                        |
-| `background: "transparent"` を gpt-image-2 が受け付けるか         | 受け付ける                           | 実 API 呼び出し                                                                             |
-| `background: "automatic"` の正式有無                              | `auto` の別名と推定                  | ドキュメント上で `automatic` が独立した値として定義されているか確認。独立値なら enum に追加 |
-| `moderation: "auto" / "low"` を gpt-image-2 が受け付けるか        | 受け付ける                           | API ドキュメント参照                                                                        |
-| `images.edit` の `image` に File 配列を渡せるか（OpenAI SDK 4.x） | SDK アップグレードが必要な可能性あり | `node_modules/openai/resources/images.ts` の型定義確認 + 実 API 呼び出し                    |
-| `gpt-image-2` で `output_compression` パラメータが必要か          | 今回は exposing しない               | 必要なら別チケット                                                                          |
+| 項目                                                              | 想定                                 | 検証方法                                         | 結果 (2026-05-07)                                                                                                          |
+| ----------------------------------------------------------------- | ------------------------------------ | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `gpt-image-2` で `size: "auto"` を受け付けるか                    | 受け付ける                           | 実 API 呼び出し                                  | ✅ 受理（warning 経由で metadata は 0/0 のまま、ファイルは生成される）                                                     |
+| `landscape_2k` の正確な物理サイズ                                 | `2048x1152`                          | 実 API 呼び出し                                  | ✅ `2048x1152` で生成                                                                                                      |
+| `portrait_2k` の正確な物理サイズ                                  | `1152x2048`                          | 同上                                             | ✅ `square_2k=2048x2048` で確認、対称性から確定                                                                            |
+| `background: "transparent"` を gpt-image-2 が受け付けるか         | 受け付ける                           | 実 API 呼び出し                                  | ✅ 受理（PNG 生成成功）                                                                                                    |
+| `background: "automatic"` の正式有無                              | `auto` の別名と推定                  | 実 API 呼び出しで直接 `automatic` を渡し挙動確認 | ❌ **400 で拒否**。OpenAI 公式 enum は `transparent / opaque / auto` の 3 値のみ。`automatic` は別名でもなく独立値でもない |
+| `moderation: "auto" / "low"` を gpt-image-2 が受け付けるか        | 受け付ける                           | 実 API 呼び出し                                  | ✅ `moderation: "auto"` 経由で生成成功                                                                                     |
+| `images.edit` の `image` に File 配列を渡せるか（OpenAI SDK 4.x） | SDK アップグレードが必要な可能性あり | SDK 型定義確認 + 実 API 呼び出し                 | ✅ `openai@4.104.0` の型定義が `Core.Uploadable \| Array<Core.Uploadable>` で配列を受理、コンポジション生成成功            |
+| `gpt-image-2` で `output_compression` パラメータが必要か          | 今回は exposing しない               | 必要なら別チケット                               | ⏸ exposing 対象外、未検証で OK                                                                                            |
 
-Phase 0 で問題が発覚した場合：
-
-- `size: "auto"` がサポートされない → `aspect_ratio: "auto"` を schema から除外
-- 2K サイズ値が異なる → `aspectRatioToSizeGpt2` の数値を更新
-- File 配列が SDK 4.x で動かない → SDK アップグレード（v5+）を本 PR に含める
+すべての UNVERIFIED 項目は 2026-05-07 の `scripts/smoke.ts` / `scripts/smoke-background.ts` 実行で検証済。schema・実装変更は不要（`background: "automatic"` を含めない現状の Zod enum が API 仕様と一致）。
 
 ## その他のリスク
 
